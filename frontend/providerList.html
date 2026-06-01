@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Providers - SERVIIO</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/providerList.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">
+        <img
+          src="Image/logo 2.png"
+          alt="SERVIIO Logo"
+          style="height: 30px; width: 30px; border-radius: 50%"
+        />
+        <span>SERVIIO</span>
+      </div>
+      <ul class="nav-links">
+        <li>
+          <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+        </li>
+        <li>
+          <a href="serviceArea.html"
+            ><i class="fa-solid fa-map-location-dot"></i> Service Area</a
+          >
+        </li>
+        <li>
+          <a href="providerList.html" class="active"
+            ><i class="fa-solid fa-users"></i> Provider</a
+          >
+        </li>
+        <li>
+          <a href="bookmark.html"
+            ><i class="fa-solid fa-bookmark"></i> Bookmark</a
+          >
+        </li>
+        <li>
+          <a href="profile.html"
+            ><i class="fa-solid fa-circle-user"></i> Profile</a
+          >
+        </li>
+        <li>
+          <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="badge">3</span>
+          </div>
+        </li>
+      </ul>
+    </header>
+
+    <div class="main-container">
+      <div class="search-filter-section">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name or skill..."
+          />
+        </div>
+
+        <div class="filters">
+          <select id="categoryFilter" class="filter-dropdown">
+            <option value="">All Categories</option>
+            <option value="Electrician">Electrician</option>
+            <option value="Plumber">Plumber</option>
+            <option value="Cleaner">Cleaner</option>
+            <option value="Painter">Painter</option>
+          </select>
+
+          <select id="areaFilter" class="filter-dropdown">
+            <option value="">All Areas</option>
+            <option value="Uttara">Uttara</option>
+            <option value="Mirpur">Mirpur</option>
+            <option value="Gulshan">Gulshan</option>
+            <option value="Dhanmondi">Dhanmondi</option>
+          </select>
+
+          <select id="ratingFilter" class="filter-dropdown">
+            <option value="">All Ratings</option>
+            <option value="4.5">4.5+ Stars</option>
+            <option value="4.0">4.0+ Stars</option>
+            <option value="3.0">3.0+ Stars</option>
+          </select>
+
+          <button id="clearBtn" class="clear-btn">
+            <i class="fa-solid fa-rotate-right"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="provider-grid" id="providerGrid">
+        <p style="text-align: center; width: 100%; padding: 40px; color: #666">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px"></i
+          ><br /><br />
+          Loading verified providers from database...
+        </p>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-logo">
+          <i class="fa-solid fa-hurricane"></i> SERVIIO
+        </div>
+
+        <div class="footer-links-grid">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><a href="#">Landing Page</a></li>
+              <li><a href="#">Popup Builder</a></li>
+              <li><a href="#">Web-design</a></li>
+              <li><a href="#">Content</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Use Cases</h4>
+            <ul>
+              <li><a href="#">Web-designers</a></li>
+              <li><a href="#">Marketers</a></li>
+              <li><a href="#">Small Business</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Resources</h4>
+            <ul>
+              <li><a href="#">Academy</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Themes</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">FAQs</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Let's do it!</h4>
+            <div class="footer-socials">
+              <i class="fa-brands fa-facebook-f"></i>
+              <i class="fa-brands fa-twitter"></i>
+              <i class="fa-brands fa-instagram"></i>
+              <i class="fa-brands fa-linkedin-in"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="legal-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Sales and Refunds</a>
+          <a href="#">Legal</a>
+        </div>
+        <div class="copyright">© 2026 SERVIIO All Rights Reserved</div>
+      </div>
+    </footer>
+
+    <script src="js/providerList.js"></script>
+  </body>
+</html>

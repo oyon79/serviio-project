@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Home Dashboard</title>
+
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/home.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">
+        <img
+          src="Image/logo 2.png"
+          alt="SERVIIO Logo"
+          style="height: 30px; width: 30px; border-radius: 50%"
+        />
+        <span>SERVIIO</span>
+      </div>
+      <ul class="nav-links">
+        <li>
+          <a href="home.html" class="active"
+            ><i class="fa-solid fa-house"></i> Home</a
+          >
+        </li>
+        <li>
+          <a href="serviceArea.html"
+            ><i class="fa-solid fa-map-location-dot"></i> Service Area</a
+          >
+        </li>
+        <li>
+          <a href="providerList.html"
+            ><i class="fa-solid fa-users"></i> Provider</a
+          >
+        </li>
+        <li>
+          <a href="bookmark.html"
+            ><i class="fa-solid fa-bookmark"></i> Bookmark</a
+          >
+        </li>
+        <li>
+          <a href="profile.html"
+            ><i class="fa-solid fa-circle-user"></i> Profile</a
+          >
+        </li>
+        <li>
+          <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="badge">3</span>
+          </div>
+        </li>
+      </ul>
+    </header>
+
+    <main class="home-main">
+      <div class="sidebar">
+        <div>
+          <h3 class="section-title">
+            <i class="fa-solid fa-magnifying-glass"></i> Explore the area
+          </h3>
+          <input
+            type="text"
+            class="location-input"
+            placeholder="Write the location name"
+          />
+        </div>
+
+        <div>
+          <h3 class="section-title">
+            <i class="fa-solid fa-list-ul"></i> Select the type of service
+          </h3>
+          <div class="service-grid">
+            <button class="service-btn" data-service="Electrician">
+              <i class="fa-solid fa-bolt"></i> Electrician
+            </button>
+            <button class="service-btn" data-service="Plumber">
+              <i class="fa-solid fa-faucet-drip"></i> Plumber
+            </button>
+            <button class="service-btn" data-service="Cleaner">
+              <i class="fa-solid fa-broom"></i> Cleaner
+            </button>
+            <button class="service-btn" data-service="repair">
+              <i class="fa-solid fa-hammer"></i> Repair
+            </button>
+            <button class="service-btn" data-service="Painter">
+              <i class="fa-solid fa-paint-roller"></i> Painting
+            </button>
+            <button class="service-btn" data-service="carpenter">
+              <i class="fa-solid fa-chair"></i> Carpenter
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <select class="workload-select" id="workload">
+            <option value="" disabled selected>Pick workload</option>
+            <option value="light">Light Workload</option>
+            <option value="moderate">Moderate Workload</option>
+            <option value="hard">Hard Workload</option>
+          </select>
+        </div>
+
+        <button class="search-btn" id="searchBtn">Search Area</button>
+      </div>
+
+      <div class="map-container">
+        <div id="map"></div>
+
+        <div class="map-overlay-bottom">
+          <div class="provider-info">
+            <h4><i class="fa-solid fa-location-dot"></i> Service provider</h4>
+            <p>Find verified service providers near you</p>
+          </div>
+          <div>
+            <button
+              class="location-btn"
+              onclick="map.setView([23.8223, 90.3966], 14)"
+            >
+              <i class="fa-solid fa-location-arrow"></i> Your Location
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-logo">
+          <i class="fa-solid fa-hurricane"></i> SERVIIO
+        </div>
+
+        <div class="footer-links-grid">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul>
+              <li><a href="#">Landing Page</a></li>
+              <li><a href="#">Popup Builder</a></li>
+              <li><a href="#">Web-design</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Use Cases</h4>
+            <ul>
+              <li><a href="#">Web-designers</a></li>
+              <li><a href="#">Marketers</a></li>
+              <li><a href="#">Small Business</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">FAQs</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="legal-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Sales and Refunds</a>
+        </div>
+        <div class="copyright">© 2026 SERVIIO All Rights Reserved</div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      // Initialize Map centered near Matikata/Mirpur (Dhaka)
+      const map = L.map("map").setView([23.8223, 90.3966], 14);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap",
+      }).addTo(map);
+
+      // Dummy Data for Providers (Later, we will fetch this from the API just like ProviderList!)
+      const dummyProviders = [
+        {
+          lat: 23.825,
+          lng: 90.395,
+          type: "Electrician",
+          name: "Raju Electric",
+        },
+        { lat: 23.818, lng: 90.4, type: "Plumber", name: "Quick Plumb" },
+        {
+          lat: 23.828,
+          lng: 90.39,
+          type: "Cleaner",
+          name: "Fresh Home Cleaners",
+        },
+        { lat: 23.82, lng: 90.388, type: "Painter", name: "Color Pros" },
+        { lat: 23.83, lng: 90.402, type: "carpenter", name: "WoodWorks" },
+      ];
+
+      let currentMarkers = [];
+      let selectedService = null;
+
+      // Handle Service Selection (Clickable Grid)
+      const serviceBtns = document.querySelectorAll(".service-btn");
+      serviceBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          serviceBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          selectedService = btn.getAttribute("data-service");
+        });
+      });
+
+      // Handle Search Button Click
+      document.getElementById("searchBtn").addEventListener("click", () => {
+        const workload = document.getElementById("workload").value;
+
+        if (!selectedService) {
+          alert("Please select a service type first.");
+          return;
+        }
+        if (!workload) {
+          alert("Please pick a workload option.");
+          return;
+        }
+
+        // Clear old markers
+        currentMarkers.forEach((marker) => map.removeLayer(marker));
+        currentMarkers = [];
+
+        // Filter dummy data and drop pins
+        const filtered = dummyProviders.filter(
+          (p) => p.type === selectedService,
+        );
+
+        if (filtered.length === 0) {
+          alert(`No ${selectedService} found in this area right now.`);
+        } else {
+          filtered.forEach((provider) => {
+            const marker = L.marker([provider.lat, provider.lng])
+              .addTo(map)
+              .bindPopup(
+                `<b>${provider.name}</b><br>Accepts ${workload} workloads.`,
+              );
+            currentMarkers.push(marker);
+          });
+
+          // Pan map to the first result
+          map.setView([filtered[0].lat, filtered[0].lng], 15);
+        }
+      });
+    </script>
+  </body>
+</html>

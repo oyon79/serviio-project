@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - SERVIIO</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/login.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="background-overlay">
+      <div class="login-container">
+        <div class="login-form-section">
+          <div class="header-row">
+            <h1>Login</h1>
+            <div class="logo-icon">
+              <img
+                src="Image/logo 2.png"
+                alt="Logo"
+                style="width: 40px; height: 40px; border-radius: 50%"
+              />
+            </div>
+          </div>
+
+          <form id="loginForm">
+            <div class="input-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                placeholder="username@gmail.com"
+                required
+              />
+            </div>
+
+            <div class="input-group">
+              <label for="password">Password</label>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  required
+                />
+                <i class="far fa-eye-slash toggle-password"></i>
+              </div>
+            </div>
+
+            <div class="forgot-link">
+              <a href="#">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn-signin">Sign In &rarr;</button>
+          </form>
+
+          <div class="divider">
+            <span>Or Continue With</span>
+          </div>
+
+          <div class="social-login">
+            <button class="social-btn"><i class="fab fa-google"></i></button>
+            <button class="social-btn"><i class="fab fa-github"></i></button>
+            <button class="social-btn">
+              <i class="fab fa-facebook-f"></i>
+            </button>
+          </div>
+
+          <p class="register-text">
+            Don't have an account yet? <a href="role.html">Register for free</a>
+          </p>
+        </div>
+
+        <div class="login-illustration-section">
+          <img
+            src="https://img.magnific.com/free-vector/access-control-system-abstract-concept_335657-3180.jpg?semt=ais_hybrid&w=740&q=80"
+            alt="Worker Illustration"
+            class="main-illustration"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault(); // Stop page refresh
+
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+
+          try {
+            // Call the Node.js Backend Login API
+            const response = await fetch(
+              "http://localhost:5000/api/auth/login",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: email,
+                  password: password,
+                }),
+              },
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+              // Save JWT token and User Info securely in Local Storage
+              localStorage.setItem("serviio_token", data.token);
+              localStorage.setItem("serviio_user", JSON.stringify(data.user));
+
+              alert("Welcome back, " + data.user.first_name + "!");
+
+              // Smart Routing: Send to correct dashboard based on user role
+              if (data.user.role === "provider") {
+                window.location.href = "profileBooking.html"; // Provider Dashboard
+              } else if (data.user.role === "admin") {
+                window.location.href = "admin.html"; // Admin Panel
+              } else {
+                window.location.href = "home.html"; // General Customer Dashboard
+              }
+            } else {
+              alert("Login failed: " + data.message); // Invalid credentials
+            }
+          } catch (error) {
+            console.error("API Error:", error);
+            alert(
+              "Cannot connect to the server. Ensure the Node.js backend is running!",
+            );
+          }
+        });
+    </script>
+  </body>
+</html>

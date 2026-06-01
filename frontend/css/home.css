@@ -1,0 +1,181 @@
+/* =========================================
+   HOME SPECIFIC CSS (css/home.css)
+========================================= */
+
+/* Main Content Area Layout */
+.home-main {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 140px); /* Fill space between header and footer */
+}
+
+/* Left Sidebar */
+.sidebar {
+    width: 320px;
+    background-color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    z-index: 10;
+    overflow-y: auto;
+}
+
+.section-title {
+    font-size: 14px;
+    color: #003393;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.location-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    font-family: inherit;
+}
+
+/* Service Grid */
+.service-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.service-btn {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #333;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.service-btn i {
+    font-size: 20px;
+    color: #555;
+    transition: color 0.2s;
+}
+
+.service-btn:hover {
+    border-color: #003393;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.service-btn.active {
+    border-color: #0051e7;
+    background-color: #f0f4ff;
+    color: #0051e7;
+    font-weight: 600;
+}
+
+.service-btn.active i {
+    color: #0051e7;
+}
+
+/* Dropdown */
+.workload-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    background-color: white;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* Search Button */
+.search-btn {
+    background-color: #003393;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-btn:hover {
+    background-color: #0051e7;
+}
+
+/* Map Area */
+.map-container {
+    flex: 1;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Keep Leaflet below the sidebar */
+}
+
+/* Overlays on top of Map */
+.map-overlay-bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 400; /* Leaflet UI layer sits around 400 */
+    pointer-events: none; /* Let clicks pass through to map */
+}
+
+.provider-info {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    pointer-events: auto; /* Re-enable clicks for the card */
+}
+
+.provider-info h4 {
+    color: #0051e7;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.provider-info p {
+    font-size: 12px;
+    color: #666;
+}
+
+.location-btn {
+    background-color: #003393;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: background 0.2s;
+}
+
+.location-btn:hover {
+    background-color: #0051e7;
+}

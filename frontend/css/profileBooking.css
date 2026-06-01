@@ -1,0 +1,151 @@
+/* =========================================
+   PROVIDER BOOKING CSS (css/profileBooking.css)
+========================================= */
+
+.main-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    min-height: 80vh;
+    gap: 50px;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    width: 250px;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #003393;
+}
+
+.side-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: color 0.3s;
+}
+
+.side-link i {
+    font-size: 20px;
+    width: 25px;
+}
+
+.side-link.active {
+    color: #003393;
+}
+
+.side-link:hover {
+    color: #0051e7;
+}
+
+/* --- Content Area --- */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    border-left: 1px solid #e2e8f0;
+    padding-left: 50px;
+}
+
+/* --- Booking Cards --- */
+.booking-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 15px;
+}
+
+.card-header h3 {
+    font-size: 18px;
+    color: #0f172a;
+    margin-bottom: 5px;
+}
+
+.status-badge {
+    background: #e0f2fe;
+    color: #0284c7;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.working { background: #dcfce7; color: #16a34a; }
+.status-badge.completed { background: #f1f5f9; color: #64748b; }
+
+.booking-details p {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.booking-details strong {
+    color: #1e293b;
+}
+
+/* --- Handshake Verification Area --- */
+.handshake-area {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.handshake-input {
+    padding: 10px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    width: 120px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 4px;
+    outline: none;
+}
+
+.handshake-input:focus {
+    border-color: #003393;
+}
+
+.btn-verify {
+    background: #003393;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-verify:hover {
+    background: #0051e7;
+}
