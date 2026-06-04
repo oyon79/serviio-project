@@ -210,11 +210,11 @@
 /* Card Buttons */
 .btns {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 10px;
 }
 
-.msg-btn, .call-btn, .book-btn {
+.book-btn {
     padding: 10px;
     border: none;
     border-radius: 8px;
@@ -226,19 +226,6 @@
     gap: 6px;
     transition: background 0.2s;
     font-size: 13px;
-}
-
-.msg-btn, .call-btn {
-    background: #e2e8f0;
-    color: #334155;
-}
-
-.msg-btn:hover, .call-btn:hover {
-    background: #cbd5e1;
-}
-
-.book-btn {
-    grid-column: span 2; /* Makes the booking button take up the full width below msg/call */
     background: #003393;
     color: white;
 }

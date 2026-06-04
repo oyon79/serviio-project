@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Account Profile</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/profile.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="#" class="active">My Profile</a></li>
+      </ul>
+    </nav>
+
+    <main class="profile-wrapper">
+      <div class="settings-card">
+        <h3>Manage Personal Parameters</h3>
+        <form id="profileUpdateForm">
+          <div class="form-group">
+            <label>Primary Phone Association</label>
+            <input type="text" id="profilePhone" value="01827364521" readonly />
+          </div>
+          <div class="form-group">
+            <label>System Email Domain</label>
+            <input
+              type="email"
+              id="profileEmail"
+              value="user@domain.com"
+              readonly
+            />
+          </div>
+          <button
+            type="button"
+            class="btn-save-settings"
+            onclick="saveChanges()"
+          >
+            Commit Structural Changes
+          </button>
+        </form>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+      function saveChanges() {
+        alert(
+          "Profile settings committed successfully inside local environment layers.",
+        );
+      }
+    </script>
+  </body>
+</html>

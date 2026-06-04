@@ -1,0 +1,119 @@
+/* css/providerInfo1.css */
+.info-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+    flex: 1;
+}
+
+.profile-main-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    padding: 40px;
+    border: 1px solid var(--border-color);
+}
+
+.provider-identity {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+}
+
+.provider-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-blue);
+}
+
+.name-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.verification-badge {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.specialty {
+    font-size: 1.2rem;
+    color: var(--primary-blue);
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.rating-row {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+.rating-row span {
+    color: var(--text-muted);
+    font-weight: normal;
+    font-size: 0.9rem;
+}
+
+.text-warning {
+    color: var(--accent-yellow);
+}
+
+.bio-section h3 {
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.bio-section p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.action-row {
+    display: flex;
+    gap: 20px;
+}
+
+.btn-bookmark {
+    padding: 14px 24px;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #555;
+    transition: all 0.2s;
+}
+
+.btn-bookmark:hover {
+    background-color: #eee;
+}
+
+.btn-book-now {
+    flex: 1;
+    padding: 14px;
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-book-now:hover {
+    background-color: var(--secondary-blue);
+}

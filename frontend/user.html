@@ -3,146 +3,165 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Your Account - SERVIIO</title>
+    <title>SERVIIO - Customer Registration</title>
     <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/user.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
   </head>
   <body>
-    <div class="signup-container">
-      <div class="header">
-        <div class="logo">
-          <img src="Image/logo 2.png" alt="SERVIIO Logo" />
-          <span>SERVIIO</span>
-        </div>
-        <h1>Create Your Account</h1>
-        <p class="join-text">Join Serviio as a Service User</p>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="providerList.html">Find Providers</a></li>
+        <li><a href="login.html" class="active">Login / Register</a></li>
+      </ul>
+    </nav>
 
-        <div class="social-auth">
-          <a href="#"><i class="fab fa-facebook-f"></i></a>
-          <a href="#"><i class="fab fa-google"></i></a>
-          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+    <main class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h2>Join as a Customer</h2>
+          <p>Create an account to hire verified professionals.</p>
         </div>
 
-        <div class="divider">
-          <span>or register with email</span>
+        <form id="customerRegisterForm">
+          <div style="display: flex; gap: 10px">
+            <div class="form-group" style="flex: 1">
+              <label for="first_name">First Name</label>
+              <div class="input-wrapper">
+                <i class="fas fa-user input-icon"></i>
+                <input
+                  type="text"
+                  id="first_name"
+                  placeholder="John"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group" style="flex: 1">
+              <label for="last_name">Last Name</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  id="last_name"
+                  placeholder="Doe"
+                  required
+                  style="padding-left: 15px"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <div class="input-wrapper">
+              <i class="fas fa-phone input-icon"></i>
+              <input type="tel" id="phone" placeholder="01XXXXXXXXX" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrapper">
+              <i class="fas fa-envelope input-icon"></i>
+              <input
+                type="email"
+                id="email"
+                placeholder="example@serviio.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <i class="fas fa-lock input-icon"></i>
+              <input
+                type="password"
+                id="password"
+                placeholder="At least 6 characters"
+                required
+              />
+            </div>
+          </div>
+
+          <div
+            id="errorBox"
+            class="alert-box error"
+            style="display: none"
+          ></div>
+          <div
+            id="successBox"
+            class="alert-box success"
+            style="display: none"
+          ></div>
+
+          <button type="submit" class="btn-auth">
+            Create Customer Account
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Already have an account? <a href="login.html">Sign In here</a></p>
+          <p style="margin-top: 10px">
+            <a href="role.html">← Back to Role Selection</a>
+          </p>
         </div>
       </div>
-
-      <form class="signup-form" id="registerForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <input type="text" id="firstName" required />
-          </div>
-          <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" required />
-        </div>
-
-        <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input type="tel" id="phone" required />
-        </div>
-
-        <div class="form-group password-wrapper">
-          <label for="password">Password</label>
-          <input type="password" id="password" required />
-          <i class="far fa-eye toggle-password"></i>
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input type="password" id="confirmPassword" required />
-        </div>
-
-        <div class="checkbox-group">
-          <div class="checkbox-item">
-            <input type="checkbox" id="terms" required />
-            <label for="terms"
-              >I agree to the Terms of Service and Privacy Policy</label
-            >
-          </div>
-          <div class="checkbox-item">
-            <input type="checkbox" id="updates" />
-            <label for="updates"
-              >Send me updates about new services and features</label
-            >
-          </div>
-        </div>
-
-        <button type="submit" class="submit-btn">
-          COMPLETE YOUR REGISTRATION &rarr;
-        </button>
-      </form>
-
-      <div class="footer-link">
-        <a href="role.html">&larr; Go to Selection page</a>
-      </div>
-    </div>
+    </main>
 
     <script>
       document
-        .getElementById("registerForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault(); // Stop the default page refresh
+        .getElementById("customerRegisterForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const errorBox = document.getElementById("errorBox");
+          const successBox = document.getElementById("successBox");
+          errorBox.style.display = "none";
 
-          const firstName = document.getElementById("firstName").value.trim();
-          const lastName = document.getElementById("lastName").value.trim();
-          const email = document.getElementById("email").value.trim();
-          const phone = document.getElementById("phone").value.trim();
-          const password = document.getElementById("password").value;
-          const confirmPassword =
-            document.getElementById("confirmPassword").value;
+          const payload = {
+            first_name: document.getElementById("first_name").value.trim(),
+            last_name: document.getElementById("last_name").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value,
+            role: "customer", // Hardcoded role
+          };
 
-          // Password Validation
-          if (password !== confirmPassword) {
-            alert("Passwords do not match! Please try again.");
-            return;
+          if (payload.password.length < 6) {
+            errorBox.textContent =
+              "Password must be at least 6 characters long.";
+            return (errorBox.style.display = "block");
           }
 
           try {
-            // Call the Node.js Backend API
             const response = await fetch(
               "http://localhost:5000/api/auth/register",
               {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  first_name: firstName,
-                  last_name: lastName,
-                  email: email,
-                  phone: phone,
-                  password: password,
-                  role: "customer", // Defaults to customer on this page
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
               },
             );
-
             const data = await response.json();
 
-            if (data.success) {
-              alert("Registration Successful! Redirecting to login...");
-              window.location.href = "login.html"; // Route to login
+            if (response.ok || data.success) {
+              successBox.textContent =
+                "Registration successful! Redirecting to login...";
+              successBox.style.display = "block";
+              setTimeout(() => (window.location.href = "login.html"), 2000);
             } else {
-              alert("Registration failed: " + data.message); // e.g., Email already exists
+              errorBox.textContent = data.message || "Registration failed.";
+              errorBox.style.display = "block";
             }
           } catch (error) {
-            console.error("API Error:", error);
-            alert(
-              "Cannot connect to the server. Make sure your Node.js backend is running!",
-            );
+            errorBox.textContent = "Server error. Please try again later.";
+            errorBox.style.display = "block";
           }
         });
     </script>

@@ -61,13 +61,7 @@
             <span>Or Continue With</span>
           </div>
 
-          <div class="social-login">
-            <button class="social-btn"><i class="fab fa-google"></i></button>
-            <button class="social-btn"><i class="fab fa-github"></i></button>
-            <button class="social-btn">
-              <i class="fab fa-facebook-f"></i>
-            </button>
-          </div>
+          <!-- Social login removed (not implemented) -->
 
           <p class="register-text">
             Don't have an account yet? <a href="role.html">Register for free</a>
@@ -85,54 +79,50 @@
     </div>
 
     <script>
+      // Single login handler: standardizes token storage and redirects
       document
         .getElementById("loginForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault(); // Stop page refresh
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
 
           try {
-            // Call the Node.js Backend Login API
             const response = await fetch(
               "http://localhost:5000/api/auth/login",
               {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  email: email,
-                  password: password,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
               },
             );
 
             const data = await response.json();
 
-            if (data.success) {
-              // Save JWT token and User Info securely in Local Storage
+            if (response.ok && data.success) {
+              // Use consistent keys across the frontend
               localStorage.setItem("serviio_token", data.token);
               localStorage.setItem("serviio_user", JSON.stringify(data.user));
 
-              alert("Welcome back, " + data.user.first_name + "!");
-
-              // Smart Routing: Send to correct dashboard based on user role
-              if (data.user.role === "provider") {
-                window.location.href = "profileBooking.html"; // Provider Dashboard
-              } else if (data.user.role === "admin") {
-                window.location.href = "admin.html"; // Admin Panel
+              // Redirect based on role
+              const role = ((data.user && data.user.role) || "").toLowerCase();
+              if (role === "provider") {
+                window.location.href = "profileBooking.html";
+              } else if (role === "admin") {
+                window.location.href = "admin.html";
               } else {
-                window.location.href = "home.html"; // General Customer Dashboard
+                window.location.href = "home.html";
               }
             } else {
-              alert("Login failed: " + data.message); // Invalid credentials
+              alert(
+                data.message || "Login failed. Please check your credentials.",
+              );
             }
-          } catch (error) {
-            console.error("API Error:", error);
+          } catch (err) {
+            console.error("Login error:", err);
             alert(
-              "Cannot connect to the server. Ensure the Node.js backend is running!",
+              "Cannot reach server. Make sure backend is running on port 5000.",
             );
           }
         });

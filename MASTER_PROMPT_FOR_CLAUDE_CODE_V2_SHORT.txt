@@ -1,0 +1,101 @@
+CLAUDE CODE MASTER PROMPT (V2 - SHORT OPERATIONAL)
+
+Role
+- You are the lead engineer responsible for finishing this Serviio project to production-grade quality.
+
+Project goal
+- Deliver a real-time, secure, dynamic service marketplace connecting customers and verified providers.
+- Fix all remaining UI, backend logic, database consistency, and missing features.
+
+Critical outcomes
+1) End-to-end user journeys work with no broken links/buttons.
+2) Auth and authorization are secure and role-correct.
+3) DB schema is migration-driven and consistent across environments.
+4) Verification pipeline is real-world (NID + police + skill + audit trail).
+5) Admin moderation workflow is complete.
+6) Real-time tracking and emergency fallback are robust.
+7) Tests cover all critical flows.
+
+Current known architecture
+- Backend: Node.js + Express + mysql2/promise + JWT + bcrypt + Socket.IO
+- Frontend: static HTML/CSS/JS pages
+- DB: MySQL
+
+Current core pages
+- login, role, customer register, provider register
+- home, provider list/detail, schedule, payment
+- provider dashboard, emergency, admin
+
+Current key APIs
+- Auth: POST /api/auth/register, POST /api/auth/login
+- Providers: GET /api/providers
+- Bookings: POST /api/bookings/create, GET /api/bookings/:id, GET /api/bookings/provider, POST|PUT /api/bookings/verify-handshake
+- Emergency: POST /api/emergency
+- Admin: GET /api/admin/providers, POST /api/admin/providers/:profileId/verify
+
+Known issues/gaps to solve first
+- Schema drift around provider_profiles.is_verified across environments.
+- Some pages still use placeholders and dummy data.
+- Home map uses dummy providers, not DB-driven providers.
+- Payment is simulated only.
+- Verification is currently basic format checks, not real KYC.
+- Need stronger ownership checks for sensitive actions.
+
+Non-negotiable real-world verification requirements
+- Real NID verification integration (provider identity)
+- Police verification flow
+- Skill/certificate verification flow
+- Verification status lifecycle with audit logs
+- Document upload + secure storage + review process
+
+Execution plan (strict)
+Phase 1: Audit and stabilize
+- Read full repo, list broken UI actions/routes, list schema mismatches.
+- Confirm route ordering and protected route behavior.
+- Create migration scripts to unify schema.
+
+Phase 2: Backend hardening
+- Add request validation schemas.
+- Enforce ownership + role checks on all sensitive routes.
+- Standardize error responses and central error middleware.
+- Add rate limiting and security middleware.
+
+Phase 3: Verification system
+- Implement provider verification module:
+  - NID validation service integration
+  - police clearance docs and review states
+  - skill verification docs/tests and badges
+  - audit logs for every review decision
+
+Phase 4: Frontend completion
+- Replace all placeholder/dummy data with real API calls.
+- Fix navigation dead-ends and role-only visibility.
+- Improve UX states: loading/empty/error/retry.
+- Build complete admin verification dashboard UX.
+
+Phase 5: Realtime + emergency
+- Add socket auth and payload validation.
+- Persist provider location snapshots/history.
+- Improve emergency escalation and fallback reliability.
+
+Phase 6: Testing + QA
+- Add unit + integration + e2e tests for critical journeys.
+- Validate:
+  - customer register/login/book
+  - provider register/login/job handling
+  - handshake verification
+  - admin provider verification
+  - emergency flow
+- Ensure no regressions across pages.
+
+Definition of done
+- All major user journeys pass manually and via tests.
+- No critical/high security issues.
+- DB schema consistent via migrations.
+- Verification system is real, auditable, and role-governed.
+- UI is coherent, responsive, and professional.
+
+Delivery constraints
+- Keep backward compatibility where feasible.
+- If changing payload contracts, update frontend and docs together.
+- Prefer clean architecture over quick hacks.

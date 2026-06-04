@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Urgent Emergency SOS</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/emergency.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="emergency.html" class="active">SOS Help</a></li>
+      </ul>
+    </nav>
+
+    <main class="emergency-wrapper">
+      <div class="sos-card">
+        <div class="pulse-ring">
+          <i class="fas fa-exclamation-triangle panic-icon"></i>
+        </div>
+        <h2>Emergency Support Fallback</h2>
+        <p>
+          No verified professional responded to your immediate service handshake
+          request? Initiate fallback sequence to transmit task logs into
+          regional community support channels.
+        </p>
+        <button class="btn-panic-trigger" onclick="activatePanicFallback()">
+          Broadcast to Facebook Assist
+        </button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+      async function activatePanicFallback() {
+        const token = localStorage.getItem("serviio_token");
+
+        const payload = {
+          message: "Emergency request from user",
+          location: "Unknown",
+        };
+
+        try {
+          const resp = await fetch("http://localhost:5000/api/emergency", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : undefined,
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await resp.json();
+          if (resp.ok && data.communityLink) {
+            alert(
+              "SOS Fallback Initialized. Redirecting to community support.",
+            );
+            window.location.href = data.communityLink;
+          } else {
+            alert(
+              "SOS: Could not reach community service. Redirecting to Facebook fallback.",
+            );
+            window.location.href = "https://facebook.com";
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error. Redirecting to Facebook fallback.");
+          window.location.href = "https://facebook.com";
+        }
+      }
+    </script>
+  </body>
+</html>

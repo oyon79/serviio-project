@@ -4,38 +4,61 @@ const jwt = require("jsonwebtoken");
 
 // 1. User Registration
 exports.register = async (req, res) => {
-  const { first_name, last_name, email, phone, password, role } = req.body;
+  // Now explicitly capturing 'nid' alongside your other parameters
+  const { first_name, last_name, email, phone, password, role, nid } = req.body;
 
   try {
-    // Check if user already exists by email or phone
+    // 1. Basic Backend Validation
+    if (!first_name || !last_name || !email || !phone || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All basic fields are required." });
+    }
+
+    // 2. Strict NID Verification for Providers ONLY
+    if (role === "provider") {
+      if (!nid) {
+        return res.status(400).json({
+          success: false,
+          message: "NID is required for Service Providers.",
+        });
+      }
+      const nidRegex = /^(?:\d{10}|\d{13}|\d{17})$/;
+      if (!nidRegex.test(nid)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid Bangladesh NID format." });
+      }
+    }
+
+    // 3. Check if user already exists by email or phone
     const [existingUsers] = await db.query(
       "SELECT * FROM users WHERE email = ? OR phone = ?",
       [email, phone],
     );
     if (existingUsers.length > 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "User with this email or phone already exists.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "User with this email or phone already exists.",
+      });
     }
 
-    // Hash the password securely
+    // 4. Hash the password securely
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert into database
+    // 5. Insert into users table
     const [result] = await db.query(
       "INSERT INTO users (first_name, last_name, email, phone, password, role) VALUES (?, ?, ?, ?, ?, ?)",
       [first_name, last_name, email, phone, hashedPassword, role || "customer"],
     );
 
-    // If the user registered as a provider, create an empty profile for them
+    // 6. If Provider, create secure profile with NID
+    // Insert without `is_verified` to be compatible with older schemas
     if (role === "provider") {
       await db.query(
-        "INSERT INTO provider_profiles (user_id, service_type, location) VALUES (?, ?, ?)",
-        [result.insertId, "Unspecified", "Unspecified"],
+        "INSERT INTO provider_profiles (user_id, service_type, location, nid_number) VALUES (?, ?, ?, ?)",
+        [result.insertId, "Unspecified", "Unspecified", nid],
       );
     }
 
@@ -44,17 +67,15 @@ exports.register = async (req, res) => {
       .json({ success: true, message: "User registered successfully!" });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Server error during registration.",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Server error during registration.",
+      error: error.message,
+    });
   }
 };
 
-// 2. User Login
+// 2. User Login (Maintained exactly as you built it)
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -71,7 +92,7 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    // Compare the provided password with the hashed password in the database
+    // Compare the provided password with the hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res

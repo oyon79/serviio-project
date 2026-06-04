@@ -1,0 +1,61 @@
+/* css/profile.css */
+.profile-wrapper {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 0 20px;
+    flex: 1;
+}
+
+.settings-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 35px;
+    border: 1px solid var(--border-color);
+}
+
+.settings-card h3 {
+    margin-bottom: 25px;
+    color: #333;
+    border-bottom: 2px solid var(--primary-blue);
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    color: #666;
+    font-size: 1rem;
+}
+
+.btn-save-settings {
+    width: 100%;
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-save-settings:hover {
+    background-color: var(--secondary-blue);
+}

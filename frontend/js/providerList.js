@@ -21,7 +21,7 @@ async function fetchProviders() {
         name: `${p.first_name} ${p.last_name}`,
         cat: p.service_type,
         area: p.location,
-        rate: parseFloat(p.rating),
+        rate: isNaN(parseFloat(p.rating)) ? 0 : parseFloat(p.rating),
         // We mock reviews for now since we don't have a reviews table yet
         reviews: Math.floor(Math.random() * 50) + 10,
         status: p.is_available ? "Online" : "Offline",
@@ -64,9 +64,7 @@ function render(data) {
                 </div>
                 <span class="status-dot ${p.status.toLowerCase()}">● ${p.status}</span>
                 <div class="btns">
-                    <button class="msg-btn"><i class="fa-solid fa-message"></i> Message</button>
-                    <button class="call-btn"><i class="fa-solid fa-phone"></i> Call</button>
-                    <button class="book-btn" onclick="window.location.href='schedule.html?provider_id=${p.id}'"><i class="fa-solid fa-calendar-check"></i> Booking</button>
+                  <button class="book-btn" onclick="window.location.href='schedule.html?provider_id=${p.id}'"><i class="fa-solid fa-calendar-check"></i> Booking</button>
                 </div>
             </div>
         </div>

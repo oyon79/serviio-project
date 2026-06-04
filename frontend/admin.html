@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SERVIIO - Admin</title>
+    <link rel="stylesheet" href="css/global.css" />
+  </head>
+  <body>
+    <main style="padding: 20px; max-width: 900px; margin: auto">
+      <h1>Admin - Provider Verification</h1>
+      <div id="providersList">Loading providers...</div>
+    </main>
+
+    <script>
+      // Client-side admin guard: redirect if not admin
+      (function ensureAdmin() {
+        const stored = localStorage.getItem("serviio_user");
+        const user = stored ? JSON.parse(stored) : null;
+        if (!user || (user.role || "").toLowerCase() !== "admin") {
+          // Not authorized
+          window.location.href = "login.html";
+        }
+      })();
+
+      async function fetchProviders() {
+        const token = localStorage.getItem("serviio_token");
+        try {
+          const resp = await fetch(
+            "http://localhost:5000/api/admin/providers",
+            {
+              headers: { Authorization: token ? `Bearer ${token}` : "" },
+            },
+          );
+          const data = await resp.json();
+          const container = document.getElementById("providersList");
+          if (!resp.ok)
+            return (container.innerText = data.message || "Failed to load");
+
+          container.innerHTML = data.data
+            .map(
+              (p) => `
+            <div style="padding:10px; border:1px solid #eee; margin-bottom:8px">
+              <div><strong>${p.first_name} ${p.last_name}</strong> (${p.email})</div>
+              <div>NID: ${p.nid_number || "N/A"} | Service: ${p.service_type || "N/A"}</div>
+              <div>Status: ${p.is_verified ? "Verified" : "Unverified"}</div>
+              ${p.is_verified ? "" : `<button onclick="verify(${p.profile_id})">Verify</button>`}
+            </div>
+          `,
+            )
+            .join("");
+        } catch (err) {
+          document.getElementById("providersList").innerText =
+            "Error: " + err.message;
+        }
+      }
+
+      async function verify(profileId) {
+        const token = localStorage.getItem("serviio_token");
+        const resp = await fetch(
+          `http://localhost:5000/api/admin/providers/${profileId}/verify`,
+          {
+            method: "POST",
+            headers: { Authorization: token ? `Bearer ${token}` : "" },
+          },
+        );
+        const data = await resp.json();
+        if (resp.ok) {
+          alert("Provider verified");
+          fetchProviders();
+        } else {
+          alert("Error: " + (data.message || "Failed"));
+        }
+      }
+
+      fetchProviders();
+    </script>
+  </body>
+</html>

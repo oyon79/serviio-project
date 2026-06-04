@@ -95,6 +95,25 @@
             </p>
           </div>
 
+          <div style="margin-bottom: 18px; text-align: left">
+            <label
+              for="jobLocationInput"
+              style="display: block; margin-bottom: 8px; font-weight: 600"
+              >Service location</label
+            >
+            <input
+              id="jobLocationInput"
+              type="text"
+              placeholder="Enter your service address"
+              style="
+                width: 100%;
+                padding: 12px 14px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
+          </div>
+
           <h4>Available Time Slots</h4>
           <div class="time-grid">
             <button class="time-slot">09:00–10:00</button>
@@ -234,8 +253,53 @@
       const nextBtn = document.getElementById("nextMonth");
       const modal = document.getElementById("emergencyModal");
       const emergencyBtn = document.getElementById("emergencyBtn");
+      const providerNameDisplay = document.getElementById(
+        "providerNameDisplay",
+      );
+      const providerRatingDisplay = document.getElementById(
+        "providerRatingDisplay",
+      );
+      const jobLocationInput = document.getElementById("jobLocationInput");
 
       let currentDate = new Date(); // Default to today's month/year
+      let selectedBookingDate = null;
+      let selectedBookingTime = null;
+      let selectedProviderServiceType = "Scheduled Maintenance";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const providerIdFromUrl = urlParams.get("provider_id");
+
+      async function loadProvider() {
+        if (!providerIdFromUrl) {
+          providerNameDisplay.innerText = "Provider: Not selected";
+          providerRatingDisplay.innerText = "--";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/providers/${providerIdFromUrl}`,
+          );
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            const provider = data.data;
+            providerNameDisplay.innerText = `Provider: ${provider.first_name} ${provider.last_name}`;
+            providerRatingDisplay.innerText =
+              provider.service_type || "Verified Provider";
+            selectedProviderServiceType =
+              provider.service_type || "Scheduled Maintenance";
+            if (!jobLocationInput.value) {
+              jobLocationInput.value = provider.location || "";
+            }
+          } else {
+            providerNameDisplay.innerText = "Provider: Not available";
+          }
+        } catch (error) {
+          console.error("Failed to load provider details", error);
+          providerNameDisplay.innerText = "Provider: Not available";
+        }
+      }
 
       function renderCalendar() {
         calendarGrid.innerHTML = "";
@@ -280,6 +344,9 @@
           const dateEl = document.createElement("div");
           dateEl.className = "date-cell";
           dateEl.innerText = i;
+          dateEl.dataset.year = year;
+          dateEl.dataset.month = month;
+          dateEl.dataset.day = i;
 
           // FIX: Add robust Event Listener for clicks
           dateEl.addEventListener("click", function () {
@@ -290,6 +357,11 @@
 
             // Add active class to ONLY the clicked cell
             this.classList.add("active");
+            selectedBookingDate = new Date(
+              Number(this.dataset.year),
+              Number(this.dataset.month),
+              Number(this.dataset.day),
+            );
           });
 
           calendarGrid.appendChild(dateEl);
@@ -318,10 +390,12 @@
             .querySelectorAll(".time-slot")
             .forEach((s) => s.classList.remove("selected"));
           slot.classList.add("selected");
+          selectedBookingTime = slot.textContent.trim();
         };
       });
 
       renderCalendar();
+      loadProvider();
 
       // --- 3. API INTEGRATION: Create Booking & Route to Payment ---
       document
@@ -332,11 +406,17 @@
           // Check if Date and Time are selected
           const selectedDateEl = document.querySelector(".date-cell.active");
           const selectedTimeEl = document.querySelector(".time-slot.selected");
+          const jobLocation = jobLocationInput.value.trim();
 
           if (!selectedDateEl || !selectedTimeEl) {
             alert(
               "Please select both a date from the calendar and a time slot.",
             );
+            return;
+          }
+
+          if (!jobLocation) {
+            alert("Please enter your service location.");
             return;
           }
 
@@ -354,14 +434,24 @@
           let providerId = urlParams.get("provider_id");
           if (!providerId) providerId = 1; // Fallback for testing if accessed directly
 
+          const bookingDateTime = new Date(selectedBookingDate || new Date());
+          const timeValue = selectedBookingTime || "09:00–10:00";
+          const [startTime] = timeValue.split("–");
+          const [hours, minutes] = startTime.trim().split(":").map(Number);
+          bookingDateTime.setHours(hours || 9, minutes || 0, 0, 0);
+
           // Prepare Booking Data
           const bookingData = {
             customer_id: currentUser.id,
             provider_id: parseInt(providerId),
-            service_type: "Scheduled Maintenance", // Placeholder
-            job_location: "Customer Registered Address", // Placeholder
+            service_type: selectedProviderServiceType,
+            job_location: jobLocation,
             is_emergency: false,
             estimated_price_range: "৳ 500 - ৳ 800",
+            booking_date: bookingDateTime
+              .toISOString()
+              .slice(0, 19)
+              .replace("T", " "),
             // Note: In the future, you can also send the selected date/time to your MySQL db!
           };
 

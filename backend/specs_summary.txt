@@ -1,0 +1,193 @@
+*** FILE: Serviio (1).pdf
+
+Md.Sahriar Hossain   0112230969  Mst Riya Akter Satu   0112310147  Md. Mahfujur Rahman   0112230483  Jahin Nowaz Sharoj   0112230482  Zannathun Noor Safa   011213133 Connecting You to Trusted  Services  1
+
+What Is Serviio? Serviio is an online platform that  connects people with professional  service providers, like plumbers,  electricians, cleaners, or painters, so  they can get home or office  services easily. 2
+
+Why Serviio?  When I moved to Dhaka and  rented a house, I faced many  problems getting basic  services. My electrician wasn’t  available, I needed a plumber  to fix my washroom, and I  wanted to paint some walls. It  was very difficult to find  reliable professionals. That’s  how Serviio came to be.  3
+
+Serviio  Features Real-Time Service Provider Discovery:  Users instantly find nearby technicians using live  GPS and smart distance filtering. 01  Smart Service Booking & Scheduling:  Instant bookings, scheduled appointments, and  automated reminders. 02  In-App Messaging & Calling:  Direct communication for faster clarification  and smoother service.  Emergency Fix (30–45 Min   Service):  Urgent response for electrical sparks, pipe bursts,  AC issues, and breakdowns. 03 04  Advanced Safety & Verification System:  ID verification, police verification form, technician 4-  digit verification code, SOS panic button. 05  4
+
+Rating, Behavior Tracking & Service Review:  Detailed feedback system to maintain trust and service  quality. 06  Favorite Technicians (Bookmark):  Users can save reliable technicians and rebook  anytime. 07  One-Click Repeat Booking:  Quickly book a previous service without  searching again.  Smart Notification System:  Push notifications for technician arrival, updates,  offers, safety alerts. 08 09  Community Support Network (Facebook Assist System):  If no technician is nearby   →   request is posted to Serviio’s Facebook  Support Page. Available service providers can respond and take the  job. 10   5 Serviio  Features
+
+6
+
+Thank You 7
+
+
+
+*** FILE: Serviio Unique Features.docx
+
+Serviio Unique Features:
+
+
+
+1. Live Service Tracking (Safa)
+
+
+
+After booking a provider, users can:
+
+
+
+Track provider location live
+
+See estimated arrival time
+
+Get status updates:
+
+Accepted
+
+On the way
+
+Working
+
+Completed
+
+
+
+Like food delivery tracking, but for home services.
+
+
+
+
+
+2. Emergency Quick Booking (30-40 mins) (Riya)
+
+
+
+A special emergency button for urgent problems:
+
+
+
+Electric short circuit
+
+Water leakage
+
+Lock issues
+
+Medical helper
+
+
+
+The request becomes high priority and alerts nearby providers instantly.
+
+
+
+
+
+3. AI-Based Price Estimation (Shoroj)
+
+
+
+Before booking, users get an estimated service cost based on:
+
+
+
+Service type
+
+Area/location
+
+Time required
+
+Previous market prices
+
+
+
+This reduces scams and increases trust.
+
+
+
+Example: Fan repair estimated cost: ৳400–৳600
+
+
+
+
+
+4. Skill Verification Badge and SOS panic button (Oyon)
+
+
+
+Providers must pass:
+
+
+
+Skill tests
+
+NID verification
+
+Experience checks
+
+
+
+Then they receive badges like:
+
+
+
+Verified Electrician
+
+Certified AC Technician
+
+Trusted Cleaner
+
+
+
+SOS panic button
+
+One tap sends an instant alert to:
+
+
+
+Emergency contacts
+
+Serviio support team
+
+Nearby authorities/admin (future scope)
+
+
+
+This increases trust and safety.
+
+
+
+
+
+5. Community Support Network (Facebook Assist System) (Akib)
+
+
+
+If no nearby technician is available for a service request, 
+
+Serviio automatically forwards the request to the official Facebook community support page.
+
+
+
+Verified service providers from nearby areas can:
+
+
+
+View the request
+
+Respond in comments/inbox
+
+Accept the job directly
+
+Contact the customer quickly
+
+
+
+This creates a backup support ecosystem beyond the app itself.
+
+
+
+
+
+*** FILE: Team Lazycat_Soft-Lab_assignment.pdf
+
+ASSIGNMENT  Software Lab - Sec A  Team LazyCat  Submitted by ,  Jahin   Nowaz Sharoj - ( 0112230482 )  Md. Mahfujur Rahman - ( 0112230483 )  Md.Sahriar Hossain   - ( 0112230969 )  Mst Riya Akter Satu - ( 0112310147 )  Zannathun Noor Safa - ( 011213133   )
+
+Project   Name   : Serviio  Main Idea   :  Beyond   simply   connecting   people   to   service   providers,   the platform   is   designed   as   a   comprehensive,   real-time   management system   with   several   key   functionalities:  ●   Real-Time   &   Location-Based   Discovery:   The   app   uses   live   GPS and   smart   distance   filtering   to   help   users   instantly   locate technicians   who   are   nearby.  ●   Flexible   &   Urgent   Booking   Options:   Users   can   make   instant bookings   or   schedule   future   appointments.   For   urgent breakdowns—like   electrical   sparks,   AC   issues,   or   pipe bursts—there   is   an   "Emergency   Fix"   feature   designed   to provide   service   within   30   to   45   minutes.  ●   Safety   and   Trust   Systems:   The   platform   heavily   emphasizes security   through   an   advanced   verification   system   that includes   ID   and   police   verification   forms,   a   4-digit technician   verification   code,   and   an   SOS   panic   button.   It also   tracks   behavior   and   maintains   service   quality   through detailed   ratings   and   reviews.  ●   Streamlined   Communication   &   Rebooking:   Customers   and providers   can   talk   directly   using   in-app   messaging   and calling.   To   make   future   repairs   easier,   users   can   bookmark their   favorite   technicians   and   use   a   "One-Click   Repeat Booking"   feature   to   hire   them   again   without   searching.  ●   Multi-User   Ecosystem:   The   use   case   diagram   shows   that   the platform   is   built   to   handle   different   types   of users—Customers,   Admins,   Service   Providers,   and   even   Job Seekers   who   can   search   and   apply   for   work—all   while processing   secure   billing   through   a   payment   gateway.
+
+Motivation   :  1.   The   idea   originated   from   personal   challenges   the   creator faced   when   trying   to   get   basic   services   after   moving   to Dhaka   and   renting   a   house.  2.   Specifically,   they   experienced   issues   like   an   unavailable electrician,   needing   a   plumber   to   fix   a   washroom,   and wanting   to   paint   walls.  3.   The   overarching   difficulty   in   finding   reliable professionals   to   handle   these   everyday   problems   directly inspired   the   creation   of   the   Serviio   platform.  Team Members :  1)   Jahin   Nowaz   Sharoj   -   0112230482  2)   Md.   Mahfujur   Rahman   -   0112230483  3)   Md.Sahriar   Hossain   -   0112230969  4)   Zannathun   Noor   Safa   -   011213133  5)   Mst   Riya   Akter   Satu   -   0112310147  JIRA Link :  https://bscse-team-nxwzpddjjns.atlassian.net/jira/software/proje cts/SVO/boards/1/backlog?atlOrigin=eyJpIjoiYjUxOTdjN2ZiOTc3NDkzY Tk3YjlhYWJiZDI1ODkzMTAiLCJwIjoiaiJ9
+
+

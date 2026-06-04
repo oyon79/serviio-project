@@ -1,0 +1,67 @@
+/* css/bookmark.css */
+.bookmark-wrapper {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    flex: 1;
+}
+
+.bookmark-wrapper h2 {
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.bookmark-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.saved-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.saved-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.saved-info {
+    padding: 20px;
+    text-align: center;
+}
+
+.saved-info h4 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.saved-info p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.btn-view-profile {
+    display: block;
+    padding: 10px;
+    background-color: var(--primary-blue);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+}
+
+.btn-view-profile:hover {
+    background-color: var(--secondary-blue);
+}

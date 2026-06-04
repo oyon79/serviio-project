@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Select Your Role</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/role.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="providerList.html">Find Providers</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+
+    <main class="role-container">
+      <div class="role-header">
+        <h2>Welcome to SERVIIO</h2>
+        <p>
+          How would you like to use our platform today? Select your account type
+          to continue.
+        </p>
+      </div>
+
+      <div class="role-cards-wrapper">
+        <div class="role-card" onclick="selectRole('customer')">
+          <div class="icon-circle">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <h3>I am a Customer</h3>
+          <p>
+            I am looking to hire verified professionals for plumbing,
+            electrical, cleaning, and more.
+          </p>
+          <span class="btn-role"
+            >Join as Customer <i class="fas fa-arrow-right"></i
+          ></span>
+        </div>
+
+        <div class="role-card provider" onclick="selectRole('provider')">
+          <div class="icon-circle">
+            <i class="fas fa-tools"></i>
+          </div>
+          <h3>I am a Service Provider</h3>
+          <p>
+            I want to offer my skills, find active jobs in my area, and grow my
+            local business.
+          </p>
+          <span class="btn-role"
+            >Join as Provider <i class="fas fa-arrow-right"></i
+          ></span>
+        </div>
+      </div>
+
+      <div class="role-footer">
+        <p>Already have an account? <a href="login.html">Sign in here</a></p>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+      function selectRole(role) {
+        // Save the intended role temporarily
+        localStorage.setItem("intended_role", role);
+
+        // Smooth UI transition
+        document.body.style.opacity = "0.5";
+        document.body.style.transition = "opacity 0.3s ease";
+
+        // Navigate based on role selection
+        setTimeout(() => {
+          if (role === "customer") {
+            window.location.href = "user.html"; // Go to Customer Registration
+          } else if (role === "provider") {
+            window.location.href = "serviceProvider.html"; // Go to Provider Registration
+          }
+        }, 300);
+      }
+    </script>
+  </body>
+</html>

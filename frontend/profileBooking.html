@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Provider Dashboard & Bookings</title>
+    <!-- Assuming global.css handles the Navbar and Footer -->
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/profileBooking.css" />
+    <!-- FontAwesome for Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Global Navbar -->
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="serviceArea.html">Service Area</a></li>
+        <li><a href="providerList.html">Providers</a></li>
+        <li><a href="profileBooking.html" class="active">Dashboard</a></li>
+        <li><a href="login.html" id="logoutBtn">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main class="dashboard-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="provider-profile-summary">
+          <img src="default-avatar.png" alt="Provider" id="providerAvatar" />
+          <h3 id="providerName">Loading...</h3>
+          <p class="badge" id="providerBadge">Verified Provider</p>
+          <p id="providerMeta" class="provider-meta"></p>
+          <p id="availabilityStatus" class="availability-status">
+            Availability: Loading...
+          </p>
+          <button
+            type="button"
+            id="shareLocationBtn"
+            class="dashboard-action-btn secondary"
+          >
+            <i class="fas fa-location-arrow"></i>
+            Start Sharing Location
+          </button>
+          <button
+            type="button"
+            id="availabilityBtn"
+            class="dashboard-action-btn primary"
+            aria-pressed="false"
+          >
+            <i class="fas fa-circle"></i>
+            <span id="availabilityBtnText">Mark Available</span>
+          </button>
+        </div>
+        <ul class="sidebar-menu">
+          <li>
+            <a href="#" class="active" data-tab="active-jobs"
+              ><i class="fas fa-briefcase"></i> Active Jobs</a
+            >
+          </li>
+          <li>
+            <a href="#" data-tab="job-history"
+              ><i class="fas fa-history"></i> Job History</a
+            >
+          </li>
+          <li>
+            <a href="#" data-tab="reviews"
+              ><i class="fas fa-star"></i> My Reviews</a
+            >
+          </li>
+          <li>
+            <a href="#" data-tab="settings"
+              ><i class="fas fa-cog"></i> Settings</a
+            >
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <section class="dashboard-content">
+        <div class="content-header">
+          <h2 id="dashboardTitle">Active Jobs</h2>
+          <p id="dashboardSummary">
+            Manage your schedule, verify handshakes, and keep customer work
+            moving.
+          </p>
+        </div>
+
+        <div class="dashboard-panels">
+          <section id="activeJobsPanel" class="dashboard-panel active">
+            <div class="panel-toolbar">
+              <h3>Active Jobs</h3>
+              <p>Open assignments, pending handshakes, and in-progress work.</p>
+            </div>
+            <div id="activeJobsContainer" class="bookings-grid">
+              <div class="loader">Loading active jobs...</div>
+            </div>
+          </section>
+
+          <section id="historyPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>Job History</h3>
+              <p>Completed and cancelled jobs are stored here for review.</p>
+            </div>
+            <div id="historyContainer" class="bookings-grid">
+              <div class="loader">Loading job history...</div>
+            </div>
+          </section>
+
+          <section id="reviewsPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>My Reviews</h3>
+              <p>See recent customer feedback and ratings.</p>
+            </div>
+            <div id="reviewsContainer" class="reviews-list">
+              <div class="loader">Loading reviews...</div>
+            </div>
+          </section>
+
+          <section id="settingsPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>Settings</h3>
+              <p>Update your profile, contact info, and service details.</p>
+            </div>
+
+            <form id="settingsForm" class="profile-settings-form">
+              <div class="form-grid">
+                <label>
+                  First Name
+                  <input type="text" id="inputFirstName" name="first_name" />
+                </label>
+                <label>
+                  Last Name
+                  <input type="text" id="inputLastName" name="last_name" />
+                </label>
+                <label>
+                  Email
+                  <input type="email" id="inputEmail" name="email" />
+                </label>
+                <label>
+                  Phone
+                  <input type="text" id="inputPhone" name="phone" />
+                </label>
+                <label>
+                  Service Type
+                  <input
+                    type="text"
+                    id="inputServiceType"
+                    name="service_type"
+                  />
+                </label>
+                <label>
+                  Location
+                  <input type="text" id="inputLocation" name="location" />
+                </label>
+              </div>
+
+              <label>
+                Experience Summary
+                <textarea
+                  id="inputExperience"
+                  name="experience_summary"
+                  rows="4"
+                ></textarea>
+              </label>
+              <label>
+                National ID / NID
+                <input type="text" id="inputNidNumber" name="nid_number" />
+              </label>
+
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  class="dashboard-action-btn primary"
+                  id="saveSettingsBtn"
+                >
+                  Save Settings
+                </button>
+                <p id="settingsMessage" class="settings-message"></p>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+
+    <!-- API Integration Script -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("serviio_token");
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const storedUser = localStorage.getItem("serviio_user");
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        if (
+          !currentUser ||
+          (currentUser.role || "").toLowerCase() !== "provider"
+        ) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const providerName = document.getElementById("providerName");
+        const providerBadge = document.getElementById("providerBadge");
+        const providerMeta = document.getElementById("providerMeta");
+        const availabilityStatus =
+          document.getElementById("availabilityStatus");
+        const availabilityBtn = document.getElementById("availabilityBtn");
+        const availabilityBtnText = document.getElementById(
+          "availabilityBtnText",
+        );
+        const shareBtn = document.getElementById("shareLocationBtn");
+        const menuLinks = document.querySelectorAll(".sidebar-menu li a");
+        const dashboardTitle = document.getElementById("dashboardTitle");
+        const dashboardSummary = document.getElementById("dashboardSummary");
+        const activeJobsPanel = document.getElementById("activeJobsPanel");
+        const historyPanel = document.getElementById("historyPanel");
+        const reviewsPanel = document.getElementById("reviewsPanel");
+        const settingsPanel = document.getElementById("settingsPanel");
+        const tabPanels = {
+          "active-jobs": activeJobsPanel,
+          "job-history": historyPanel,
+          reviews: reviewsPanel,
+          settings: settingsPanel,
+        };
+        let activeTab = "active-jobs";
+        const activeJobsContainer = document.getElementById(
+          "activeJobsContainer",
+        );
+        const historyContainer = document.getElementById("historyContainer");
+        const reviewsContainer = document.getElementById("reviewsContainer");
+        const settingsForm = document.getElementById("settingsForm");
+        const settingsMessage = document.getElementById("settingsMessage");
+
+        const inputFirstName = document.getElementById("inputFirstName");
+        const inputLastName = document.getElementById("inputLastName");
+        const inputEmail = document.getElementById("inputEmail");
+        const inputPhone = document.getElementById("inputPhone");
+        const inputServiceType = document.getElementById("inputServiceType");
+        const inputLocation = document.getElementById("inputLocation");
+        const inputExperience = document.getElementById("inputExperience");
+        const inputNidNumber = document.getElementById("inputNidNumber");
+
+        let providerProfile = null;
+        let providerIsAvailable = true;
+        let availabilityRequestPending = false;
+        let currentBookings = [];
+        let currentReviews = [];
+
+        function setActivePanel(tabName) {
+          activeTab = tabName;
+
+          Object.entries(tabPanels).forEach(([tabKey, panel]) => {
+            if (!panel) return;
+            const isSelected = tabKey === tabName;
+            panel.style.display = isSelected ? "block" : "none";
+            panel.classList.toggle("active", isSelected);
+          });
+
+          menuLinks.forEach((link) => {
+            link.classList.toggle("active", link.dataset.tab === tabName);
+          });
+
+          if (tabName === "active-jobs") {
+            dashboardTitle.textContent = "Active Jobs";
+            dashboardSummary.textContent =
+              "Manage your open assignments, verify handshakes, and keep jobs moving.";
+          } else if (tabName === "job-history") {
+            dashboardTitle.textContent = "Job History";
+            dashboardSummary.textContent =
+              "See completed and cancelled jobs, plus your recent work records.";
+          } else if (tabName === "reviews") {
+            dashboardTitle.textContent = "My Reviews";
+            dashboardSummary.textContent =
+              "Customer feedback helps you improve and build trust.";
+          } else if (tabName === "settings") {
+            dashboardTitle.textContent = "Settings";
+            dashboardSummary.textContent =
+              "Update your provider profile, contact details, and service offerings.";
+          }
+        }
+
+        async function parseJsonResponse(response) {
+          const text = await response.text();
+          if (!text) return {};
+
+          try {
+            return JSON.parse(text);
+          } catch (error) {
+            console.error(
+              "Failed to parse JSON response:",
+              response.url,
+              "status:",
+              response.status,
+              "body:",
+              text,
+            );
+            throw new Error(
+              `Invalid JSON response from server (${response.status})`,
+            );
+          }
+        }
+
+        function updateAvailabilityButton() {
+          if (!availabilityBtn) return;
+          availabilityBtn.setAttribute(
+            "aria-pressed",
+            providerIsAvailable ? "true" : "false",
+          );
+          availabilityBtn.classList.toggle("is-online", providerIsAvailable);
+          availabilityBtn.classList.toggle("is-offline", !providerIsAvailable);
+          availabilityBtnText.textContent = providerIsAvailable
+            ? "Mark Unavailable"
+            : "Mark Available";
+          availabilityStatus.innerHTML = providerIsAvailable
+            ? '<span class="status-dot online"></span> Availability: Online'
+            : '<span class="status-dot offline"></span> Availability: Offline';
+        }
+
+        async function toggleAvailability() {
+          if (availabilityRequestPending) return;
+          const nextState = !providerIsAvailable;
+
+          availabilityRequestPending = true;
+          availabilityBtn.disabled = true;
+          availabilityBtn.classList.add("is-loading");
+          availabilityBtnText.textContent = "Updating...";
+          providerIsAvailable = nextState;
+          updateAvailabilityButton();
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/availability",
+              {
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ is_available: nextState }),
+              },
+            );
+            const data = await parseJsonResponse(response);
+            if (!response.ok || !data.success) {
+              throw new Error(data?.message || "Unable to save availability");
+            }
+            providerIsAvailable = !!data.data.is_available;
+            updateAvailabilityButton();
+          } catch (error) {
+            console.error("Unable to update availability", error);
+            providerIsAvailable = !nextState;
+            updateAvailabilityButton();
+            alert("Unable to update availability. Please try again.");
+          } finally {
+            availabilityRequestPending = false;
+            availabilityBtn.disabled = false;
+            availabilityBtn.classList.remove("is-loading");
+          }
+        }
+
+        async function fetchProfile() {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me",
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              providerProfile = result.data;
+              providerIsAvailable = !!providerProfile.is_available;
+              providerName.textContent = `${providerProfile.first_name} ${providerProfile.last_name}`;
+              providerBadge.textContent = providerProfile.is_verified
+                ? "Verified Provider"
+                : "Pending Verification";
+              providerMeta.textContent = `${providerProfile.service_type || "Service Provider"} | ${providerProfile.location || "No location set"}`;
+              updateAvailabilityButton();
+              populateSettingsForm();
+            }
+          } catch (error) {
+            console.error("Unable to load provider profile", error);
+          }
+        }
+
+        function populateSettingsForm() {
+          if (!providerProfile) return;
+          inputFirstName.value = providerProfile.first_name || "";
+          inputLastName.value = providerProfile.last_name || "";
+          inputEmail.value = providerProfile.email || "";
+          inputPhone.value = providerProfile.phone || "";
+          inputServiceType.value = providerProfile.service_type || "";
+          inputLocation.value = providerProfile.location || "";
+          inputExperience.value = providerProfile.experience_summary || "";
+          inputNidNumber.value = providerProfile.nid_number || "";
+        }
+
+        async function fetchBookings() {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/bookings/provider",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              currentBookings = result.data || [];
+              renderActiveJobs();
+              renderHistory();
+            } else {
+              throw new Error(result.message || "Unable to fetch bookings");
+            }
+          } catch (error) {
+            console.error(error);
+            displayEmptyState(
+              activeJobsContainer,
+              "Unable to load jobs. Please try again later.",
+            );
+            displayEmptyState(
+              historyContainer,
+              "Unable to load history. Please try again later.",
+            );
+          }
+        }
+
+        async function fetchReviews() {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/reviews",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              currentReviews = result.data || [];
+              renderReviews();
+            } else {
+              throw new Error(result.message || "Unable to fetch reviews");
+            }
+          } catch (error) {
+            console.error(error);
+            displayEmptyState(
+              reviewsContainer,
+              "Unable to load reviews. Please try again later.",
+            );
+          }
+        }
+
+        function displayEmptyState(container, message) {
+          container.innerHTML = `<div class="section-empty">${message}</div>`;
+        }
+
+        function renderActiveJobs() {
+          const activeJobs = currentBookings.filter((job) =>
+            ["PENDING", "IN_PROGRESS"].includes(job.status),
+          );
+          if (activeJobs.length === 0) {
+            displayEmptyState(
+              activeJobsContainer,
+              "You have no active jobs right now.",
+            );
+            return;
+          }
+          activeJobsContainer.innerHTML = activeJobs
+            .map(renderBookingCard)
+            .join("");
+        }
+
+        function renderHistory() {
+          const historyJobs = currentBookings.filter((job) =>
+            ["COMPLETED", "CANCELLED"].includes(job.status),
+          );
+          if (historyJobs.length === 0) {
+            displayEmptyState(
+              historyContainer,
+              "No completed or cancelled jobs yet.",
+            );
+            return;
+          }
+          historyContainer.innerHTML = historyJobs
+            .map((job) => {
+              return `
+                <div class="booking-card">
+                  <div class="job-header">
+                    <h4>${job.service_type}</h4>
+                    <span class="status ${job.status.toLowerCase()}">${job.status}</span>
+                  </div>
+                  <div class="job-details">
+                    <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${job.customer_name}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${job.job_location || "N/A"}</p>
+                    <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${job.booking_date ? new Date(job.booking_date).toLocaleString() : "N/A"}</p>
+                    <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${job.customer_phone || "N/A"}</p>
+                    <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${job.estimated_price_range || "N/A"}</p>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        function renderBookingCard(job) {
+          const actionRegion =
+            job.status === "PENDING"
+              ? `
+                <div class="handshake-section">
+                  <label>Enter 4-Digit Handshake Code:</label>
+                  <div class="code-inputs">
+                    <input type="text" maxlength="4" class="handshake-input" id="code-${job.id}" placeholder="----" autocomplete="off" />
+                    <button class="btn-verify" onclick="verifyHandshake('${job.id}')">Verify & Start</button>
+                  </div>
+                  <p class="verify-msg" id="msg-${job.id}"></p>
+                </div>
+              `
+              : job.status === "IN_PROGRESS"
+                ? `
+                <div class="handshake-section">
+                  <p class="verify-msg" id="msg-${job.id}">Job is active. Update its status when work is complete.</p>
+                  <div class="code-inputs">
+                    <button class="btn-verify" onclick="updateStatus('${job.id}', 'COMPLETED')">Mark Completed</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus('${job.id}', 'CANCELLED')">Cancel Job</button>
+                  </div>
+                </div>
+              `
+                : job.status === "COMPLETED"
+                  ? `
+                <div class="job-completed-msg">
+                  <i class="fas fa-check-circle"></i> Job Completed
+                </div>
+              `
+                  : `
+                <div class="job-completed-msg">
+                  <i class="fas fa-ban"></i> Job Cancelled
+                </div>
+              `;
+
+          return `
+            <div class="booking-card" data-id="${job.id}">
+              <div class="job-header">
+                <h4>${job.service_type}</h4>
+                <span class="status ${job.status.toLowerCase()}">${job.status}</span>
+              </div>
+              <div class="job-details">
+                <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${job.customer_name}</p>
+                <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${job.job_location || "N/A"}</p>
+                <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${job.booking_date ? new Date(job.booking_date).toLocaleString() : "N/A"}</p>
+                <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${job.customer_phone || "N/A"}</p>
+                <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${job.estimated_price_range || "N/A"}</p>
+              </div>
+              ${actionRegion}
+            </div>
+          `;
+        }
+
+        function renderReviews() {
+          if (!currentReviews || currentReviews.length === 0) {
+            displayEmptyState(
+              reviewsContainer,
+              "You don’t have reviews yet. Complete jobs to collect feedback.",
+            );
+            return;
+          }
+
+          reviewsContainer.innerHTML = currentReviews
+            .map((review) => {
+              const stars = Array.from(
+                { length: 5 },
+                (_, index) =>
+                  `<span>${index < review.rating ? "★" : "☆"}</span>`,
+              ).join("");
+              return `
+                <div class="review-card">
+                  <h4>${review.title || "Customer Review"}</h4>
+                  <div class="review-meta">
+                    <span>${review.customer_name}</span>
+                    <span class="rating-stars">${stars}</span>
+                  </div>
+                  <p class="review-comment">${review.comment || "No comment provided."}</p>
+                  <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        async function submitSettings(event) {
+          event.preventDefault();
+          settingsMessage.textContent = "Saving...";
+          settingsMessage.style.color = "#334155";
+
+          const payload = {
+            first_name: inputFirstName.value.trim(),
+            last_name: inputLastName.value.trim(),
+            email: inputEmail.value.trim(),
+            phone: inputPhone.value.trim(),
+            service_type: inputServiceType.value.trim(),
+            location: inputLocation.value.trim(),
+            experience_summary: inputExperience.value.trim(),
+            nid_number: inputNidNumber.value.trim(),
+          };
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/settings",
+              {
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              providerProfile = result.data;
+              populateSettingsForm();
+              providerName.textContent = `${providerProfile.first_name} ${providerProfile.last_name}`;
+              settingsMessage.textContent = "Settings updated successfully.";
+              settingsMessage.style.color = "#16a34a";
+              updateAvailabilityButton();
+            } else {
+              throw new Error(result.message || "Unable to save settings.");
+            }
+          } catch (error) {
+            console.error("Settings update failed", error);
+            settingsMessage.textContent =
+              error.message || "Unable to update settings.";
+            settingsMessage.style.color = "#b91c1c";
+          }
+        }
+
+        window.verifyHandshake = async (bookingId) => {
+          const codeInput = document.getElementById(`code-${bookingId}`).value;
+          const msgElement = document.getElementById(`msg-${bookingId}`);
+          if (codeInput.length !== 4) {
+            msgElement.textContent = "Please enter a valid 4-digit code.";
+            msgElement.style.color = "red";
+            return;
+          }
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/bookings/verify-handshake",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ bookingId, handshakeCode: codeInput }),
+              },
+            );
+            const data = await parseJsonResponse(response);
+            if (response.ok && data.success) {
+              msgElement.textContent =
+                "Code verified successfully! Job started.";
+              msgElement.style.color = "green";
+              setTimeout(fetchBookings, 1200);
+            } else {
+              msgElement.textContent =
+                data.message || "Invalid code. Try again.";
+              msgElement.style.color = "red";
+            }
+          } catch (error) {
+            msgElement.textContent = "Server error. Please try again.";
+            msgElement.style.color = "red";
+          }
+        };
+
+        window.updateStatus = async (bookingId, status) => {
+          const msgElement = document.getElementById(`msg-${bookingId}`);
+          try {
+            const response = await fetch(
+              `http://localhost:5000/api/bookings/${bookingId}/status`,
+              {
+                method: "PATCH",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ status }),
+              },
+            );
+            const data = await parseJsonResponse(response);
+            if (response.ok && data.success) {
+              if (msgElement) {
+                msgElement.textContent = `Job marked as ${status.toLowerCase()}.`;
+                msgElement.style.color = "green";
+              }
+              setTimeout(fetchBookings, 1000);
+            } else if (msgElement) {
+              msgElement.textContent =
+                data.message || "Failed to update status.";
+              msgElement.style.color = "red";
+            }
+          } catch (error) {
+            if (msgElement) {
+              msgElement.textContent = "Server error. Please try again.";
+              msgElement.style.color = "red";
+            }
+          }
+        };
+
+        menuLinks.forEach((link) => {
+          link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const tab = link.dataset.tab;
+            if (tab) setActivePanel(tab);
+          });
+        });
+
+        settingsForm.addEventListener("submit", submitSettings);
+
+        await fetchProfile();
+        await fetchBookings();
+        await fetchReviews();
+        setActivePanel("active-jobs");
+
+        if (
+          !currentUser ||
+          (currentUser.role && currentUser.role.toLowerCase() !== "provider")
+        ) {
+          if (shareBtn) shareBtn.style.display = "none";
+          if (availabilityBtn) availabilityBtn.style.display = "none";
+        }
+
+        let watchId = null;
+        const socket = io("http://localhost:5000");
+
+        if (availabilityBtn) {
+          availabilityBtn.addEventListener("click", toggleAvailability);
+        }
+
+        if (shareBtn) {
+          shareBtn.addEventListener("click", () => {
+            if (!navigator.geolocation) {
+              alert("Geolocation not supported in this browser.");
+              return;
+            }
+
+            const providerId = currentUser ? currentUser.id : null;
+            if (!providerId) {
+              alert(
+                "Provider not found. Ensure you are logged in as provider.",
+              );
+              return;
+            }
+
+            if (watchId) {
+              navigator.geolocation.clearWatch(watchId);
+              watchId = null;
+              shareBtn.textContent = "Start Sharing Location";
+              return;
+            }
+
+            socket.emit("provider:join", { providerId });
+            watchId = navigator.geolocation.watchPosition(
+              (pos) => {
+                socket.emit("provider:location", {
+                  providerId,
+                  lat: pos.coords.latitude,
+                  lng: pos.coords.longitude,
+                });
+              },
+              (err) => {
+                console.error("Geolocation error", err);
+              },
+              { enableHighAccuracy: true, maximumAge: 2000 },
+            );
+
+            shareBtn.textContent = "Stop Sharing Location";
+          });
+        }
+
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            localStorage.removeItem("serviio_token");
+            localStorage.removeItem("serviio_user");
+            window.location.href = "login.html";
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

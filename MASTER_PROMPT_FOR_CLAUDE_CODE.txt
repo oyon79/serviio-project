@@ -1,0 +1,416 @@
+MASTER PROMPT FOR CLAUDE CODE AI
+
+You are Claude Code acting as the lead full-stack engineer for this project.
+Your mission: read this entire repository end-to-end and finish it as a real-world, production-grade platform.
+Focus on correctness, security, UX quality, data integrity, and maintainable architecture.
+
+PROJECT NAME
+- Serviio
+
+PROJECT VISION
+- Serviio connects customers with trusted home-service providers (electrician, plumber, cleaner, painter, etc.).
+- Platform must support real-time provider discovery and tracking, secure booking lifecycle, verification and trust system, emergency fallback, and robust admin moderation.
+
+PRIMARY GOAL
+- Convert this academic/prototype codebase into a professional dynamic product:
+1) Fix all UI/UX inconsistencies and broken flows.
+2) Fix backend logic bugs and route collisions.
+3) Fix database schema drift and migration gaps.
+4) Implement missing critical features for production-readiness.
+5) Keep backward compatibility where possible.
+
+==================================================
+1. CURRENT TECH STACK
+==================================================
+Backend
+- Node.js, Express
+- mysql2/promise with connection pool
+- JWT auth
+- bcrypt password hashing
+- Socket.IO for live location tracking
+
+Frontend
+- Static HTML/CSS/JS (vanilla)
+- Absolute API base URLs: http://localhost:5000/api/...
+- Leaflet map in home page
+
+Database
+- MySQL
+- Core tables currently in schema: users, provider_profiles, bookings, emergency_logs
+
+==================================================
+2. REPOSITORY STRUCTURE (IMPORTANT)
+==================================================
+- backend/
+  - server.js
+  - config/db.js
+  - controllers/
+  - routes/
+  - middlewares/
+  - sockets/
+  - scripts/
+- database/serviio_schema.sql
+- frontend/
+  - login.html
+  - role.html
+  - user.html
+  - serviceProvider.html
+  - home.html
+  - providerList.html
+  - providerInfo1.html
+  - schedule.html
+  - payment.html
+  - profileBooking.html
+  - emergency.html
+  - admin.html
+  - plus css/, js/
+
+==================================================
+3. FEATURES STATUS SNAPSHOT
+==================================================
+DONE / PARTIALLY DONE
+- Auth register/login with JWT and bcrypt.
+- Role-based registration pages (customer/provider).
+- Provider NID format validation (frontend and backend format checks).
+- Booking creation with generated 4-digit handshake code.
+- Booking verification endpoint to move status to IN_PROGRESS.
+- Provider booking dashboard (fetches assigned bookings and verifies handshake).
+- Emergency log endpoint with community fallback link.
+- Admin provider verification endpoints and basic admin panel.
+- Socket.IO real-time provider location sharing and customer subscription.
+- Provider list API fallback behavior for schema mismatch around is_verified.
+- UI cleanup started: unimplemented social login and call/message buttons removed.
+
+IN PROGRESS / INCONSISTENT
+- Schema drift: some environments have provider_profiles.is_verified, some do not.
+- Some pages still use placeholders/dummy data.
+- Home map currently uses dummy providers (not DB-driven).
+- Payment flow simulates payment only.
+- Verification flow is not real KYC yet.
+
+NOT DONE (CRITICAL)
+- Real NID verification integration and anti-fraud checks.
+- Police verification workflow and document verification pipeline.
+- Robust role-based route protection across all sensitive actions.
+- Full provider verification lifecycle with audit trail.
+- Full admin moderation panel (filters/search/pagination/review queue).
+- Proper notification system (status changes, provider arrival, emergency alerts).
+- Production-grade logging, validation, error handling, and test coverage.
+
+==================================================
+4. CONFIRMED IMPORTANT BEHAVIOR / BUG CONTEXT
+==================================================
+- Booking route collision existed where /api/bookings/provider could be interpreted as /api/bookings/:id.
+  Ensure route order keeps provider routes before :id.
+- provider_profiles.is_verified may not exist in DB in some instances.
+  Keep compatibility until migration enforces one schema.
+- Provider registration must not break when schema differs.
+- UI auth storage uses:
+  - localStorage key serviio_token
+  - localStorage key serviio_user
+- Admin page currently has client-side guard; still require server-side auth+role checks (already present in admin routes).
+
+==================================================
+5. AUTHENTICATION AND AUTHORIZATION CONTRACT
+==================================================
+Auth API
+- POST /api/auth/register
+  - customer payload: first_name, last_name, email, phone, password, role=customer
+  - provider payload: first_name, last_name, email, phone, password, role=provider, nid
+- POST /api/auth/login
+  - returns token and user {id, first_name, last_name, role}
+
+Auth middleware behavior
+- Bearer token required on protected routes.
+- JWT payload includes id and role.
+
+Current protected routes
+- GET /api/bookings/provider
+- GET /api/bookings/provider/:providerId
+- POST/PUT /api/bookings/verify-handshake
+- POST /api/emergency (middleware currently required)
+- GET /api/admin/providers
+- POST /api/admin/providers/:profileId/verify
+
+Required upgrades
+- Enforce ownership checks:
+  - customer can only create bookings for self unless admin.
+  - provider can only verify handshake for own bookings.
+- Add refresh-token strategy or hardened session handling.
+- Add brute-force protection and login rate limiting.
+
+==================================================
+6. FRONTEND NAVIGATION AND FLOW MAP
+==================================================
+Role and account flow
+- role.html -> user.html (customer register) OR serviceProvider.html (provider register)
+- Both go to login.html after registration
+- login.html routes by role:
+  - customer -> home.html
+  - provider -> profileBooking.html
+  - admin -> admin.html
+
+Customer journey
+- home.html (service exploration, map)
+- providerList.html (DB provider cards)
+- providerInfo1.html (provider detail placeholder)
+- schedule.html (choose date/time, create booking)
+- payment.html (simulated payment and handshake display)
+
+Provider journey
+- profileBooking.html
+  - fetch bookings via /api/bookings/provider
+  - verify handshake via /api/bookings/verify-handshake
+  - start/stop live location sharing with Socket.IO
+
+Emergency flow
+- emergency.html
+  - POST /api/emergency
+  - fallback redirect to community link/Facebook
+
+Admin journey
+- admin.html
+  - GET /api/admin/providers
+  - POST /api/admin/providers/:profileId/verify
+
+==================================================
+7. SOCKET REAL-TIME TRACKING CONTRACT
+==================================================
+Events
+- provider:join { providerId }
+- provider:location { providerId, lat, lng, bearing? }
+- customer:subscribe { providerId }
+- provider:location broadcast back to room track:provider:{providerId}
+
+Required upgrades
+- Authenticate socket connections with JWT.
+- Validate payload schema for socket events.
+- Persist recent locations and online presence.
+- Add ETA calculation service.
+
+==================================================
+8. DATABASE: CURRENT VS TARGET
+==================================================
+Current key tables
+- users(id, first_name, last_name, email, phone, password, role, ...)
+- provider_profiles(id, user_id, service_type, location, nid_number, [is_verified?], experience_summary, is_available, ...)
+- bookings(id, customer_id, provider_id, service_type, job_location, booking_date, estimated_price_range, status, handshake_code, is_emergency, ...)
+- emergency_logs(id, user_id, booking_id, message, location, ...)
+
+Immediate DB work required
+- Create explicit migration system (up/down scripts).
+- Resolve schema drift with deterministic migration:
+  - add provider_profiles.is_verified if missing
+  - normalize default values
+- Add missing tables for production quality:
+  - provider_verification_documents
+  - verification_audit_logs
+  - reviews
+  - bookmarks
+  - notifications
+  - provider_locations_history
+  - payouts/payments/transactions
+  - service_catalog
+
+Data integrity/security
+- Add unique/index constraints where needed.
+- Add foreign-key consistency and cascading strategy review.
+- Encrypt sensitive PII and verification document metadata.
+
+==================================================
+9. REAL NID VERIFICATION AND ALL REQUIRED VERIFICATIONS
+==================================================
+Implement real-world KYC pipeline for providers:
+
+NID Verification
+- Integrate real NID verification provider/API (Bangladesh compatible).
+- Validate:
+  - NID number format and checksum (if available)
+  - Name and DOB match
+  - Liveness/selfie + NID face match (if provider supports)
+- Store verification status and confidence score.
+- Keep masked NID in main table; secure raw documents in protected storage.
+
+Police Verification
+- Add provider police clearance workflow:
+  - upload police clearance document
+  - document metadata verification
+  - manual admin review queue
+  - status: PENDING, REJECTED, APPROVED
+
+Skill Verification
+- Add skill test/certification records:
+  - certificate upload
+  - manual/automated review
+  - badge assignment (Verified Electrician, Certified AC Technician, Trusted Cleaner)
+
+Experience Verification
+- Add prior jobs/company references check fields
+- Optional reference contact verification state
+
+Safety/SOS Verification
+- Build emergency contact validation and SOS event escalation policy
+
+Verification statuses must be explicit and auditable
+- For each verification type: pending, under_review, approved, rejected, expired
+- Track reviewer id, timestamp, comments, evidence links
+
+==================================================
+10. API WORK THAT MUST BE COMPLETED
+==================================================
+Keep existing APIs stable. Add/upgrade these:
+
+Auth
+- POST /api/auth/register
+- POST /api/auth/login
+- POST /api/auth/refresh
+- POST /api/auth/logout
+- POST /api/auth/forgot-password
+- POST /api/auth/reset-password
+
+Providers
+- GET /api/providers (filtered, paginated, verified-only by default)
+- GET /api/providers/:id
+- PATCH /api/providers/:id/profile
+- POST /api/providers/:id/documents
+- GET /api/providers/:id/verification-status
+
+Bookings
+- POST /api/bookings/create
+- GET /api/bookings/:id
+- GET /api/bookings/provider
+- POST /api/bookings/verify-handshake
+- PATCH /api/bookings/:id/status
+- POST /api/bookings/:id/cancel
+
+Emergency
+- POST /api/emergency
+- POST /api/emergency/:id/escalate
+
+Admin
+- GET /api/admin/providers
+- POST /api/admin/providers/:profileId/verify
+- Add queue/search/filter/reject/reason endpoints
+
+Reviews/Bookmarks/Notifications (new)
+- Implement full CRUD with auth and ownership checks.
+
+==================================================
+11. UX/UI AND PRODUCT REQUIREMENTS
+==================================================
+- Audit every frontend page and remove dead actions.
+- Ensure all nav links point to existing pages/routes.
+- Add loading, empty, error, and retry states consistently.
+- Use centralized API helper and auth guard logic.
+- Convert placeholder data to real API data.
+- Responsive behavior across desktop/mobile.
+- Improve accessibility (labels, focus, aria where needed).
+
+Specific page upgrades
+- home.html: replace dummy providers with DB-backed map markers and filters.
+- providerInfo1.html: load provider detail dynamically by id.
+- schedule.html: real service type/location/date/time from user input and selected provider.
+- payment.html: real payment intent/status flow (or clean abstraction/stub with status table).
+- profileBooking.html: correct field mappings for job date/location names and robust status UI.
+- admin.html: richer dashboard with queues, docs preview, approve/reject actions.
+
+==================================================
+12. SECURITY AND PRODUCTION HARDENING
+==================================================
+- Input validation via schema (Joi/Zod/class-validator).
+- Rate limiting, helmet, CORS restrictions by env.
+- SQL injection prevention (already parameterized mostly; verify all queries).
+- Centralized error handler with safe client messages.
+- Structured logs with request ids.
+- Secrets from env, no hardcoded secrets.
+- Role and ownership authorization checks on every sensitive route.
+- File upload scanning and content-type enforcement.
+
+==================================================
+13. TESTING REQUIREMENTS
+==================================================
+Must add tests before final completion:
+- Unit tests for auth, booking logic, verification services.
+- Integration tests for all critical API flows.
+- E2E smoke tests:
+  1) customer register/login
+  2) provider register/login
+  3) booking create
+  4) handshake verify
+  5) admin verify provider
+  6) emergency fallback
+- Add seed data strategy and deterministic test fixtures.
+
+==================================================
+14. WHAT IS DONE VS IN PROGRESS VS TODO (EXPLICIT)
+==================================================
+DONE
+- Base auth, booking, emergency, admin, and socket scaffolding.
+- Main pages and basic flow wiring.
+- Token key standardization on frontend.
+- Initial UI cleanup started.
+
+IN PROGRESS
+- DB compatibility handling around provider verification fields.
+- Full provider/admin verification UX and data model.
+- Dynamic map/provider integration.
+
+TODO (PRIORITY ORDER)
+1) Apply migrations and unify schema (including is_verified and verification tables).
+2) Build real NID + police + skill verification pipeline.
+3) Finish all route authorization and ownership checks.
+4) Replace dummy frontend data with API-backed data everywhere.
+5) Complete admin verification workflow.
+6) Implement notifications/reviews/bookmarks and one-click repeat booking.
+7) Add production security hardening.
+8) Add comprehensive automated tests and CI scripts.
+
+==================================================
+15. EXECUTION INSTRUCTIONS FOR CLAUDE CODE
+==================================================
+Do this in phases and commit after each stable phase:
+
+Phase A: Repository audit
+- Read all files and generate a structured gap report.
+- Identify dead links, unimplemented actions, schema mismatches.
+
+Phase B: Backend correctness
+- Fix routing, controllers, validation, and authorization.
+- Introduce migration scripts and apply schema normalization.
+
+Phase C: Verification system
+- Implement robust provider verification architecture.
+- Add document upload, review queue, statuses, audit logs.
+
+Phase D: Frontend completion
+- Replace placeholder data and align with APIs.
+- Add robust state handling and role guards.
+
+Phase E: Realtime and emergency
+- Harden socket auth and persistence.
+- Improve emergency escalation workflow.
+
+Phase F: Testing and hardening
+- Add unit/integration/e2e tests.
+- Add production hardening and deployment docs.
+
+Phase G: Final QA
+- Validate all user journeys with fresh DB.
+- Verify no broken links, no dead buttons, no auth bypasses.
+
+==================================================
+16. FINAL DEFINITION OF DONE
+==================================================
+Project is complete only when:
+- All core journeys work end-to-end for customer/provider/admin.
+- Verification system is real and auditable (not just regex checks).
+- UI is clean, coherent, responsive, and role-aware.
+- DB schema is versioned and consistent across environments.
+- Critical security controls are implemented.
+- Automated tests pass for critical workflows.
+- Documentation explains setup, migrations, env vars, and run/test commands.
+
+IMPORTANT
+- Keep existing behavior backward-compatible where possible.
+- If any behavior changes, update frontend and backend together and document it.
+- Prioritize real-world reliability over quick hacks.

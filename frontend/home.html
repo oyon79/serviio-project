@@ -257,6 +257,34 @@
           map.setView([filtered[0].lat, filtered[0].lng], 15);
         }
       });
+
+      // --- Live tracking: subscribe to provider updates (demo providerId=1)
+      (function setupLiveTracking() {
+        const socketScript = document.createElement("script");
+        socketScript.src = "https://cdn.socket.io/4.5.4/socket.io.min.js";
+        socketScript.onload = () => {
+          const socket = io("http://localhost:5000");
+          const trackedProviderId = 1; // demo: subscribe to provider 1
+          socket.emit("customer:subscribe", { providerId: trackedProviderId });
+
+          let providerMarker = null;
+          socket.on("provider:location", (payload) => {
+            if (payload.providerId !== trackedProviderId) return;
+            const lat = payload.lat;
+            const lng = payload.lng;
+            if (!providerMarker) {
+              providerMarker = L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup("Live Provider");
+            } else {
+              providerMarker.setLatLng([lat, lng]);
+            }
+            // Optionally pan to provider
+            // map.panTo([lat, lng]);
+          });
+        };
+        document.head.appendChild(socketScript);
+      })();
     </script>
   </body>
 </html>

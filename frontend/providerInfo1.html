@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Expert Provider Detail</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/providerInfo1.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="providerList.html" class="active">Providers</a></li>
+        <li><a href="profileBooking.html">Dashboard</a></li>
+        <li>
+          <a href="bookmark.html"><i class="fas fa-bookmark"></i> Saved</a>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="info-container">
+      <div class="profile-main-card">
+        <div class="provider-identity">
+          <img
+            src="Image/asian-plumber-blue-overalls-clearing-blockage-drain 1.png"
+            alt="Specialist Photo"
+            class="provider-avatar"
+          />
+          <div class="identity-text">
+            <div class="name-badge-row">
+              <h2 id="fullName">Loading...</h2>
+              <span class="verification-badge" id="verificationBadge"
+                ><i class="fas fa-check-circle"></i> NID Verified</span
+              >
+            </div>
+            <p class="specialty" id="specialty">Loading provider profile...</p>
+            <p class="rating-row">
+              <i class="fas fa-star text-warning"></i> 4.9
+              <span>(42 completed tasks)</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="bio-section">
+          <h3>Professional Background</h3>
+          <p id="bioText">Loading provider description...</p>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-bookmark" onclick="toggleBookmark()">
+            <i class="far fa-bookmark"></i> Save Expert
+          </button>
+          <button
+            class="btn-book-now"
+            id="bookNowBtn"
+            onclick="routeToSchedule()"
+          >
+            Book Appointment Slot
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const providerId = urlParams.get("id") || urlParams.get("provider_id");
+
+      function toggleBookmark() {
+        alert("Expert successfully added to your bookmark dashboard.");
+      }
+      function routeToSchedule() {
+        if (!providerId) {
+          alert("Provider profile is missing.");
+          return;
+        }
+        window.location.href = `schedule.html?provider_id=${providerId}`;
+      }
+
+      async function loadProvider() {
+        if (!providerId) {
+          document.getElementById("fullName").textContent =
+            "Provider not found";
+          return;
+        }
+
+        try {
+          const resp = await fetch(
+            `http://localhost:5000/api/providers/${providerId}`,
+          );
+          const data = await resp.json();
+
+          if (!resp.ok || !data.success) {
+            throw new Error(data.message || "Failed to load provider");
+          }
+
+          const provider = data.data;
+          document.getElementById("fullName").textContent =
+            `${provider.first_name} ${provider.last_name}`;
+          document.getElementById("specialty").textContent =
+            provider.service_type || "Service Provider";
+          document.getElementById("bioText").textContent =
+            provider.experience_summary ||
+            "No profile description available yet.";
+          document.getElementById("verificationBadge").innerHTML =
+            provider.is_verified
+              ? '<i class="fas fa-check-circle"></i> NID Verified'
+              : '<i class="fas fa-hourglass-half"></i> Pending Verification';
+        } catch (error) {
+          console.error(error);
+          document.getElementById("fullName").textContent =
+            "Provider not available";
+          document.getElementById("bioText").textContent =
+            "Unable to load provider profile right now.";
+        }
+      }
+
+      loadProvider();
+    </script>
+  </body>
+</html>
