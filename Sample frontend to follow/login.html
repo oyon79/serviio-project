@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Serviio</title>
+    <link rel="stylesheet" href="login.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="background-overlay">
+        <div class="login-container">
+            
+            <!-- Left Side: Login Form -->
+            <div class="login-form-section">
+                <div class="header-row">
+                    <h1>Login</h1>
+                    <div class="logo-icon">
+                        <!-- Placeholder for the circular blue logo in the screenshot -->
+                        <div class="logo-placeholder"></div>
+                    </div>
+                </div>
+
+                <form>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="username@gmail.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Password">
+                            <i class="far fa-eye-slash toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <div class="forgot-link">
+                        <a href="#">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-signin">Sign In &rarr;</button>
+                </form>
+
+                <div class="divider">
+                    <span>Or Continue With</span>
+                </div>
+
+                <div class="social-login">
+                    <button class="social-btn"><i class="fab fa-google"></i></button>
+                    <button class="social-btn"><i class="fab fa-github"></i></button>
+                    <button class="social-btn"><i class="fab fa-facebook-f"></i></button>
+                </div>
+
+                <p class="register-text">Don't have an account yet? <a href="role.html">Register for free</a></p>
+            </div>
+
+            <!-- Right Side: Illustration Container -->
+            <div class="login-illustration-section">
+                <!-- Exact picture container for your address later -->
+                <img src="https://img.magnific.com/free-vector/access-control-system-abstract-concept_335657-3180.jpg?semt=ais_hybrid&w=740&q=80" alt="Worker Illustration" class="main-illustration">
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

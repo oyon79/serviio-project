@@ -1,77 +1,71 @@
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "..", ".env") });
 const mysql = require("mysql2/promise");
-require("dotenv").config();
 
-// Read env with safe defaults
 const {
   DB_HOST = "localhost",
   DB_USER = "root",
   DB_PASSWORD = "",
   DB_NAME,
-  DB_PORT,
+  DB_PORT = 3306,
   DB_CONNECTION_LIMIT = 10,
+  DB_QUEUE_LIMIT = 0,
+  DB_CONNECT_TIMEOUT = 10000,
+  DB_ACQUIRE_TIMEOUT = 10000,
 } = process.env;
 
-// Validate required config
 if (!DB_NAME) {
   console.error("Missing required environment variable: DB_NAME");
-  // Fail fast so developers notice misconfiguration early
   process.exit(1);
 }
 
-// Create a connection pool
 const pool = mysql.createPool({
   host: DB_HOST,
   user: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
-  port: DB_PORT ? parseInt(DB_PORT, 10) : undefined,
+  port: Number(DB_PORT),
   waitForConnections: true,
-  connectionLimit: parseInt(DB_CONNECTION_LIMIT, 10) || 10,
-  queueLimit: 0,
+  connectionLimit: Number(DB_CONNECTION_LIMIT) || 10,
+  queueLimit: Number(DB_QUEUE_LIMIT) || 0,
+  connectTimeout: Number(DB_CONNECT_TIMEOUT) || 10000,
+  acquireTimeout: Number(DB_ACQUIRE_TIMEOUT) || 10000,
+  decimalNumbers: true,
+  namedPlaceholders: true,
 });
 
-console.log("MySQL Pool created for database:", DB_NAME);
-
-// Helper: test connection on startup
 async function testConnection() {
   try {
-    const conn = await pool.getConnection();
+    const connection = await pool.getConnection();
     try {
-      await conn.ping();
+      await connection.ping();
     } finally {
-      conn.release();
+      connection.release();
     }
-    console.log("MySQL connection test succeeded");
-  } catch (err) {
-    console.error("MySQL connection test failed:", err.message || err);
-    // Exit so the service doesn't run in a broken state
+    console.log("MySQL pool initialized and reachable.");
+  } catch (error) {
+    console.error("MySQL pool initialization failed:", error.message || error);
     process.exit(1);
   }
 }
 
-// Expose a small convenience query helper
-async function query(sql, params = []) {
-  const [rows] = await pool.execute(sql, params);
-  return rows;
-}
-
-// Attach helpers on the pool object to remain backwards-compatible
 pool.testConnection = testConnection;
-pool.queryExec = query;
 
-// Graceful shutdown: close pool on process exit
 function closePool() {
   pool
     .end()
-    .then(() => console.log("MySQL pool closed"))
-    .catch((e) => console.error("Error closing MySQL pool", e));
+    .then(() => {
+      console.log("MySQL pool closed.");
+    })
+    .catch((error) => {
+      console.error("Error closing MySQL pool:", error.message || error);
+    });
 }
 
 process.on("SIGINT", closePool);
 process.on("SIGTERM", closePool);
 process.on("exit", closePool);
 
-// Run a quick test at startup
 testConnection();
 
 module.exports = pool;

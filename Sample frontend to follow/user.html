@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Account - SERVIIO</title>
+    <link rel="stylesheet" href="user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="signup-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <img src="/Frontend/Image/logo 2.png" alt="SERVIIO Logo">
+                <span>SERVIIO</span>
+            </div>
+            <h1>Create Your Account</h1>
+            <p class="join-text">Join Serviio as a Service User</p>
+            
+            <div class="social-auth">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-google"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            
+            <div class="divider">
+                <span>or register with email</span>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form class="signup-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel">
+            </div>
+
+            <div class="form-group password-wrapper">
+                <label>Password</label>
+                <input type="password">
+                <i class="far fa-eye toggle-password"></i>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password">
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="terms">
+                    <label for="terms">I agree to the Terms of Service and Privacy Policy</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="updates">
+                    <label for="updates">Send me updates about new services and features</label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" onclick="window.location.href='home.html'" >COMPLETE YOUR REGISTRATION &rarr;</button>
+        </form>
+
+        <div class="footer-link">
+            <a href="role.html">&larr; Go to Selection page</a>
+        </div>
+    </div>
+
+</body>
+</html>

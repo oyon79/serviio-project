@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIIO - Choose Your Role</title>
+    <link rel="stylesheet" href="role.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Logo Section -->
+        <div class="logo-area">
+            <img src="/Frontend/Image/logo 2.png" alt="SERVIIO Logo" class="brand-logo">
+            <span class="brand-name">SERVIIO</span>
+        </div>
+
+        <h1 class="page-title">Choose Your Role</h1>
+        <p class="subtitle">How would you like to join Serviio? Select the option that best describes you.</p>
+
+        <!-- Role Selection Cards as Buttons -->
+        <div class="cards-container">
+            <!-- Service User Button -->
+            <a href="user.html" class="role-card-button">
+                <div class="icon-box">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <h3>Service User</h3>
+                <p class="role-desc">Looking for professional services? Join as a service user to book and manage services.</p>
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-check"></i> Browse available services</li>
+                    <li><i class="fa-solid fa-check"></i> Book appointments</li>
+                    <li><i class="fa-solid fa-check"></i> Rate and review providers</li>
+                    <li><i class="fa-solid fa-check"></i> Track service history</li>
+                </ul>
+            </a>
+
+            <!-- Service Provider Button -->
+            <a href="serviceProvider.html" class="role-card-button">
+                <div class="icon-box">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </div>
+                <h3>Service Provider</h3>
+                <p class="role-desc"><strong>Ready to offer your professional services? Join as a service provider to grow your business.</strong></p>
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-check"></i> Create service profiles</li>
+                    <li><i class="fa-solid fa-check"></i> Manage bookings</li>
+                    <li><i class="fa-solid fa-check"></i> Set your own rates</li>
+                    <li><i class="fa-solid fa-check"></i> Build your reputation</li>
+                </ul>
+            </a>
+        </div>
+
+        <!-- Action Section -->
+        <div class="footer-actions">
+            <button class="btn-home" onclick="window.location.href='landing.html'">Back To HomePage &rarr;</button>
+            <p class="login-text">Already have an account? <a href="login.html">Sign in here</a></p>
+        </div>
+    </div>
+</body>
+</html>

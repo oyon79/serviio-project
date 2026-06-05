@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIIO - Service Area</title>
+    <link rel="stylesheet" href="serviceArea.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <span>SERVIIO</span>
+        </div>
+        <nav class="nav-links">
+            <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="serviceArea.html" class="active"><i class="fa-solid fa-map-location-dot"></i> Service Area</a>
+            <a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a>
+            <a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a>
+            <a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a>
+            <div class="notification">
+                <i class="fa-solid fa-bell"></i>
+                <span class="badge">3</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="page-banner">
+        <div class="banner-content">
+            <div class="banner-text">
+                <h1><i class="fa-solid fa-map-location-dot"></i> Service Area</h1>
+                <p>Select your area and take the service.</p>
+            </div>
+            <div class="banner-actions">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search Your Area">
+                    <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div class="view-toggles">
+                    <button class="active"><i class="fa-solid fa-border-all"></i></button>
+                    <button><i class="fa-solid fa-list"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="breadcrumb-container">
+        <div class="breadcrumb">
+            <i class="fa-solid fa-house"></i> Home <i class="fa-solid fa-chevron-right"></i> Service Area
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="filters-container">
+            <div class="filter-group">
+                <label>Select Your Area</label>
+                <select id="areaFilter">
+                    <option value="all">Pick an option</option>
+                    <option value="Uttara">Uttara</option>
+                    <option value="Mirpur">Mirpur</option>
+                    <option value="Old Dhaka">Old Dhaka</option>
+                    <option value="Notun Bazar">Notun Bazar</option>
+                    <option value="Gulshan">Gulshan</option>
+                    <option value="Banani">Banani</option>
+                    <option value="Dhanmondi">Dhanmondi</option>
+                    <option value="Badda">Badda</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Type of Service:</label>
+                <select id="serviceFilter">
+                    <option value="all">Pick an option</option>
+                    <option value="Electrician">Electrician</option>
+                    <option value="Plumber">Plumber</option>
+                    <option value="Wood Worker">Wood Worker</option>
+                    <option value="Normal Service">Normal Service</option>
+                    <option value="AC Repair">AC Repair</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Availability</label>
+                <select id="availabilityFilter">
+                    <option value="all">Pick an option</option>
+                    <option value="Regular Time">Regular Time</option>
+                    <option value="24/7 Support">24/7 Support</option>
+                    <option value="Weekend Only">Weekend Only</option>
+                </select>
+            </div>
+            <button class="btn-clear" id="clearFiltersBtn">Clear</button>
+        </div>
+
+        <div class="area-grid" id="areaGrid">
+            </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            <h3>No areas match your filters.</h3>
+            <p>Try clearing your search or selecting different options.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <i class="fa-solid fa-hurricane" style="font-size: 28px; margin-right: 10px;"></i>
+                <h2>SERVIIO</h2>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h3>Product</h3>
+                    <a href="#">Landing Page</a>
+                    <a href="#">Popup Builder</a>
+                    <a href="#">Web-design</a>
+                    <a href="#">Content</a>
+                    <a href="#">Integrations</a>
+                </div>
+                <div class="footer-col">
+                    <h3>Use Cases</h3>
+                    <a href="#">Web-designers</a>
+                    <a href="#">Marketers</a>
+                    <a href="#">Small Business</a>
+                    <a href="#">Website Builder</a>
+                </div>
+                <div class="footer-col">
+                    <h3>Resources</h3>
+                    <a href="#">Academy</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Themes</a>
+                    <a href="#">Hosting</a>
+                    <a href="#">Developers</a>
+                    <a href="#">Support</a>
+                </div>
+                <div class="footer-col">
+                    <h3>Company</h3>
+                    <a href="#">About Us</a>
+                    <a href="#">Careers</a>
+                    <a href="#">FAQs</a>
+                    <a href="#">Teams</a>
+                    <a href="#">Contact Us</a>
+                </div>
+                <div class="footer-col">
+                    <h3>Let's do it!</h3>
+                    <div class="social-icons">
+                        <i class="fa-brands fa-facebook-f"></i>
+                        <i class="fa-brands fa-twitter"></i>
+                        <i class="fa-brands fa-instagram"></i>
+                        <i class="fa-brands fa-linkedin-in"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="legal-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+            <div class="copyright">
+                © 2024 All Rights Reserved
+            </div>
+        </div>
+    </footer>
+
+    <script src="serviceArea.js"></script>
+</body>
+</html>

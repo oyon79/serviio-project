@@ -51,10 +51,17 @@
             </div>
 
             <div class="forgot-link">
-              <a href="#">Forgot Password?</a>
+              <a href="forgot-password.html">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="btn-signin">Sign In &rarr;</button>
+            <button type="submit" class="btn-signin" id="loginSubmitButton">
+              Sign In &rarr;
+            </button>
+            <div
+              id="loginMessage"
+              class="login-message"
+              aria-live="polite"
+            ></div>
           </form>
 
           <div class="divider">
@@ -78,54 +85,6 @@
       </div>
     </div>
 
-    <script>
-      // Single login handler: standardizes token storage and redirects
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const email = document.getElementById("email").value.trim();
-          const password = document.getElementById("password").value;
-
-          try {
-            const response = await fetch(
-              "http://localhost:5000/api/auth/login",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-              },
-            );
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-              // Use consistent keys across the frontend
-              localStorage.setItem("serviio_token", data.token);
-              localStorage.setItem("serviio_user", JSON.stringify(data.user));
-
-              // Redirect based on role
-              const role = ((data.user && data.user.role) || "").toLowerCase();
-              if (role === "provider") {
-                window.location.href = "profileBooking.html";
-              } else if (role === "admin") {
-                window.location.href = "admin.html";
-              } else {
-                window.location.href = "home.html";
-              }
-            } else {
-              alert(
-                data.message || "Login failed. Please check your credentials.",
-              );
-            }
-          } catch (err) {
-            console.error("Login error:", err);
-            alert(
-              "Cannot reach server. Make sure backend is running on port 5000.",
-            );
-          }
-        });
-    </script>
+    <script src="js/auth.js"></script>
   </body>
 </html>

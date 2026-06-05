@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviio - Emergency Fix System</title>
+    <link rel="stylesheet" href="emergency.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="top-nav">
+        <div class="logo">SERVIIO</div>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-map-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+                <li class="notif"><i class="fa-solid fa-bell"></i><span class="badge">3</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="emergency-banner">
+        <h1>Emergency Fix System</h1>
+        <p>In case of emergency, Serviio is always there for you</p>
+    </section>
+
+    <main class="content-container">
+        <h2>give your preferable Date & Time</h2>
+
+        <div class="selection-wrapper">
+            <div class="date-picker-section">
+                <div class="calendar-icon-header">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3652/3652191.png" alt="calendar" width="40">
+                </div>
+                <div class="calendar-box">
+                    <div class="cal-header">
+                        <span class="today-tag" id="currentMonthYear">May 2026</span>
+                    </div>
+                    <div class="cal-days">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div class="cal-grid" id="calendarGrid">
+                        </div>
+                    <div class="cal-footer">
+                        <button class="btn-clear" onclick="clearSelection()">Clear</button>
+                        <button class="btn-apply" onclick="applySelection()">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="time-picker-section">
+                <i class="fa-regular fa-clock clock-icon"></i>
+                <div class="time-card">
+                    <div class="time-grid" id="timeGrid">
+                        <div class="time-num">9</div><div class="time-num">10</div><div class="time-num">11</div><div class="time-num">12</div>
+                        <div class="time-num">1</div><div class="time-num">2</div><div class="time-num">3</div><div class="time-num">4</div>
+                        <div class="time-num">5</div><div class="time-num">6</div><div class="time-num">7</div><div class="time-num">8</div>
+                    </div>
+                    <div class="ampm-switch">
+                        <button class="btn-toggle" id="pmBtn">PM</button>
+                        <button class="btn-toggle active-blue" id="amBtn">AM</button>
+                    </div>
+                </div>
+                <button class="btn-next" onclick="window.location.href='payment.html'">Next</button>
+            </div>
+        </div>
+
+        <button class="btn-back-main" onclick="window.history.back()">Back</button>
+    </main>
+
+    <script>
+        // Calendar Logic
+        const grid = document.getElementById('calendarGrid');
+        const monthYear = document.getElementById('currentMonthYear');
+        let selectedDate = 14; // Default as per image
+
+        function initCalendar() {
+            grid.innerHTML = '';
+            // Simplified rendering for demonstration based on reference
+            for (let i = 1; i <= 31; i++) {
+                const span = document.createElement('span');
+                span.innerText = i;
+                if (i === selectedDate) span.className = 'active-orange';
+                span.onclick = () => {
+                    document.querySelectorAll('.cal-grid span').forEach(s => s.classList.remove('active-orange'));
+                    span.classList.add('active-orange');
+                    selectedDate = i;
+                };
+                grid.appendChild(span);
+            }
+        }
+
+        // Time Selection Logic
+        document.querySelectorAll('.time-num').forEach(num => {
+            num.onclick = () => {
+                document.querySelectorAll('.time-num').forEach(n => n.classList.remove('active-orange'));
+                num.classList.add('active-orange');
+            };
+        });
+
+        // AM/PM Switch
+        const amBtn = document.getElementById('amBtn');
+        const pmBtn = document.getElementById('pmBtn');
+        amBtn.onclick = () => { amBtn.classList.add('active-blue'); pmBtn.classList.remove('active-blue'); };
+        pmBtn.onclick = () => { pmBtn.classList.add('active-blue'); amBtn.classList.remove('active-blue'); };
+
+        function clearSelection() {
+            document.querySelectorAll('.active-orange').forEach(el => el.classList.remove('active-orange'));
+        }
+
+        initCalendar();
+    </script>
+</body>
+</html>

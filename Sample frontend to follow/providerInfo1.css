@@ -1,0 +1,66 @@
+:root {
+    --primary-blue: #004de6;
+    --dark-blue: #003393;
+    --active-purple: #004fe2;
+    --inactive-purple: #003393;
+    --emergency-red: #ff4d4d;
+    --white: #ffffff;
+    --bg-gray: #f4f7fe;
+}
+
+body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-gray); }
+
+/* Header */
+.navbar { background: var(--dark-blue); color: white; padding: 15px 8%; display: flex; justify-content: space-between; align-items: center; }
+.navbar ul { display: flex; list-style: none; gap: 20px; }
+.navbar a { color: white; text-decoration: none; font-size: 14px; }
+.badge { background: red; font-size: 10px; padding: 2px 6px; border-radius: 50%; margin-left: -5px; }
+
+/* Layout */
+.container { max-width: 1000px; margin: 40px auto; padding: 0 20px; text-align: center; }
+.page-title { color: var(--primary-blue); margin-bottom: 30px; }
+
+.profile-card { background: white; border-radius: 15px; padding: 40px; display: flex; gap: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; }
+.profile-left { flex: 1; border-right: 1px solid #eee; padding-right: 40px; }
+.profile-right { flex: 1.5; }
+
+/* Header Row for Rating & Emergency */
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+
+.rating-box strong { font-size: 16px; color: #333; }
+.rating-box p { font-size: 12px; color: #666; margin: 5px 0 0; }
+.rating-box i { color: #f1c40f; }
+
+/* Simple Emergency Button */
+.btn-emergency-fix {
+    background: var(--emergency-red);
+    color: white; border: none;
+    padding: 10px 20px; border-radius: 6px;
+    font-weight: bold; cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+.btn-emergency-fix:hover { background: #c40707; transform: translateY(-1px); }
+.btn-emergency-fix:active { transform: translateY(0); }
+
+/* Tabs */
+.tab-buttons { display: flex; gap: 10px; margin: 20px 0; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+.tab-btn { flex: 1; padding: 12px; border: none; background: var(--inactive-purple); color: white; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+.tab-btn.active { background: var(--active-purple); }
+.tab-btn:hover:not(.active) { background: var(--active-purple); opacity: 0.9; }
+
+.tab-content .panel { display: none; }
+.tab-content .panel.active { display: block; animation: fadeIn 0.3s; }
+
+/* Lists */
+.price-list { list-style: none; padding: 0; }
+.price-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 13px; }
+.price-list strong { color: var(--dark-blue); }
+
+.avatar-circle img { width: 80px; height: 80px; border-radius: 50%; }
+.tag-technician { background: #e8eaf6; color: var(--primary-blue); font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+
+.btn-booking { background: var(--dark-blue); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; }
+.btn-booking:hover{ background: var(--primary-blue); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; }
+.btn-back { margin-top: 30px; background: var(--primary-blue); color: white; border: none; padding: 10px 40px; border-radius: 5px; cursor: pointer; }
+.btn-back:hover { margin-top: 30px; background: var(--dark-blue); color: white; border: none; padding: 10px 40px; border-radius: 5px; cursor: pointer; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

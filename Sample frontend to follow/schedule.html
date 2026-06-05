@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviio - Emergency Schedule</title>
+    <link rel="stylesheet" href="schedule.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="logo"><i class="fa-solid fa-compass"></i> SERVIIO</div>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-map-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+                <li class="notif"><i class="fa-solid fa-bell"></i><span class="badge">3</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="schedule-container">
+        <h1>Schedule Management</h1>
+        <p class="subtitle">Select a date and available time slot to book your service</p>
+
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button class="cal-nav" id="prevMonth">&lt;</button>
+                <h2 id="monthYearDisplay">October 2025</h2>
+                <button class="cal-nav" id="nextMonth">&gt;</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <div class="slots-card">
+            <div class="provider-info">
+                <h3>Provider: Rahim Electrician</h3>
+                <p><i class="fa-solid fa-star" style="color:#ffcc00"></i> 4.8 | Dhanmondi | 9 AM – 6 PM</p>
+            </div>
+
+            <h4>Available Time Slots</h4>
+            <div class="time-grid">
+                <button class="time-slot">09:00–10:00</button>
+                <button class="time-slot">10:00–11:00</button>
+                <button class="time-slot">11:00–12:00</button>
+                <button class="time-slot">02:00–03:00</button>
+                <button class="time-slot">03:00–04:00</button>
+                <button class="time-slot">05:00–06:00</button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-confirm" onclick="location.href='payment.html'">Confirm Schedule &rarr;</button>
+                <button class="btn-emergency" id="emergencyBtn">Emergency Schedule</button>
+            </div>
+        </div>
+        <button class="btn-back" onclick="window.history.back()">Back</button>
+    </main>
+
+    <div class="emergency-overlay" id="emergencyModal">
+        <div class="emergency-modal-content">
+            <i class="fa-solid fa-triangle-exclamation emergency-icon"></i>
+            <h2>Emergency Service</h2>
+            <p>Our technician will arrive within 30-45 minutes. Additional charges may apply for instant service.</p>
+            <div class="modal-actions">
+                <button class="btn-confirm" onclick="location.href='emergency.html'">Proceed with Emergency</button>
+                <button class="btn-back" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-logo"><i class="fa-solid fa-compass"></i> SERVIIO</div>
+        <div class="footer-columns">
+            <div class="col"><h4>Product</h4><ul><li>Landing Page</li><li>Popup Builder</li><li>Web-design</li></ul></div>
+            <div class="col"><h4>Use Cases</h4><ul><li>Web-designers</li><li>Marketers</li><li>Small Business</li></ul></div>
+            <div class="col"><h4>Resources</h4><ul><li>Academy</li><li>Blog</li><li>Themes</li></ul></div>
+            <div class="col"><h4>Company</h4><ul><li>About Us</li><li>Careers</li><li>FAQs</li></ul></div>
+            <div class="col"><h4>Let's do it!</h4><div class="socials"><i class="fa-brands fa-facebook"></i><i class="fa-brands fa-github"></i></div></div>
+        </div>
+        <div class="footer-bottom">
+            <p>Privacy Policy | Terms of Use | Sales and Refunds</p>
+            <p>© 2021 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        const monthYearDisplay = document.getElementById('monthYearDisplay');
+        const calendarGrid = document.getElementById('calendarGrid');
+        const prevBtn = document.getElementById('prevMonth');
+        const nextBtn = document.getElementById('nextMonth');
+        const modal = document.getElementById('emergencyModal');
+        const emergencyBtn = document.getElementById('emergencyBtn');
+
+        let currentDate = new Date(2025, 9, 1);
+
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            monthYearDisplay.innerText = `${monthNames[month]} ${year}`;
+
+            ["Su", "MO", "TU", "WE", "TH", "FR", "SA"].forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'day-label';
+                dayEl.innerText = day;
+                calendarGrid.appendChild(dayEl);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'date-cell empty';
+                calendarGrid.appendChild(emptyDiv);
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateEl = document.createElement('div');
+                dateEl.className = 'date-cell';
+                dateEl.innerText = i;
+                if(i === 10 && month === 9) dateEl.classList.add('active'); // Match image
+                dateEl.onclick = () => {
+                    document.querySelectorAll('.date-cell').forEach(c => c.classList.remove('active'));
+                    dateEl.classList.add('active');
+                };
+                calendarGrid.appendChild(dateEl);
+            }
+        }
+
+        prevBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
+        nextBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
+        emergencyBtn.onclick = () => { modal.style.display = 'flex'; };
+        function closeModal() { modal.style.display = 'none'; }
+
+        document.querySelectorAll('.time-slot').forEach(slot => {
+            slot.onclick = () => {
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+            };
+        });
+
+        renderCalendar();
+    </script>
+</body>
+</html>

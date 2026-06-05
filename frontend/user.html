@@ -15,9 +15,7 @@
     <nav class="navbar">
       <div class="logo">SERVIIO</div>
       <ul class="nav-links">
-        <li><a href="home.html">Home</a></li>
-        <li><a href="providerList.html">Find Providers</a></li>
-        <li><a href="login.html" class="active">Login / Register</a></li>
+        <li><a href="login.html" class="active">Login</a></li>
       </ul>
     </nav>
 
@@ -137,6 +135,15 @@
             errorBox.textContent =
               "Password must be at least 6 characters long.";
             return (errorBox.style.display = "block");
+          }
+
+          // Strict phone validation (Bangladesh mobile numbers start with 01 and have 11 digits)
+          const phoneRegex = /^01\d{9}$/;
+          if (!phoneRegex.test(payload.phone)) {
+            errorBox.textContent =
+              "Please enter a valid Bangladeshi phone number (11 digits, starting with 01).";
+            errorBox.style.display = "block";
+            return;
           }
 
           try {

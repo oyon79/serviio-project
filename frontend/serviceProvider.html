@@ -159,6 +159,15 @@
             return (errorBox.style.display = "block");
           }
 
+          // Strict phone validation (Bangladesh mobile numbers start with 01 and have 11 digits)
+          const phoneRegex = /^01\d{9}$/;
+          if (!phoneRegex.test(payload.phone)) {
+            errorBox.textContent =
+              "Please enter a valid Bangladeshi phone number (11 digits, starting with 01).";
+            errorBox.style.display = "block";
+            return;
+          }
+
           try {
             // EXPLICIT ABSOLUTE URL TO FORCE CONNECTION TO BACKEND
             const response = await fetch(

@@ -1,0 +1,186 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+}
+
+/* Background setup based on Screenshot 2026-05-14 064001.jpg */
+.background-overlay {
+    height: 100vh;
+    width: 100vw;
+    background: linear-gradient(rgba(190, 184, 218, 0.7), rgba(46, 46, 142, 0.7)), 
+                url('https://files.123freevectors.com/wp-content/original/148077-abstract-glowing-cool-blue-wave-background-design.jpg'); /* Replace with actual background */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main Container */
+.login-container {
+    width: 850px;
+    height: 500px;
+    display: flex;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+/* Form Section (Left) */
+.login-form-section {
+    flex: 1.2;
+    background-color: #e5e5e5;
+    padding: 40px 50px;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.header-row h1 {
+    font-size: 2rem;
+    color: #333;
+}
+
+/* Form Inputs */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fdfdfd;
+    font-size: 0.85rem;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ccc;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.forgot-link {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.forgot-link a {
+    font-size: 0.75rem;
+    color: #003399;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* Button Hover Effect */
+.btn-signin {
+    width: 100%;
+    padding: 12px;
+    background-color: #0d47a1;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-signin:hover {
+    background-color: #1969c5;
+    transform: translateY(-1px);
+}
+
+/* Divider & Socials */
+.divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.divider span {
+    font-size: 0.7rem;
+    color: #888;
+    background: #e5e5e5;
+    padding: 0 10px;
+}
+
+.social-login {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.social-btn {
+    width: 45px;
+    height: 35px;
+    border: none;
+    border-radius: 15px;
+    background: white;
+    color: #555;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.social-btn:hover {
+    transform: scale(1.1);
+}
+
+.register-text {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #555;
+}
+
+.register-text a {
+    color: #003399;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Illustration Section (Right) */
+.login-illustration-section {
+    flex: 1;
+    background-color: #002b80; /* Matches the deep blue in the screenshot */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.main-illustration {
+    width: 90%;
+    height: auto;
+    object-fit: contain;
+}

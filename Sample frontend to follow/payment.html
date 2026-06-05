@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviio - Payment</title>
+    <link rel="stylesheet" href="payment.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">SERVIIO</div>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-map-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+                <li class="notif-icon"><i class="fa-solid fa-bell"></i><span class="badge">3</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Payment</h1>
+            <a href="#" class="back-link" onclick="window.history.back()">&lt; Back to Schedule Page</a>
+        </div>
+
+        <div class="payment-card">
+            <div class="payment-left">
+                <h3>How would you like to pay?</h3>
+                
+                <div class="payment-grid">
+                    <div class="payment-option" onclick="selectPayment('bKash', this)">
+                        <div class="brand-logo bkash-logo">
+                            <i class="fa-solid fa-paper-plane"></i> bKash
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('Nagad', this)">
+                        <div class="brand-logo nagad-logo">
+                            <i class="fa-solid fa-infinity"></i> নগদ
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('Rocket', this)">
+                        <div class="brand-logo rocket-logo">
+                            <i class="fa-solid fa-rocket"></i> Rocket
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('Visa', this)">
+                        <div class="brand-logo visa-logo">
+                            <strong>VISA</strong>
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('Mastercard', this)">
+                        <div class="brand-logo mc-logo">
+                            <div class="mc-circles">
+                                <div class="circle red"></div>
+                                <div class="circle orange"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('PayPal', this)">
+                        <div class="brand-logo paypal-logo">
+                            <i>Pay</i><strong>Pal</strong>
+                        </div>
+                    </div>
+                    <div class="payment-option" onclick="selectPayment('Cash on Delivery', this)">
+                        <div class="brand-logo cod-logo">
+                            <i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vertical-divider"></div>
+
+            <div class="payment-right">
+                <h2>Booking Summary</h2>
+                <p class="provider-id">Provider Code ID: 223847</p>
+
+                <div class="summary-profile">
+                    <div class="avatar-circle">
+                        <img src="https://via.placeholder.com/50" alt="Najmul Hossain Nur">
+                    </div>
+                    <div class="name-area">
+                        <h4>Najmul Hossain Nur</h4>
+                        <span class="tag-technician">Technician</span>
+                    </div>
+                </div>
+
+                <div class="summary-table">
+                    <div class="summary-row">
+                        <span class="label">Work Type</span>
+                        <span class="value bg-gray">AC Repair</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Service Type</span>
+                        <span class="value bg-gray">Normal</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Service Charge</span>
+                        <span class="value bg-gray">৳700</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Tax (5%)</span>
+                        <span class="value bg-gray">৳35</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="label">Total</span>
+                        <span class="value bg-gray bold">৳735</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Payment Method</span>
+                        <span class="value bg-gray highlight" id="selected-method-display">Select a method</span>
+                    </div>
+                </div>
+
+                <button class="btn-book-now" onclick="processBooking()">Book now</button>
+                <a href="#" class="cancel-link" onclick="window.history.back()">&lt; Cancel payment</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-logo"><i class="fa-solid fa-compass"></i> SERVIIO</div>
+        </div>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#">Landing Page</a></li>
+                    <li><a href="#">Popup Builder</a></li>
+                    <li><a href="#">Web-design</a></li>
+                    <li><a href="#">Content</a></li>
+                    <li><a href="#">Integrations</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Use Cases</h4>
+                <ul>
+                    <li><a href="#">Web-designers</a></li>
+                    <li><a href="#">Marketers</a></li>
+                    <li><a href="#">Small Business</a></li>
+                    <li><a href="#">Website Builder</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Academy</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Themes</a></li>
+                    <li><a href="#">Hosting</a></li>
+                    <li><a href="#">Developers</a></li>
+                    <li><a href="#">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Teams</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Let's do it!</h4>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="legal-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+            <p>© 2021 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentPaymentMethod = null;
+
+        function selectPayment(methodName, element) {
+            // Remove active class from all options
+            const options = document.querySelectorAll('.payment-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+
+            // Add active class to the clicked option
+            element.classList.add('selected');
+
+            // Update the state and UI summary
+            currentPaymentMethod = methodName;
+            const displayElement = document.getElementById('selected-method-display');
+            displayElement.textContent = methodName;
+            displayElement.classList.add('active-text');
+        }
+
+        function processBooking() {
+            if (!currentPaymentMethod) {
+                alert("Please select a payment method first.");
+                return;
+            }
+            alert("Booking confirmed using " + currentPaymentMethod + "!");
+        }
+    </script>
+</body>
+</html>

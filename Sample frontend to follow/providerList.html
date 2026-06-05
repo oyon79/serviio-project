@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIIO - Provider List</title>
+    <link rel="stylesheet" href="providerList.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">SERVIIO</div>
+            <ul class="nav-links">
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html" class="active"><i class="fa-solid fa-users-gear"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+                <li class="notif"><i class="fa-solid fa-bell"></i><span class="badge">3</span></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="header-section">
+            <h1>SERVIIO Provider List</h1>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Search">
+            </div>
+        </header>
+
+        <div class="filter-card">
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="categoryFilter">
+                    <option value="">Pick an option</option>
+                    <option value="Electrician">Electrician</option>
+                    <option value="Cleaner">Cleaner</option>
+                    <option value="Technician">Technician</option>
+                    <option value="Plumber">Plumber</option>
+                    <option value="Carpenter">Carpenter</option>
+                    <option value="Painter">Painter</option>
+                    <option value="Mechanic">Mechanic</option>
+                    <option value="Gardener">Gardener</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Area</label>
+                <select id="areaFilter">
+                    <option value="">Pick an option</option>
+                    <option value="Dhaka">Dhaka</option>
+                    <option value="Uttora">Uttora</option>
+                    <option value="Chattogram">Chattogram</option>
+                    <option value="Sylhet">Sylhet</option>
+                    <option value="Rajshahi">Rajshahi</option>
+                    <option value="Barishal">Barishal</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Rating</label>
+                <select id="ratingFilter">
+                    <option value="">Pick an option</option>
+                    <option value="4.5">4.5 & Up</option>
+                    <option value="4.0">4.0 & Up</option>
+                </select>
+            </div>
+            <button class="clear-btn" id="clearBtn">Clear filters</button>
+        </div>
+
+        <div id="providerGrid"></div>
+
+        <div class="pagination">
+            <button><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-num active">1</button>
+            <button><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </main>
+
+    <script src="providerList.js"></script>
+</body>
+</html>

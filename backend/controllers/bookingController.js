@@ -9,25 +9,40 @@ const allowedStatuses = new Set([
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
+  const customerId = req.user?.id;
   const {
-    customer_id,
     provider_id,
     service_type,
-    job_location,
     booking_date,
-    is_emergency,
+    job_location,
+    is_emergency = false,
     estimated_price_range,
   } = req.body;
+
+  if (!customerId) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required to create a booking.",
+    });
+  }
+
+  if (!provider_id || !service_type || !booking_date) {
+    return res.status(400).json({
+      success: false,
+      message: "provider_id, service_type, and booking_date are required.",
+    });
+  }
 
   try {
     const [customerRows] = await db.query(
       "SELECT id FROM users WHERE id = ? AND role = 'customer' LIMIT 1",
-      [customer_id],
+      [customerId],
     );
     if (customerRows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Customer not found" });
+      return res.status(403).json({
+        success: false,
+        message: "Only customers can create bookings.",
+      });
     }
 
     const [providerRows] = await db.query(
@@ -37,42 +52,43 @@ exports.createBooking = async (req, res) => {
     if (providerRows.length === 0) {
       return res
         .status(404)
-        .json({ success: false, message: "Provider not found" });
+        .json({ success: false, message: "Provider not found." });
     }
 
-    // 1. Generate a secure, random 4-digit handshake code
     const handshake_code = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // 2. Insert the booking into the database
     const [result] = await db.query(
-      `INSERT INTO bookings 
-            (customer_id, provider_id, service_type, estimated_price_range, is_emergency, status, handshake_code, job_location, booking_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO bookings
+        (customer_id, provider_id, service_type, job_location, booking_date, estimated_price_range, is_emergency, status, handshake_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        customer_id,
+        customerId,
         provider_id,
         service_type,
-        estimated_price_range,
-        is_emergency || false,
-        "PENDING", // Initial status aligned with schema
+        job_location || null,
+        booking_date,
+        estimated_price_range || null,
+        is_emergency ? 1 : 0,
+        "PENDING",
         handshake_code,
-        job_location,
-        booking_date || null,
       ],
     );
 
-    // 3. Send success response back to the frontend
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Booking created successfully!",
-      booking_id: result.insertId,
-      handshake_code: handshake_code, // We send this back so the customer can see it!
+      message: "Booking created successfully.",
+      data: {
+        booking_id: result.insertId,
+        status: "PENDING",
+        handshake_code,
+      },
     });
   } catch (error) {
     console.error("Error creating booking:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Server Error during booking" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error during booking creation.",
+    });
   }
 };
 // ... existing createBooking function ...
@@ -160,6 +176,48 @@ exports.getProviderBookings = async (req, res) => {
   }
 };
 
+// 3. Get bookings for the authenticated user (customer or provider)
+exports.getMyBookings = async (req, res) => {
+  if (!req.user || !req.user.id) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication required" });
+  }
+
+  const userId = req.user.id;
+  try {
+    if (req.user.role === "provider") {
+      const query = `
+        SELECT b.*, u.first_name as customer_name, u.phone as customer_phone
+        FROM bookings b
+        JOIN users u ON b.customer_id = u.id
+        WHERE b.provider_id = ?
+        ORDER BY b.created_at DESC
+      `;
+      const [bookings] = await db.query(query, [userId]);
+      return res
+        .status(200)
+        .json({ success: true, count: bookings.length, data: bookings });
+    }
+
+    // else customer
+    const query = `
+      SELECT b.*, u.first_name as provider_name, u.phone as provider_phone
+      FROM bookings b
+      LEFT JOIN users u ON b.provider_id = u.id
+      WHERE b.customer_id = ?
+      ORDER BY b.created_at DESC
+    `;
+    const [bookings] = await db.query(query, [userId]);
+    return res
+      .status(200)
+      .json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 // 2. Verify Handshake Code (Changes status to 'working')
 exports.verifyHandshake = async (req, res) => {
   if (!req.user || req.user.role !== "provider") {
@@ -226,7 +284,7 @@ exports.updateBookingStatus = async (req, res) => {
   if (!req.user || req.user.role !== "provider") {
     return res
       .status(403)
-      .json({ success: false, message: "Provider access required" });
+      .json({ success: false, message: "Provider access required." });
   }
 
   const bookingId = req.params.id;
@@ -236,7 +294,7 @@ exports.updateBookingStatus = async (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Invalid status. Use PENDING, IN_PROGRESS, COMPLETED, or CANCELLED.",
+        "Invalid status. Valid values are PENDING, IN_PROGRESS, COMPLETED, or CANCELLED.",
     });
   }
 
@@ -252,10 +310,19 @@ exports.updateBookingStatus = async (req, res) => {
         .json({ success: false, message: "Booking not found." });
     }
 
-    if (String(bookingRows[0].provider_id) !== String(req.user.id)) {
+    const booking = bookingRows[0];
+    if (String(booking.provider_id) !== String(req.user.id)) {
       return res.status(403).json({
         success: false,
         message: "You can only update bookings assigned to you.",
+      });
+    }
+
+    if (booking.status === requestedStatus) {
+      return res.status(200).json({
+        success: true,
+        message: `Booking already in status ${requestedStatus}.`,
+        data: { id: bookingId, status: requestedStatus },
       });
     }
 
@@ -266,11 +333,85 @@ exports.updateBookingStatus = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Booking status updated",
+      message: "Booking status updated successfully.",
       data: { id: bookingId, status: requestedStatus },
     });
   } catch (error) {
     console.error("Error updating booking status:", error);
-    return res.status(500).json({ success: false, message: "Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error while updating status." });
+  }
+};
+
+exports.cancelBooking = async (req, res) => {
+  if (!req.user) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication required." });
+  }
+
+  const bookingId = req.params.id;
+  if (!bookingId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Booking id is required." });
+  }
+
+  try {
+    const [bookingRows] = await db.query(
+      "SELECT id, customer_id, provider_id, status FROM bookings WHERE id = ? LIMIT 1",
+      [bookingId],
+    );
+
+    if (bookingRows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found." });
+    }
+
+    const booking = bookingRows[0];
+    const userId = String(req.user.id);
+    const isCustomer = String(booking.customer_id) === userId;
+    const isProvider = String(booking.provider_id) === userId;
+
+    if (!isCustomer && !isProvider && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to cancel this booking.",
+      });
+    }
+
+    if (booking.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed bookings cannot be cancelled.",
+      });
+    }
+
+    if (booking.status === "CANCELLED") {
+      return res.status(200).json({
+        success: true,
+        message: "Booking is already cancelled.",
+        data: { id: bookingId, status: booking.status },
+      });
+    }
+
+    await db.query("UPDATE bookings SET status = ? WHERE id = ?", [
+      "CANCELLED",
+      bookingId,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully.",
+      data: { id: bookingId, status: "CANCELLED" },
+    });
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while cancelling booking.",
+    });
   }
 };

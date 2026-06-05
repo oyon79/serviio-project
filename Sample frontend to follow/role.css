@@ -1,0 +1,173 @@
+/* Styling based on Screenshot 2026-05-14 065912.png */
+:root {
+    --primary-blue: #2563eb;
+    --hover-blue: #1d4ed8;
+    --brand-dark: #002d88;
+    --text-muted: #555555;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+body {
+    background-color: #e7e8ee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.main-container {
+    background-color: var(--white);
+    width: 100%;
+    max-width: 1000px;
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo Styles */
+.logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 25px;
+}
+
+.brand-logo {
+    width: 100px;
+    height: auto;
+}
+
+.brand-name {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--brand-dark);
+    letter-spacing: 1px;
+}
+
+/* Typography */
+.page-title {
+    color: #0000ff;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 15px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 40px;
+}
+
+/* Clickable Card Buttons */
+.cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.role-card-button {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    text-decoration: none; /* Removes underline from text */
+    flex: 1;
+    max-width: 340px;
+    padding: 40px 25px;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    display: block; /* Makes the entire area clickable */
+    cursor: pointer;
+    border: none;
+}
+
+.role-card-button:hover {
+    background-color: var(--hover-blue);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.icon-box {
+    font-size: 40px;
+    margin-bottom: 20px;
+}
+
+.role-card-button h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.role-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    opacity: 0.95;
+}
+
+.feature-list {
+    list-style: none;
+    text-align: left;
+    display: inline-block;
+}
+
+.feature-list li {
+    font-size: 13px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.feature-list li i {
+    font-size: 11px;
+    color: #4ade80;
+}
+
+/* Footer Section */
+.btn-home {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    padding: 14px 40px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background 0.2s;
+}
+
+.btn-home:hover {
+    background-color: var(--hover-blue);
+}
+
+.login-text {
+    font-size: 13px;
+    color: #666;
+}
+
+.login-text a {
+    color: #00bfff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .role-card-button {
+        width: 100%;
+    }
+}

@@ -8,10 +8,22 @@ const areaFilter = document.getElementById("areaFilter");
 const rateFilter = document.getElementById("ratingFilter");
 const clearBtn = document.getElementById("clearBtn");
 
+function getApiBaseUrl() {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  if (window.location.protocol === "file:") {
+    return "http://localhost:5000";
+  }
+  if (hostname === "localhost" && (!port || port === "" || port === "80")) {
+    return "http://localhost:5000";
+  }
+  return window.location.origin;
+}
+
 // 1. Fetch Real Data from your Node.js Backend
 async function fetchProviders() {
   try {
-    const response = await fetch("http://localhost:5000/api/providers");
+    const response = await fetch(`${getApiBaseUrl()}/api/providers`);
     const result = await response.json();
 
     if (result.success) {

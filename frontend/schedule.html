@@ -442,7 +442,6 @@
 
           // Prepare Booking Data
           const bookingData = {
-            customer_id: currentUser.id,
             provider_id: parseInt(providerId),
             service_type: selectedProviderServiceType,
             job_location: jobLocation,
@@ -462,11 +461,15 @@
               'Processing... <i class="fa-solid fa-spinner fa-spin"></i>';
             btn.style.pointerEvents = "none";
 
+            const token = localStorage.getItem("serviio_token");
             const response = await fetch(
               "http://localhost:5000/api/bookings/create",
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: token ? `Bearer ${token}` : "",
+                },
                 body: JSON.stringify(bookingData),
               },
             );

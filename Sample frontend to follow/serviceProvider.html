@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Provider Registration - SERVIIO</title>
+    <link rel="stylesheet" href="serviceProvider.css">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="registration-container">
+        <!-- Logo & Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="/Frontend/Image/logo 2.png" alt="SERVIIO">
+                <span>SERVIIO</span>
+            </div>
+            <h1>Service Provider Registration</h1>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-google"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            <p class="tagline">Join Serviio and earn by sharing your Skills</p>
+        </div>
+
+        <form class="registration-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name (Based on NID/Birth Certificate)</label>
+                    <input type="text" placeholder="Name.....">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number:</label>
+                    <input type="text" placeholder="Your name........">
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Email (Optional)</label>
+                <input type="email" placeholder="Enter your name.....">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Current Location (Zilla/Upazilla)</label>
+                    <input type="text" placeholder="Enter your Current Location...">
+                </div>
+                <div class="form-group">
+                    <label>Sex:</label>
+                    <select>
+                        <option value="">Choose your gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label>What kind of service do you want to give ?</label>
+                <select>
+                    <option value="">Choose your service profession</option>
+                    <option value="plumbing">Plumbing</option>
+                    <option value="electrician">Electrician</option>
+                    <option value="cleaning">Cleaning</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Elaborate your past experience or about your skill</label>
+                <textarea placeholder="Brief summery of your skill and experience"></textarea>
+            </div>
+
+            <div class="form-group full-width file-input-group">
+                <label>National ID card/ Birth Certificate :</label>
+                <input type="file">
+            </div>
+
+            <div class="form-group full-width file-input-group">
+                <label>Picture :</label>
+                <input type="file">
+            </div>
+
+            <!-- Map Section -->
+            <div id="map"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" placeholder="enter your password.....">
+                </div>
+                <div class="form-group">
+                    <label>Confirm your Password again:</label>
+                    <input type="password" placeholder="type same password again....">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" onclick="window.location.href='login.html'">COMPLETE YOUR REGISTRATION &rarr;</button>
+        </form>
+
+        <a href="role.html" class="back-link">&larr; Go to Selection page</a>
+    </div>
+
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initializing map centered at Dhaka based on Screenshot 2026-05-14 071326.jpg
+        var map = L.map('map').setView([23.8103, 90.4125], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker = L.marker([23.8103, 90.4125], {draggable: true}).addTo(map);
+        marker.bindPopup("Drag to your location").openPopup();
+    </script>
+</body>
+</html>

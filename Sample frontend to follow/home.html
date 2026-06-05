@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIIO - Home</title>
+    <link rel="stylesheet" href="home.css">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo"> SERVIIO
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-map-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+                <li>
+                    <a href="#" class="bell-icon">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+            <div>
+                <h3 class="section-title"><i class="fa-solid fa-magnifying-glass"></i> Explore the area</h3>
+                <input type="text" class="location-input" placeholder="Write the location name">
+            </div>
+
+            <div>
+                <h3 class="section-title"><i class="fa-solid fa-list-ul"></i> Select the type of service</h3>
+                <div class="service-grid">
+                    <button class="service-btn" data-service="electrician">
+                        <i class="fa-solid fa-bolt"></i> Electrician
+                    </button>
+                    <button class="service-btn" data-service="plumber">
+                        <i class="fa-solid fa-faucet-drip"></i> Plumber
+                    </button>
+                    <button class="service-btn" data-service="ac">
+                        <i class="fa-solid fa-wind"></i> AC service
+                    </button>
+                    <button class="service-btn" data-service="repair">
+                        <i class="fa-solid fa-hammer"></i> Household Repair
+                    </button>
+                    <button class="service-btn" data-service="painting">
+                        <i class="fa-solid fa-paint-roller"></i> Painting
+                    </button>
+                    <button class="service-btn" data-service="carpenter">
+                        <i class="fa-solid fa-chair"></i> Carpenter
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <select class="workload-select" id="workload">
+                    <option value="" disabled selected>Pick an option</option>
+                    <option value="light">Light Workload</option>
+                    <option value="moderate">Moderate Workload</option>
+                    <option value="hard">Hard Workload</option>
+                </select>
+            </div>
+
+            <button class="search-btn" id="searchBtn">Search Area</button>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Map Overlays -->
+            <div class="map-overlay-bottom">
+                <div class="provider-info">
+                    <h4><i class="fa-solid fa-location-dot"></i> Service provider</h4>
+                    <p>Find service providers near you</p>
+                </div>
+                <div>
+                    <button class="location-btn" onclick="map.setView([23.8223, 90.3966], 14)">
+                        <i class="fa-solid fa-location-arrow"></i> Your Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-top">
+            <div class="footer-logo">
+                <i class="fa-solid fa-hurricane"></i> SERVIIO
+            </div>
+            <div class="footer-column">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#">Landing Page</a></li>
+                    <li><a href="#">Popup Builder</a></li>
+                    <li><a href="#">Web-design</a></li>
+                    <li><a href="#">Content</a></li>
+                    <li><a href="#">Integrations</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Use Cases</h4>
+                <ul>
+                    <li><a href="#">Web-designers</a></li>
+                    <li><a href="#">Marketers</a></li>
+                    <li><a href="#">Small Business</a></li>
+                    <li><a href="#">Website Builder</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Academy</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Themes</a></li>
+                    <li><a href="#">Hosting</a></li>
+                    <li><a href="#">Developers</a></li>
+                    <li><a href="#">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Teams</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Let's do it!</h4>
+                <div class="social-icons">
+                    <i class="fa-brands fa-facebook-f"></i>
+                    <i class="fa-brands fa-twitter"></i>
+                    <i class="fa-brands fa-dribbble"></i>
+                    <i class="fa-brands fa-telegram"></i>
+                    <i class="fa-brands fa-instagram"></i>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+            <div>
+                © 2026 All Rights Reserved
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS & Custom Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map centered near Matikata/Mirpur (Dhaka) as shown in the screenshot
+        const map = L.map('map').setView([23.8223, 90.3966], 14);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Dummy Data for Providers
+        const dummyProviders = [
+            { lat: 23.8250, lng: 90.3950, type: "electrician", name: "Raju Electric" },
+            { lat: 23.8180, lng: 90.4000, type: "plumber", name: "Quick Plumb" },
+            { lat: 23.8280, lng: 90.3900, type: "ac", name: "Cool Breeze AC" },
+            { lat: 23.8200, lng: 90.3880, type: "painting", name: "Color Pros" },
+            { lat: 23.8300, lng: 90.4020, type: "carpenter", name: "WoodWorks" }
+        ];
+
+        let currentMarkers = [];
+        let selectedService = null;
+
+        // Handle Service Selection (Clickable Grid)
+        const serviceBtns = document.querySelectorAll('.service-btn');
+        serviceBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all
+                serviceBtns.forEach(b => b.classList.remove('active'));
+                // Add to clicked
+                btn.classList.add('active');
+                selectedService = btn.getAttribute('data-service');
+            });
+        });
+
+        // Handle Search Button Click
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const workload = document.getElementById('workload').value;
+            
+            if (!selectedService) {
+                alert("Please select a service type first.");
+                return;
+            }
+            if (!workload) {
+                alert("Please pick a workload option.");
+                return;
+            }
+
+            // Clear old markers
+            currentMarkers.forEach(marker => map.removeLayer(marker));
+            currentMarkers = [];
+
+            // Filter dummy data and drop pins
+            const filtered = dummyProviders.filter(p => p.type === selectedService);
+            
+            if (filtered.length === 0) {
+                alert(`No ${selectedService} found in this area right now.`);
+            } else {
+                filtered.forEach(provider => {
+                    const marker = L.marker([provider.lat, provider.lng]).addTo(map)
+                        .bindPopup(`<b>${provider.name}</b><br>Accepts ${workload} workloads.`);
+                    currentMarkers.push(marker);
+                });
+                
+                // Pan map to the first result
+                map.setView([filtered[0].lat, filtered[0].lng], 15);
+            }
+        });
+    </script>
+</body>
+</html>

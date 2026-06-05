@@ -34,7 +34,10 @@
         </p>
         <div class="cta-group">
           <a href="role.html" class="btn-cta primary">Get Started Now</a>
-          <a href="providerList.html" class="btn-cta secondary"
+          <a
+            id="browseSpecialists"
+            href="providerList.html"
+            class="btn-cta secondary"
             >Browse Specialists</a
           >
         </div>
@@ -47,5 +50,25 @@
     <footer class="footer">
       <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
     </footer>
+    <script>
+      // Require login before allowing browsing specialists from the landing page.
+      document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById("browseSpecialists");
+        if (!btn) return;
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          const token = localStorage.getItem("serviio_token");
+          const target = this.getAttribute("href") || "providerList.html";
+          if (token) {
+            // Already logged in — go to providers list
+            window.location.href = target;
+          } else {
+            // Not logged in — redirect to login and preserve intended destination
+            const next = encodeURIComponent(target);
+            window.location.href = `login.html?next=${next}`;
+          }
+        });
+      });
+    </script>
   </body>
 </html>

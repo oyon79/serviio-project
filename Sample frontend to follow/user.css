@@ -1,0 +1,200 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.signup-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Header & Logo */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.logo img {
+    width: 70px;
+}
+
+.logo span {
+    font-size: 28px;
+    font-weight: 800;
+    color: #002e94;
+    letter-spacing: 1px;
+}
+
+.header h1 {
+    font-size: 26px;
+    color: #002e94;
+    margin-bottom: 8px;
+}
+
+.join-text {
+    font-size: 13px;
+    color: #0047ff;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+/* Social Buttons */
+.social-auth {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.social-auth a {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.social-auth a:hover {
+    background-color: #f9fafb;
+}
+
+.divider {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* Form Styles */
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    font-size: 14px;
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    right: 15px;
+    bottom: 12px;
+    color: #4b5563;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Checkboxes */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.checkbox-item label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+/* Submit Button */
+.submit-btn {
+    background-color: #0047ff;
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 280px;
+    align-self: center;
+    transition: background 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #0036cc;
+}
+
+.footer-link {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.footer-link a {
+    color: #0047ff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 18px;
+    }
+}

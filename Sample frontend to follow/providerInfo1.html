@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviio - Provider Information</title>
+    <link rel="stylesheet" href="providerInfo1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">SERVIIO</div>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="serviceArea.html"><i class="fa-solid fa-map-location-dot"></i> Service Area</a></li>
+                <li><a href="providerList.html"><i class="fa-solid fa-users"></i> Provider</a></li>
+                <li><a href="bookmark.html"><i class="fa-solid fa-bookmark"></i> Bookmark</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+                <li class="notif-icon"><i class="fa-solid fa-bell"></i><span class="badge">3</span></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 class="page-title">Sheba Provider Information</h1>
+
+        <div class="profile-card">
+            <div class="profile-left">
+                <div class="profile-header">
+                    <div class="avatar-circle">
+                        <img src="https://via.placeholder.com/100" alt="Najmul Hossain Nur">
+                    </div>
+                    <div class="name-area">
+                        <h2>Najmul Hossain Nur</h2>
+                        <span class="tag-technician">Technician</span>
+                        <p class="location"><i class="fa-solid fa-location-dot"></i> Uttora</p>
+                    </div>
+                </div>
+
+                <div class="details-list">
+                    <p><strong>Service Profile:</strong> Technician</p>
+                    <p><strong>Name:</strong> Najmul Hossain Nur</p>
+                    <p><strong>Experience:</strong> 7+ Years</p>
+                    <p><strong>Service Area:</strong> Uttora and nearby locations</p>
+                    <p><strong>Availability:</strong> 7 Days a Week | 7:00 AM – 6:00 PM</p>
+                </div>
+
+                <div class="guarantee-box">
+                    <h3>Service Guarantee</h3>
+                    <ul>
+                        <li>Post-service inspection</li>
+                        <li>Limited service warranty</li>
+                        <li>Reliable and professional behavior</li>
+                    </ul>
+                </div>
+
+                <button class="btn-booking" onclick="location.href='schedule.html'"><i class="fa-solid fa-calendar-check"></i> Booking</button>
+            </div>
+
+            <div class="profile-right">
+                <div class="header-row">
+                    <div class="rating-box">
+                        <strong>Customer Rating <i class="fa-solid fa-star"></i> 4.8 / 5</strong>
+                        <p>Satisfied Customers: 250+</p>
+                    </div>
+                    <button class="btn-emergency-fix" onclick="location.href='emergency.html'">Emergency Fix!</button>
+                </div>
+
+                <p class="description">
+                    Skilled electrician with 7 years of experience. I handle all kinds of electrical work for homes and offices.
+                </p>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="showTab('services', this)">Services Offered</button>
+                    <button class="tab-btn" onclick="showTab('skills', this)">Skills & Expertise</button>
+                    <button class="tab-btn" onclick="showTab('verification', this)">Verification Check</button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="services" class="panel active">
+                        <ul class="price-list">
+                            <li><span>Residential and office electrical services</span> <strong>(৳450)</strong></li>
+                            <li><span>New wiring and rewiring</span> <strong>(৳300)</strong></li>
+                            <li><span>Switch, socket, light, and fan installation</span> <strong>(৳350)</strong></li>
+                            <li><span>Circuit breaker (MCB/DB) setup</span> <strong>(৳300)</strong></li>
+                            <li><span>Short circuit and low voltage problem fixing</span> <strong>(৳300)</strong></li>
+                            <li><span>Inverter and UPS connection</span> <strong>(৳380)</strong></li>
+                        </ul>
+                    </div>
+
+                    <div id="skills" class="panel">
+                        <ul class="bullet-list">
+                            <li><i class="fa-solid fa-arrow-right"></i> AC, fridge repair expert</li>
+                            <li><i class="fa-solid fa-arrow-right"></i> Safety standard compliance</li>
+                            <li><i class="fa-solid fa-arrow-right"></i> Quick fault detection</li>
+                        </ul>
+                    </div>
+
+                    <div id="verification" class="panel">
+                        <div class="verification-grid">
+                            <p>Police Verification (PVC) <i class="fa-solid fa-circle-check"></i></p>
+                            <p>Security Clearance <i class="fa-solid fa-circle-check"></i></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pricing-approx">
+                    <h3>Pricing (Approximate)</h3>
+                    <ul>
+                        <li>Visit charge: <strong>৳300</strong></li>
+                        <li>Small jobs: <strong>৳400 – ৳800</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="window.history.back()">Back</button>
+    </main>
+
+    <script>
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
