@@ -79,12 +79,13 @@
             <label for="password">Password</label>
             <div class="input-wrapper">
               <i class="fas fa-lock input-icon"></i>
-              <input
-                type="password"
-                id="password"
-                placeholder="At least 6 characters"
-                required
-              />
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="At least 8 characters"
+                  minlength="8"
+                  required
+                />
             </div>
           </div>
 
@@ -131,9 +132,9 @@
             role: "customer", // Hardcoded role
           };
 
-          if (payload.password.length < 6) {
+          if (payload.password.length < 8) {
             errorBox.textContent =
-              "Password must be at least 6 characters long.";
+              "Password must be at least 8 characters long.";
             return (errorBox.style.display = "block");
           }
 

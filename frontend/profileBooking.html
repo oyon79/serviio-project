@@ -72,6 +72,21 @@
             >
           </li>
           <li>
+            <a href="#" data-tab="wallet"
+              ><i class="fas fa-wallet"></i> Wallet</a
+            >
+          </li>
+          <li>
+            <a href="#" data-tab="verification"
+              ><i class="fas fa-id-card"></i> Verification</a
+            >
+          </li>
+          <li>
+            <a href="#" data-tab="notifications"
+              ><i class="fas fa-bell"></i> Notifications</a
+            >
+          </li>
+          <li>
             <a href="#" data-tab="settings"
               ><i class="fas fa-cog"></i> Settings</a
             >
@@ -117,6 +132,89 @@
             </div>
             <div id="reviewsContainer" class="reviews-list">
               <div class="loader">Loading reviews...</div>
+            </div>
+          </section>
+
+          <section id="walletPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>Wallet & Escrow</h3>
+              <p>Track available earnings, pending escrow, and releases.</p>
+            </div>
+            <div id="walletContainer" class="bookings-grid">
+              <div class="loader">Loading wallet...</div>
+            </div>
+          </section>
+
+          <section id="verificationPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>KYC Verification</h3>
+              <p>Submit identity, police clearance, selfie, and skill proof for admin review.</p>
+            </div>
+            <div id="verificationContainer" class="bookings-grid">
+              <div class="loader">Loading verification...</div>
+            </div>
+            <form id="verificationDocumentForm" class="profile-settings-form">
+              <div class="form-grid">
+                <label>
+                  Document Type
+                  <select id="verificationDocumentType">
+                    <option value="NID">NID</option>
+                    <option value="POLICE_CLEARANCE">Police Clearance</option>
+                    <option value="SKILL_CERTIFICATE">Skill Certificate</option>
+                    <option value="LIVE_SELFIE">Live Selfie</option>
+                    <option value="EXPERIENCE_PROOF">Experience Proof</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+                <label>
+                  Document Number
+                  <input type="text" id="verificationDocumentNumber" />
+                </label>
+                <label>
+                  Document URL
+                  <input type="url" id="verificationDocumentUrl" placeholder="https://..." />
+                </label>
+                <label>
+                  File Name
+                  <input type="text" id="verificationFileName" placeholder="nid-front.jpg" />
+                </label>
+              </div>
+              <label>
+                Notes
+                <textarea id="verificationNotes" rows="3"></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="dashboard-action-btn primary">
+                  Add Document
+                </button>
+                <button
+                  type="button"
+                  class="dashboard-action-btn secondary"
+                  id="submitVerificationBtn"
+                >
+                  Submit For Review
+                </button>
+                <p id="verificationMessage" class="settings-message"></p>
+              </div>
+            </form>
+          </section>
+
+          <section id="notificationsPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>Notifications</h3>
+              <p>Recent booking, wallet, support, and verification updates.</p>
+            </div>
+            <div class="form-actions" style="margin-bottom: 12px">
+              <button
+                type="button"
+                class="dashboard-action-btn secondary"
+                id="markNotificationsReadBtn"
+              >
+                Mark All Read
+              </button>
+            </div>
+            <div id="notificationsContainer" class="bookings-grid">
+              <div class="loader">Loading notifications...</div>
             </div>
           </section>
 
@@ -228,11 +326,19 @@
         const activeJobsPanel = document.getElementById("activeJobsPanel");
         const historyPanel = document.getElementById("historyPanel");
         const reviewsPanel = document.getElementById("reviewsPanel");
+        const walletPanel = document.getElementById("walletPanel");
+        const verificationPanel = document.getElementById("verificationPanel");
+        const notificationsPanel = document.getElementById(
+          "notificationsPanel",
+        );
         const settingsPanel = document.getElementById("settingsPanel");
         const tabPanels = {
           "active-jobs": activeJobsPanel,
           "job-history": historyPanel,
           reviews: reviewsPanel,
+          wallet: walletPanel,
+          verification: verificationPanel,
+          notifications: notificationsPanel,
           settings: settingsPanel,
         };
         let activeTab = "active-jobs";
@@ -241,6 +347,24 @@
         );
         const historyContainer = document.getElementById("historyContainer");
         const reviewsContainer = document.getElementById("reviewsContainer");
+        const walletContainer = document.getElementById("walletContainer");
+        const verificationContainer = document.getElementById(
+          "verificationContainer",
+        );
+        const verificationDocumentForm = document.getElementById(
+          "verificationDocumentForm",
+        );
+        const submitVerificationBtn = document.getElementById(
+          "submitVerificationBtn",
+        );
+        const verificationMessage =
+          document.getElementById("verificationMessage");
+        const notificationsContainer = document.getElementById(
+          "notificationsContainer",
+        );
+        const markNotificationsReadBtn = document.getElementById(
+          "markNotificationsReadBtn",
+        );
         const settingsForm = document.getElementById("settingsForm");
         const settingsMessage = document.getElementById("settingsMessage");
 
@@ -258,6 +382,9 @@
         let availabilityRequestPending = false;
         let currentBookings = [];
         let currentReviews = [];
+        let currentWallet = null;
+        let currentVerification = null;
+        let currentNotifications = [];
 
         function setActivePanel(tabName) {
           activeTab = tabName;
@@ -285,6 +412,21 @@
             dashboardTitle.textContent = "My Reviews";
             dashboardSummary.textContent =
               "Customer feedback helps you improve and build trust.";
+          } else if (tabName === "wallet") {
+            dashboardTitle.textContent = "Wallet & Escrow";
+            dashboardSummary.textContent =
+              "Track available earnings, pending escrow, and release history.";
+            fetchWallet();
+          } else if (tabName === "verification") {
+            dashboardTitle.textContent = "KYC Verification";
+            dashboardSummary.textContent =
+              "Submit identity, police clearance, selfie, and skill evidence for admin review.";
+            fetchVerification();
+          } else if (tabName === "notifications") {
+            dashboardTitle.textContent = "Notifications";
+            dashboardSummary.textContent =
+              "Review recent Serviio updates across your work and wallet.";
+            fetchNotifications();
           } else if (tabName === "settings") {
             dashboardTitle.textContent = "Settings";
             dashboardSummary.textContent =
@@ -385,7 +527,7 @@
               providerName.textContent = `${providerProfile.first_name} ${providerProfile.last_name}`;
               providerBadge.textContent = providerProfile.is_verified
                 ? "Verified Provider"
-                : "Pending Verification";
+                : `Verification: ${providerProfile.verification_status || "Pending"}`;
               providerMeta.textContent = `${providerProfile.service_type || "Service Provider"} | ${providerProfile.location || "No location set"}`;
               updateAvailabilityButton();
               populateSettingsForm();
@@ -461,6 +603,91 @@
             displayEmptyState(
               reviewsContainer,
               "Unable to load reviews. Please try again later.",
+            );
+          }
+        }
+
+        async function fetchWallet() {
+          if (currentWallet) {
+            renderWallet();
+          }
+
+          try {
+            const response = await fetch("http://localhost:5000/api/wallet/me", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              currentWallet = result.data;
+              renderWallet();
+            } else {
+              throw new Error(result.message || "Unable to fetch wallet");
+            }
+          } catch (error) {
+            console.error(error);
+            displayEmptyState(
+              walletContainer,
+              "Unable to load wallet. Please try again later.",
+            );
+          }
+        }
+
+        async function fetchVerification() {
+          if (currentVerification) {
+            renderVerification();
+          }
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/verification",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              currentVerification = result.data;
+              renderVerification();
+            } else {
+              throw new Error(
+                result.message || "Unable to fetch verification status",
+              );
+            }
+          } catch (error) {
+            console.error(error);
+            displayEmptyState(
+              verificationContainer,
+              "Unable to load verification status. Please try again later.",
+            );
+          }
+        }
+
+        async function fetchNotifications() {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/notifications",
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (response.ok && result.success) {
+              currentNotifications = result.data || [];
+              renderNotifications();
+            } else {
+              throw new Error(result.message || "Unable to fetch notifications");
+            }
+          } catch (error) {
+            console.error(error);
+            displayEmptyState(
+              notificationsContainer,
+              "Unable to load notifications. Please try again later.",
             );
           }
         }
@@ -601,6 +828,315 @@
             .join("");
         }
 
+        function formatMoney(amount, currency = "BDT") {
+          const value = Number(amount || 0).toFixed(2);
+          return `${currency} ${value}`;
+        }
+
+        function renderWallet() {
+          if (!currentWallet || !currentWallet.wallet) {
+            displayEmptyState(walletContainer, "No wallet data available yet.");
+            return;
+          }
+
+          const wallet = currentWallet.wallet;
+          const escrows = currentWallet.escrows || [];
+          const transactions = currentWallet.transactions || [];
+          const heldEscrows = escrows.filter((escrow) => escrow.status === "HELD");
+
+          walletContainer.innerHTML = `
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Available Balance</h4>
+                <span class="status completed">${formatMoney(wallet.balance, wallet.currency)}</span>
+              </div>
+              <div class="job-details">
+                <p><i class="fas fa-hourglass-half"></i> <strong>Pending Escrow:</strong> ${formatMoney(wallet.pending_balance, wallet.currency)}</p>
+                <p><i class="fas fa-lock"></i> <strong>Held Jobs:</strong> ${heldEscrows.length}</p>
+              </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Recent Escrow</h4>
+              </div>
+              <div class="job-details">
+                ${
+                  escrows.length
+                    ? escrows
+                        .slice(0, 5)
+                        .map(
+                          (escrow) => `
+                            <p>
+                              <i class="fas fa-receipt"></i>
+                              <strong>Booking #${escrow.booking_id}:</strong>
+                              ${formatMoney(escrow.provider_amount, wallet.currency)}
+                              <span class="status ${String(escrow.status).toLowerCase()}">${escrow.status}</span>
+                              ${
+                                escrow.status === "HELD"
+                                  ? `<button class="btn-verify" style="margin-left:8px;padding:6px 10px" onclick="releaseEscrow('${escrow.booking_id}')">Release</button>`
+                                  : ""
+                              }
+                            </p>
+                          `,
+                        )
+                        .join("")
+                    : "<p>No escrow records yet.</p>"
+                }
+              </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Wallet Ledger</h4>
+              </div>
+              <div class="job-details">
+                ${
+                  transactions.length
+                    ? transactions
+                        .slice(0, 5)
+                        .map(
+                          (tx) => `
+                            <p>
+                              <i class="fas fa-wallet"></i>
+                              <strong>${tx.type}:</strong>
+                              ${formatMoney(tx.amount, wallet.currency)}
+                              ${tx.booking_id ? `for booking #${tx.booking_id}` : ""}
+                            </p>
+                          `,
+                        )
+                        .join("")
+                    : "<p>No wallet transactions yet.</p>"
+                }
+              </div>
+            </div>
+          `;
+        }
+
+        window.releaseEscrow = async (bookingId) => {
+          if (!bookingId) return;
+
+          try {
+            const response = await fetch(
+              `http://localhost:5000/api/wallet/escrow/${bookingId}/release`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to release escrow.");
+            }
+            currentWallet = null;
+            await fetchWallet();
+            alert("Escrow released to your available wallet balance.");
+          } catch (error) {
+            console.error(error);
+            alert(error.message || "Unable to release escrow right now.");
+          }
+        };
+
+        function renderVerification() {
+          if (!currentVerification || !currentVerification.profile) {
+            displayEmptyState(
+              verificationContainer,
+              "No verification data available yet.",
+            );
+            return;
+          }
+
+          const profile = currentVerification.profile;
+          const documents = currentVerification.documents || [];
+          const auditLogs = currentVerification.audit_logs || [];
+
+          verificationContainer.innerHTML = `
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Verification Status</h4>
+                <span class="status ${String(profile.verification_status).toLowerCase()}">${profile.verification_status}</span>
+              </div>
+              <div class="job-details">
+                <p><i class="fas fa-id-card"></i> <strong>NID:</strong> ${profile.nid_number || "Not provided"}</p>
+                <p><i class="fas fa-certificate"></i> <strong>Verified:</strong> ${profile.is_verified ? "Yes" : "No"}</p>
+                <p><i class="fas fa-note-sticky"></i> <strong>Admin Notes:</strong> ${profile.verification_notes || "None"}</p>
+              </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Documents</h4>
+              </div>
+              <div class="job-details">
+                ${
+                  documents.length
+                    ? documents
+                        .map(
+                          (doc) => `
+                            <p>
+                              <i class="fas fa-file-shield"></i>
+                              <strong>${doc.document_type}:</strong>
+                              ${doc.file_name || doc.document_number || doc.document_url || "Submitted"}
+                              <span class="status ${String(doc.status).toLowerCase()}">${doc.status}</span>
+                            </p>
+                          `,
+                        )
+                        .join("")
+                    : "<p>No verification documents submitted yet.</p>"
+                }
+              </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Audit Trail</h4>
+              </div>
+              <div class="job-details">
+                ${
+                  auditLogs.length
+                    ? auditLogs
+                        .slice(0, 5)
+                        .map(
+                          (log) => `
+                            <p>
+                              <i class="fas fa-clock-rotate-left"></i>
+                              <strong>${log.action}:</strong>
+                              ${log.new_status || ""}
+                              ${log.notes ? `- ${log.notes}` : ""}
+                            </p>
+                          `,
+                        )
+                        .join("")
+                    : "<p>No audit events yet.</p>"
+                }
+              </div>
+            </div>
+          `;
+        }
+
+        async function submitVerificationDocument(event) {
+          event.preventDefault();
+          verificationMessage.textContent = "Submitting document...";
+          verificationMessage.style.color = "#334155";
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/verification/documents",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  document_type: document.getElementById(
+                    "verificationDocumentType",
+                  ).value,
+                  document_number: document
+                    .getElementById("verificationDocumentNumber")
+                    .value.trim(),
+                  document_url: document
+                    .getElementById("verificationDocumentUrl")
+                    .value.trim(),
+                  file_name: document
+                    .getElementById("verificationFileName")
+                    .value.trim(),
+                  notes: document.getElementById("verificationNotes").value.trim(),
+                }),
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to submit document.");
+            }
+            verificationMessage.textContent = "Document submitted.";
+            verificationMessage.style.color = "#16a34a";
+            verificationDocumentForm.reset();
+            currentVerification = null;
+            await fetchVerification();
+          } catch (error) {
+            verificationMessage.textContent =
+              error.message || "Unable to submit document.";
+            verificationMessage.style.color = "#b91c1c";
+          }
+        }
+
+        async function submitVerificationForReview() {
+          verificationMessage.textContent = "Submitting for review...";
+          verificationMessage.style.color = "#334155";
+
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/providers/me/verification/submit",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to submit for review.");
+            }
+            verificationMessage.textContent = "Submitted for admin review.";
+            verificationMessage.style.color = "#16a34a";
+            currentVerification = null;
+            await fetchVerification();
+          } catch (error) {
+            verificationMessage.textContent =
+              error.message || "Unable to submit for review.";
+            verificationMessage.style.color = "#b91c1c";
+          }
+        }
+
+        function renderNotifications() {
+          if (!currentNotifications || currentNotifications.length === 0) {
+            displayEmptyState(
+              notificationsContainer,
+              "No notifications yet.",
+            );
+            return;
+          }
+
+          notificationsContainer.innerHTML = currentNotifications
+            .map(
+              (notification) => `
+                <div class="booking-card">
+                  <div class="job-header">
+                    <h4>${notification.title || notification.notification_type}</h4>
+                    <span class="status ${notification.is_read ? "completed" : "pending"}">${notification.is_read ? "READ" : "NEW"}</span>
+                  </div>
+                  <div class="job-details">
+                    <p>${notification.message || ""}</p>
+                    <p><i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+              `,
+            )
+            .join("");
+        }
+
+        async function markNotificationsRead() {
+          try {
+            const response = await fetch(
+              "http://localhost:5000/api/notifications/read-all",
+              {
+                method: "PATCH",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to update notifications");
+            }
+            await fetchNotifications();
+          } catch (error) {
+            console.error(error);
+            alert(error.message || "Unable to update notifications.");
+          }
+        }
+
         async function submitSettings(event) {
           event.preventDefault();
           settingsMessage.textContent = "Saving...";
@@ -728,10 +1264,25 @@
         });
 
         settingsForm.addEventListener("submit", submitSettings);
+        verificationDocumentForm.addEventListener(
+          "submit",
+          submitVerificationDocument,
+        );
+        submitVerificationBtn.addEventListener(
+          "click",
+          submitVerificationForReview,
+        );
+        markNotificationsReadBtn.addEventListener(
+          "click",
+          markNotificationsRead,
+        );
 
         await fetchProfile();
         await fetchBookings();
         await fetchReviews();
+        await fetchWallet();
+        await fetchVerification();
+        await fetchNotifications();
         setActivePanel("active-jobs");
 
         if (
@@ -744,6 +1295,16 @@
 
         let watchId = null;
         const socket = io("http://localhost:5000");
+        socket.emit("notifications:join", { token });
+        socket.on("notification:new", (notification) => {
+          currentNotifications = [notification, ...(currentNotifications || [])];
+          if (activeTab === "notifications") {
+            renderNotifications();
+          }
+        });
+        socket.on("notifications:error", (payload) => {
+          console.warn(payload?.message || "Notification socket error");
+        });
 
         if (availabilityBtn) {
           availabilityBtn.addEventListener("click", toggleAvailability);

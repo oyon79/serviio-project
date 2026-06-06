@@ -1,10 +1,53 @@
 const db = require("../config/db");
+const { createAdminNotifications } = require("../services/notificationService");
 
 function shapeProviderRow(row) {
   return {
     ...row,
     full_name: `${row.first_name || ""} ${row.last_name || ""}`.trim(),
   };
+}
+
+const allowedVerificationDocuments = new Set([
+  "NID",
+  "POLICE_CLEARANCE",
+  "SKILL_CERTIFICATE",
+  "LIVE_SELFIE",
+  "EXPERIENCE_PROOF",
+  "OTHER",
+]);
+
+async function getMyProfileRecord(userId) {
+  const [rows] = await db.query(
+    "SELECT id, user_id, verification_status FROM provider_profiles WHERE user_id = ? LIMIT 1",
+    [userId],
+  );
+  return rows[0] || null;
+}
+
+async function insertVerificationAudit({
+  providerProfileId,
+  providerUserId,
+  action,
+  oldStatus = null,
+  newStatus = null,
+  actorId = null,
+  notes = null,
+}) {
+  await db.query(
+    `INSERT INTO provider_verification_audit_logs
+      (provider_profile_id, provider_user_id, action, old_status, new_status, actor_id, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      providerProfileId,
+      providerUserId,
+      action,
+      oldStatus,
+      newStatus,
+      actorId,
+      notes,
+    ],
+  );
 }
 
 // Get all verified providers
@@ -14,7 +57,9 @@ exports.getAllProviders = async (req, res) => {
     const query = `
             SELECT 
                 u.id, u.first_name, u.last_name, u.phone,
-                p.service_type, p.experience_summary, p.location, p.is_available, p.is_verified
+                p.service_type, p.experience_summary, p.location,
+                p.is_available, p.is_verified, p.hourly_rate,
+                p.total_reviews, p.average_rating
             FROM users u
             JOIN provider_profiles p ON u.id = p.user_id
             WHERE u.role = 'provider' AND (p.is_verified = 1 OR p.is_verified = TRUE)
@@ -38,7 +83,9 @@ exports.getAllProviders = async (req, res) => {
         const fallback = `
                 SELECT 
                     u.id, u.first_name, u.last_name, u.phone,
-                    p.service_type, p.experience_summary, p.location, p.is_available
+                    p.service_type, p.experience_summary, p.location,
+                    p.is_available, p.hourly_rate,
+                    p.total_reviews, p.average_rating
                 FROM users u
                 JOIN provider_profiles p ON u.id = p.user_id
                 WHERE u.role = 'provider'
@@ -66,7 +113,10 @@ exports.getProviderById = async (req, res) => {
       SELECT
         u.id, u.first_name, u.last_name, u.email, u.phone,
         p.id as profile_id, p.service_type, p.experience_summary,
-        p.location, p.nid_number, p.is_available, p.is_verified
+        p.location, p.nid_number, p.is_available, p.is_verified,
+        p.verification_status, p.verification_submitted_at,
+        p.verified_at, p.verification_notes,
+        p.hourly_rate, p.total_reviews, p.average_rating
       FROM users u
       JOIN provider_profiles p ON u.id = p.user_id
       WHERE u.id = ? AND u.role = 'provider'
@@ -103,7 +153,10 @@ exports.getMyProviderProfile = async (req, res) => {
       SELECT
         u.id, u.first_name, u.last_name, u.email, u.phone,
         p.id as profile_id, p.service_type, p.experience_summary,
-        p.location, p.nid_number, p.is_available, p.is_verified
+        p.location, p.nid_number, p.is_available, p.is_verified,
+        p.verification_status, p.verification_submitted_at,
+        p.verified_at, p.verification_notes,
+        p.hourly_rate, p.total_reviews, p.average_rating
       FROM users u
       JOIN provider_profiles p ON u.id = p.user_id
       WHERE u.id = ? AND u.role = 'provider'
@@ -242,7 +295,10 @@ exports.updateMySettings = async (req, res) => {
       SELECT
         u.id, u.first_name, u.last_name, u.email, u.phone,
         p.id as profile_id, p.service_type, p.experience_summary,
-        p.location, p.nid_number, p.is_available, p.is_verified
+        p.location, p.nid_number, p.is_available, p.is_verified,
+        p.verification_status, p.verification_submitted_at,
+        p.verified_at, p.verification_notes,
+        p.hourly_rate, p.total_reviews, p.average_rating
       FROM users u
       JOIN provider_profiles p ON u.id = p.user_id
       WHERE u.id = ? AND u.role = 'provider'
@@ -269,5 +325,229 @@ exports.updateMySettings = async (req, res) => {
       });
     }
     return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+exports.getMyVerification = async (req, res) => {
+  const userId = req.user && req.user.id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication required" });
+  }
+
+  try {
+    const [profileRows] = await db.query(
+      `SELECT id, user_id, nid_number, is_verified, verification_status,
+              verification_submitted_at, verified_at, verification_notes
+       FROM provider_profiles
+       WHERE user_id = ?
+       LIMIT 1`,
+      [userId],
+    );
+
+    if (profileRows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Provider profile not found" });
+    }
+
+    const profile = profileRows[0];
+    const [documents] = await db.query(
+      `SELECT id, document_type, document_number, document_url, file_name,
+              file_mime, status, reviewer_notes, reviewed_at, created_at
+       FROM provider_verification_documents
+       WHERE provider_profile_id = ?
+       ORDER BY created_at DESC`,
+      [profile.id],
+    );
+    const [auditLogs] = await db.query(
+      `SELECT action, old_status, new_status, actor_id, notes, created_at
+       FROM provider_verification_audit_logs
+       WHERE provider_profile_id = ?
+       ORDER BY created_at DESC
+       LIMIT 20`,
+      [profile.id],
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        profile,
+        documents,
+        audit_logs: auditLogs,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching provider verification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching verification status.",
+    });
+  }
+};
+
+exports.submitVerificationDocument = async (req, res) => {
+  const userId = req.user && req.user.id;
+  const {
+    document_type,
+    document_number,
+    document_url,
+    file_name,
+    file_mime,
+    notes,
+  } = req.body;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication required" });
+  }
+
+  const normalizedType = String(document_type || "").toUpperCase();
+  if (!allowedVerificationDocuments.has(normalizedType)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid document_type.",
+    });
+  }
+
+  if (!document_number && !document_url && !file_name) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Provide at least one document reference: document_number, document_url, or file_name.",
+    });
+  }
+
+  try {
+    const profile = await getMyProfileRecord(userId);
+    if (!profile) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Provider profile not found" });
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO provider_verification_documents
+        (provider_profile_id, provider_user_id, document_type, document_number, document_url, file_name, file_mime)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        profile.id,
+        userId,
+        normalizedType,
+        document_number || null,
+        document_url || null,
+        file_name || null,
+        file_mime || null,
+      ],
+    );
+
+    if (profile.verification_status === "NOT_SUBMITTED") {
+      await db.query(
+        "UPDATE provider_profiles SET verification_status = 'PENDING' WHERE id = ?",
+        [profile.id],
+      );
+    }
+
+    await insertVerificationAudit({
+      providerProfileId: profile.id,
+      providerUserId: userId,
+      action: "DOCUMENT_SUBMITTED",
+      oldStatus: profile.verification_status,
+      newStatus:
+        profile.verification_status === "NOT_SUBMITTED"
+          ? "PENDING"
+          : profile.verification_status,
+      actorId: userId,
+      notes: notes || `${normalizedType} document submitted.`,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Verification document submitted.",
+      data: {
+        id: result.insertId,
+        document_type: normalizedType,
+        status: "PENDING",
+      },
+    });
+  } catch (error) {
+    console.error("Error submitting verification document:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while submitting verification document.",
+    });
+  }
+};
+
+exports.submitVerificationForReview = async (req, res) => {
+  const userId = req.user && req.user.id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication required" });
+  }
+
+  try {
+    const profile = await getMyProfileRecord(userId);
+    if (!profile) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Provider profile not found" });
+    }
+
+    const [documentRows] = await db.query(
+      "SELECT COUNT(*) AS document_count FROM provider_verification_documents WHERE provider_profile_id = ?",
+      [profile.id],
+    );
+
+    if (!documentRows[0].document_count) {
+      return res.status(400).json({
+        success: false,
+        message: "Submit at least one verification document before review.",
+      });
+    }
+
+    await db.query(
+      `UPDATE provider_profiles
+       SET verification_status = 'UNDER_REVIEW',
+           verification_submitted_at = NOW()
+       WHERE id = ?`,
+      [profile.id],
+    );
+
+    await insertVerificationAudit({
+      providerProfileId: profile.id,
+      providerUserId: userId,
+      action: "SUBMITTED_FOR_REVIEW",
+      oldStatus: profile.verification_status,
+      newStatus: "UNDER_REVIEW",
+      actorId: userId,
+      notes: "Provider submitted verification profile for admin review.",
+    });
+    await createAdminNotifications({
+      notification_type: "KYC_SUBMITTED",
+      title: "Provider KYC submitted",
+      message: `Provider #${userId} submitted verification for review.`,
+      entity_type: "PROVIDER_PROFILE",
+      entity_id: profile.id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification submitted for review.",
+      data: {
+        verification_status: "UNDER_REVIEW",
+      },
+    });
+  } catch (error) {
+    console.error("Error submitting verification for review:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while submitting verification for review.",
+    });
   }
 };

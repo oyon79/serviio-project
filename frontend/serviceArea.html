@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Service Area</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      .area-main {
+        max-width: 1100px;
+        margin: 36px auto;
+        padding: 0 20px;
+      }
+
+      .area-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .area-header h1 {
+        margin: 0 0 8px;
+        color: #123c7c;
+      }
+
+      .area-header p {
+        margin: 0;
+        color: #64748b;
+      }
+
+      .area-search {
+        display: flex;
+        gap: 10px;
+        min-width: 280px;
+      }
+
+      .area-search input {
+        flex: 1;
+        padding: 12px 14px;
+        border: 1px solid #d6deea;
+        border-radius: 8px;
+      }
+
+      .area-search button,
+      .area-card a {
+        border: 0;
+        border-radius: 8px;
+        background: #003393;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .area-search button {
+        padding: 0 16px;
+      }
+
+      .area-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 16px;
+      }
+
+      .area-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      }
+
+      .area-card h3 {
+        margin: 0 0 8px;
+        color: #0f172a;
+      }
+
+      .area-card p {
+        min-height: 44px;
+        color: #64748b;
+        margin: 0 0 16px;
+      }
+
+      .area-card a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      @media (max-width: 720px) {
+        .area-header {
+          display: block;
+        }
+
+        .area-search {
+          margin-top: 16px;
+          min-width: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">
+        <img
+          src="Image/logo 2.png"
+          alt="SERVIIO Logo"
+          style="height: 30px; width: 30px; border-radius: 50%"
+        />
+        <span>SERVIIO</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li>
+          <a href="serviceArea.html" class="active"
+            ><i class="fa-solid fa-map-location-dot"></i> Service Area</a
+          >
+        </li>
+        <li>
+          <a href="providerList.html"
+            ><i class="fa-solid fa-users"></i> Provider</a
+          >
+        </li>
+        <li>
+          <a href="bookmark.html"
+            ><i class="fa-solid fa-bookmark"></i> Bookmark</a
+          >
+        </li>
+        <li>
+          <a href="profile.html"
+            ><i class="fa-solid fa-circle-user"></i> Profile</a
+          >
+        </li>
+      </ul>
+    </header>
+
+    <main class="area-main">
+      <section class="area-header">
+        <div>
+          <h1>Service Areas</h1>
+          <p>Browse the Dhaka areas currently covered by verified providers.</p>
+        </div>
+        <div class="area-search">
+          <input id="areaSearch" type="search" placeholder="Search area" />
+          <button id="clearSearch" type="button">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </section>
+
+      <section class="area-grid" id="areaGrid" aria-live="polite"></section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-logo">
+          <i class="fa-solid fa-hurricane"></i> SERVIIO
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="copyright">© 2026 SERVIIO All Rights Reserved</div>
+      </div>
+    </footer>
+
+    <script>
+      const areas = [
+        {
+          name: "Mirpur",
+          services: "Electrician, plumber, cleaner, AC repair",
+        },
+        {
+          name: "Uttara",
+          services: "Electrician, painting, appliance repair",
+        },
+        {
+          name: "Gulshan",
+          services: "Cleaner, plumber, AC repair, emergency support",
+        },
+        {
+          name: "Banani",
+          services: "Electrician, cleaner, carpenter",
+        },
+        {
+          name: "Dhanmondi",
+          services: "Plumber, painter, appliance repair",
+        },
+        {
+          name: "Badda",
+          services: "Cleaner, electrician, pipe leakage support",
+        },
+      ];
+
+      const grid = document.getElementById("areaGrid");
+      const search = document.getElementById("areaSearch");
+      const clear = document.getElementById("clearSearch");
+
+      function renderAreas() {
+        const query = search.value.trim().toLowerCase();
+        const filtered = areas.filter((area) => {
+          return (
+            area.name.toLowerCase().includes(query) ||
+            area.services.toLowerCase().includes(query)
+          );
+        });
+
+        if (filtered.length === 0) {
+          grid.innerHTML =
+            '<p style="grid-column:1/-1;color:#64748b">No service areas matched your search.</p>';
+          return;
+        }
+
+        grid.innerHTML = filtered
+          .map(
+            (area) => `
+              <article class="area-card">
+                <h3><i class="fa-solid fa-location-dot"></i> ${area.name}</h3>
+                <p>${area.services}</p>
+                <a href="providerList.html?area=${encodeURIComponent(area.name)}">
+                  Find providers <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      search.addEventListener("input", renderAreas);
+      clear.addEventListener("click", () => {
+        search.value = "";
+        renderAreas();
+      });
+      renderAreas();
+    </script>
+  </body>
+</html>

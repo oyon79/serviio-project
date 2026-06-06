@@ -225,3 +225,53 @@ The schema contains primary entities: `Users`, `Providers`, `Bookings`, `Reviews
 5. **Step 5:** Build out the Booking and Emergency flow APIs and connect to UI.
 6. **Step 6:** Implement real-time WebSockets for tracking.
 7. **Step 7:** Implement Payments and Notifications.
+
+---
+
+### **SEQUENTIAL COMPLETION LOG - 2026-06-06**
+
+**Completed since the original audit:**
+
+* Payment processing API connected to booking payment state and transaction records.
+* Wallet and escrow tables, routes, controller logic, and provider dashboard wallet UI added.
+* Support ticket tables, APIs, admin queue, and customer ticket UI added.
+* Provider KYC verification tables, migrations, provider submission UI/API, and admin review UI/API added.
+* Notification engine added with persistent in-app notifications, read state, and real-time Socket.IO delivery.
+* Review/rating flow completed:
+  * Customers can review only their own completed bookings.
+  * Duplicate reviews per booking are blocked by API checks and `reviews.uniq_booking_review`.
+  * Provider `average_rating` and `total_reviews` are recalculated after review submission.
+  * Provider/customer notifications are created when a review is submitted.
+  * Customer profile shows pending completed bookings and submitted reviews.
+  * Provider detail page displays public customer reviews.
+  * `database/serviio_schema.sql` and `database/migrations/2026_06_06_reviews.sql` updated.
+* Bookmark persistence and rebooking completed:
+  * Added `provider_bookmarks` table with one saved record per customer/provider pair.
+  * Added `/api/bookmarks` customer routes for list, status, save, and remove.
+  * Provider detail page now saves/removes providers through the backend.
+  * Bookmark page now loads saved providers from the database.
+  * Saved providers have direct profile and rebooking links.
+  * `database/serviio_schema.sql` and `database/migrations/2026_06_06_provider_bookmarks.sql` updated.
+* Password reset / OTP recovery completed:
+  * Added `password_reset_requests` table for hashed reset tokens, hashed OTPs, expiry, attempts, and one-time-use status.
+  * Upgraded `/api/auth/forgot-password` to generate a reset link plus six-digit OTP and expire older pending requests.
+  * Upgraded `/api/auth/validate-reset-token` to validate against stored reset requests.
+  * Upgraded `/api/auth/reset-password` to require token + OTP, enforce attempt limits, update password atomically, and mark the request used.
+  * Forgot/reset password frontend pages now use reset-code language and OTP input.
+  * `database/serviio_schema.sql` and `database/migrations/2026_06_06_password_reset_otp.sql` updated.
+
+**Still to do next:**
+
+* File upload hardening for KYC/profile assets if local file upload is introduced. Current KYC flow stores document references only.
+* Expand endpoint-level test coverage for booking, payment/escrow, notification, review, and support flows.
+
+**Completed in this continuation:**
+
+* Installed missing backend security dependencies used by `server.js`: `helmet` and `express-rate-limit`.
+* Added shared route-level validation middleware in `backend/middlewares/validationMiddleware.js`.
+* Applied validation to auth, bookings, payments, provider settings/KYC, admin verification, support, wallet escrow release, reviews, and bookmarks.
+* Preserved booking handshake compatibility with both `booking_id`/`handshake_code` and `bookingId`/`handshakeCode` payload styles while adding a direct missing-field guard.
+* Converted backend `npm test` from a placeholder to `node --test`.
+* Added validation middleware tests in `backend/tests/validationMiddleware.test.js`.
+* Removed invalid `mysql2` pool option `acquireTimeout` and quieted `dotenv` startup output.
+* Verified backend syntax, test suite, and controlled server startup with MySQL connection.

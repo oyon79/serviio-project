@@ -34,7 +34,7 @@ function showForgotMessage(text, isError = true) {
 function setForgotLoading(isLoading) {
   if (!forgotSubmitButton) return;
   forgotSubmitButton.disabled = isLoading;
-  forgotSubmitButton.textContent = isLoading ? "Sending..." : "Send Reset Link";
+  forgotSubmitButton.textContent = isLoading ? "Sending..." : "Send Reset Code";
 }
 
 async function handleForgotPassword(event) {
@@ -86,6 +86,13 @@ async function handleForgotPassword(event) {
       if (messageEl) {
         messageEl.innerHTML = `${message}<br>`;
         messageEl.appendChild(link);
+        if (data.otp) {
+          const otpEl = document.createElement("div");
+          otpEl.textContent = `Development reset code: ${data.otp}`;
+          otpEl.style.marginTop = "0.5rem";
+          otpEl.style.fontWeight = "700";
+          messageEl.appendChild(otpEl);
+        }
       }
       return;
     }

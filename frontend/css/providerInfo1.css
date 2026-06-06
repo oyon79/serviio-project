@@ -81,6 +81,48 @@
     margin-bottom: 30px;
 }
 
+.reviews-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 24px;
+    margin-bottom: 30px;
+}
+
+.reviews-section h3 {
+    color: #333;
+    margin-bottom: 14px;
+}
+
+.provider-review-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+.review-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.review-heading span,
+.provider-review-item small {
+    color: var(--text-muted);
+}
+
+.review-stars {
+    color: var(--accent-yellow);
+    margin: 6px 0;
+}
+
+.provider-review-item p {
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
 .action-row {
     display: flex;
     gap: 20px;
@@ -99,6 +141,17 @@
 
 .btn-bookmark:hover {
     background-color: #eee;
+}
+
+.btn-bookmark.saved {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background-color: #eef6ff;
+}
+
+.btn-bookmark:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
 }
 
 .btn-book-now {

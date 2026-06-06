@@ -1,5 +1,5 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+require("dotenv").config({ path: path.resolve(__dirname, ".env"), quiet: true });
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -15,6 +15,13 @@ const emergencyRoutes = require("./routes/emergencyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const walletRoutes = require("./routes/walletRoutes");
+const supportRoutes = require("./routes/supportRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const bookmarkRoutes = require("./routes/bookmarkRoutes");
+const {
+  setNotificationRealtimeServer,
+} = require("./services/notificationService");
 
 // Ensure critical environment variables
 const requiredEnv = ["JWT_SECRET"];
@@ -27,13 +34,16 @@ for (const key of requiredEnv) {
 
 const app = express();
 app.set("trust proxy", 1);
+const corsOrigin = process.env.CORS_ORIGIN || "*";
+const corsCredentials =
+  corsOrigin !== "*" && process.env.CORS_CREDENTIALS !== "false";
 
 // Security middleware
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    credentials: true,
+    origin: corsOrigin,
+    credentials: corsCredentials,
   }),
 );
 app.use(express.json());
@@ -60,15 +70,21 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/emergency", emergencyRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/support", supportRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
 
 // Create HTTP server and attach Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: corsOrigin,
     methods: ["GET", "POST"],
+    credentials: corsCredentials,
   },
 });
+setNotificationRealtimeServer(io);
 require("./sockets/trackingSocket")(io);
 
 app.get("/", (req, res) => {

@@ -35,7 +35,7 @@ function showMessage(text, isError = true) {
 function setLoading(isLoading) {
   if (!submitButton) return;
   submitButton.disabled = isLoading;
-  submitButton.textContent = isLoading ? "Signing in..." : "Sign In →";
+  submitButton.textContent = isLoading ? "Signing in..." : "Sign In ->";
 }
 
 function getRedirectUrl(user) {

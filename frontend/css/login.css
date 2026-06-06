@@ -115,6 +115,27 @@
     background-color: var(--secondary-blue);
 }
 
+.btn-signin:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.info-text {
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.login-message {
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+.login-message a {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
 /* Response/Feedback Alerts */
 .alert-box {
     padding: 12px;

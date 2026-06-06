@@ -432,7 +432,11 @@
           // Get Provider ID from URL
           const urlParams = new URLSearchParams(window.location.search);
           let providerId = urlParams.get("provider_id");
-          if (!providerId) providerId = 1; // Fallback for testing if accessed directly
+          if (!providerId) {
+            alert("Please select a provider before scheduling.");
+            window.location.href = "providerList.html";
+            return;
+          }
 
           const bookingDateTime = new Date(selectedBookingDate || new Date());
           const timeValue = selectedBookingTime || "09:00–10:00";
@@ -477,8 +481,12 @@
             const data = await response.json();
 
             if (data.success) {
+              const bookingId = data.data?.booking_id || data.booking_id;
+              if (!bookingId) {
+                throw new Error("Booking created but booking id was missing.");
+              }
               // SILENT REDIRECT: Go straight to payment and pass the booking ID
-              window.location.href = `payment.html?booking_id=${data.booking_id}`;
+              window.location.href = `payment.html?booking_id=${bookingId}`;
             } else {
               alert("Booking failed: " + data.message);
               btn.innerHTML = "Confirm Schedule &rarr;";
@@ -486,7 +494,10 @@
             }
           } catch (error) {
             console.error("API Error:", error);
-            alert("Could not connect to the server.");
+            alert(error.message || "Could not connect to the server.");
+            const btn = document.getElementById("confirmBookingBtn");
+            btn.innerHTML = "Confirm Schedule &rarr;";
+            btn.style.pointerEvents = "auto";
           }
         });
     </script>

@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test",
+    "backend": "npm --prefix backend start"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

@@ -1,4 +1,5 @@
 const resetPasswordForm = document.getElementById("resetPasswordForm");
+const resetOtpInput = document.getElementById("resetOtp");
 const newPasswordInput = document.getElementById("newPassword");
 const confirmPasswordInput = document.getElementById("confirmPassword");
 const resetSubmitButton = document.getElementById("resetSubmitButton");
@@ -56,7 +57,9 @@ async function validateResetToken(token) {
     }
 
     if (resetHint) {
-      resetHint.textContent = `Reset password for ${data.email}.`;
+      resetHint.textContent = data.otp_required
+        ? `Reset password for ${data.email}. Enter the one-time code from your reset email.`
+        : `Reset password for ${data.email}.`;
     }
     return true;
   } catch (error) {
@@ -73,6 +76,7 @@ async function handleResetPassword(event) {
 
   const password = newPasswordInput.value;
   const confirmPassword = confirmPasswordInput.value;
+  const otp = resetOtpInput.value.trim();
   const token = getTokenFromUrl();
 
   if (!token) {
@@ -80,8 +84,13 @@ async function handleResetPassword(event) {
     return;
   }
 
-  if (!password || !confirmPassword) {
-    showResetMessage("Please enter and confirm your new password.");
+  if (!otp || !password || !confirmPassword) {
+    showResetMessage("Please enter the reset code and confirm your new password.");
+    return;
+  }
+
+  if (!/^\d{6}$/.test(otp)) {
+    showResetMessage("The reset code must be 6 digits.");
     return;
   }
 
@@ -106,7 +115,7 @@ async function handleResetPassword(event) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token, password, confirmPassword }),
+      body: JSON.stringify({ token, otp, password, confirmPassword }),
     });
     const data = await response.json();
 

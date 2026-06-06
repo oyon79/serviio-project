@@ -46,18 +46,472 @@
           </button>
         </form>
       </div>
+
+      <div class="settings-card" style="margin-top: 24px">
+        <h3>Notifications</h3>
+        <button type="button" class="btn-save-settings" id="markAllNotificationsRead">
+          Mark All Read
+        </button>
+        <div id="notificationList" style="margin-top: 18px">
+          Loading notifications...
+        </div>
+      </div>
+
+      <div class="settings-card" style="margin-top: 24px">
+        <h3>Support Tickets</h3>
+        <form id="supportTicketForm">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="ticketCategory">
+              <option value="GENERAL">General</option>
+              <option value="REFUND">Refund</option>
+              <option value="DISPUTE">Dispute</option>
+              <option value="SAFETY">Safety</option>
+              <option value="TECHNICAL">Technical</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input
+              type="text"
+              id="ticketSubject"
+              placeholder="Short issue title"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea
+              id="ticketDescription"
+              rows="4"
+              placeholder="Describe what happened"
+              required
+              style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px"
+            ></textarea>
+          </div>
+          <button type="submit" class="btn-save-settings">
+            Open Support Ticket
+          </button>
+          <p id="supportMessage" style="margin-top: 10px"></p>
+        </form>
+        <div id="ticketList" style="margin-top: 18px">Loading tickets...</div>
+      </div>
+
+      <div class="settings-card" style="margin-top: 24px">
+        <h3>Completed Job Reviews</h3>
+        <div id="pendingReviewList">Loading completed bookings...</div>
+        <div id="reviewFormWrap" style="display: none; margin-top: 18px">
+          <form id="reviewForm">
+            <input type="hidden" id="reviewBookingId" />
+            <div class="form-group">
+              <label>Selected Booking</label>
+              <input type="text" id="reviewBookingLabel" readonly />
+            </div>
+            <div class="form-group">
+              <label>Rating</label>
+              <select id="reviewRating" required>
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Good</option>
+                <option value="3">3 - Okay</option>
+                <option value="2">2 - Poor</option>
+                <option value="1">1 - Bad</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input
+                type="text"
+                id="reviewTitle"
+                placeholder="Short feedback title"
+                maxlength="255"
+              />
+            </div>
+            <div class="form-group">
+              <label>Comment</label>
+              <textarea
+                id="reviewComment"
+                rows="4"
+                placeholder="Share details about the service"
+                maxlength="2000"
+                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn-save-settings">
+              Submit Review
+            </button>
+            <p id="reviewMessage" style="margin-top: 10px"></p>
+          </form>
+        </div>
+        <h3 style="margin-top: 24px">My Reviews</h3>
+        <div id="myReviewList">Loading reviews...</div>
+      </div>
     </main>
 
     <footer class="footer">
       <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
     </footer>
 
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
       function saveChanges() {
         alert(
           "Profile settings committed successfully inside local environment layers.",
         );
       }
+
+      const token = localStorage.getItem("serviio_token");
+      const ticketForm = document.getElementById("supportTicketForm");
+      const supportMessage = document.getElementById("supportMessage");
+      const ticketList = document.getElementById("ticketList");
+      const notificationList = document.getElementById("notificationList");
+      const markAllNotificationsRead = document.getElementById(
+        "markAllNotificationsRead",
+      );
+      const pendingReviewList = document.getElementById("pendingReviewList");
+      const reviewFormWrap = document.getElementById("reviewFormWrap");
+      const reviewForm = document.getElementById("reviewForm");
+      const reviewMessage = document.getElementById("reviewMessage");
+      const myReviewList = document.getElementById("myReviewList");
+      let currentNotifications = [];
+      let customerBookings = [];
+      let customerReviews = [];
+
+      function escapeHTML(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function formatDate(value) {
+        if (!value) return "Date not set";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "Date not set";
+        return date.toLocaleDateString();
+      }
+
+      function renderStars(rating) {
+        const safeRating = Number(rating) || 0;
+        return Array.from({ length: 5 }, (_, index) =>
+          index < safeRating ? "&#9733;" : "&#9734;",
+        ).join("");
+      }
+
+      async function fetchNotifications() {
+        if (!token) {
+          notificationList.innerText = "Log in to view notifications.";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/notifications",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load notifications.");
+          }
+
+          currentNotifications = data.data || [];
+          if (!currentNotifications.length) {
+            notificationList.innerText = "No notifications yet.";
+            return;
+          }
+
+          renderNotifications();
+        } catch (error) {
+          notificationList.innerText = error.message;
+        }
+      }
+
+      function renderNotifications() {
+        if (!currentNotifications.length) {
+          notificationList.innerText = "No notifications yet.";
+          return;
+        }
+
+        notificationList.innerHTML = currentNotifications
+            .map(
+              (notification) => `
+                <div style="border:1px solid #eee; border-radius:8px; padding:12px; margin-bottom:10px">
+                  <strong>${escapeHTML(notification.title || notification.notification_type)}</strong>
+                  <span>${notification.is_read ? "Read" : "New"}</span>
+                  <div>${escapeHTML(notification.message || "")}</div>
+                </div>
+              `,
+            )
+            .join("");
+      }
+
+      async function fetchTickets() {
+        if (!token) {
+          ticketList.innerText = "Log in to view support tickets.";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/support/tickets/my",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load tickets.");
+          }
+
+          if (!data.data.length) {
+            ticketList.innerText = "No support tickets yet.";
+            return;
+          }
+
+          ticketList.innerHTML = data.data
+            .map(
+              (ticket) => `
+                <div style="border:1px solid #eee; border-radius:8px; padding:12px; margin-bottom:10px">
+                  <strong>${escapeHTML(ticket.ticket_number)}</strong> - ${escapeHTML(ticket.subject)}
+                  <div>Category: ${escapeHTML(ticket.category)} | Status: ${escapeHTML(ticket.status)}</div>
+                </div>
+              `,
+            )
+            .join("");
+        } catch (error) {
+          ticketList.innerText = error.message;
+        }
+      }
+
+      async function fetchCustomerReviewData() {
+        if (!token) {
+          pendingReviewList.innerText = "Log in to review completed bookings.";
+          myReviewList.innerText = "Log in to view reviews.";
+          return;
+        }
+
+        try {
+          const [bookingResponse, reviewResponse] = await Promise.all([
+            fetch("http://localhost:5000/api/bookings/my", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch("http://localhost:5000/api/reviews/my", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+          const bookingData = await bookingResponse.json();
+          const reviewData = await reviewResponse.json();
+
+          if (!bookingResponse.ok || !bookingData.success) {
+            throw new Error(bookingData.message || "Unable to load bookings.");
+          }
+          if (!reviewResponse.ok || !reviewData.success) {
+            throw new Error(reviewData.message || "Unable to load reviews.");
+          }
+
+          customerBookings = bookingData.data || [];
+          customerReviews = reviewData.data || [];
+          renderPendingReviews();
+          renderMyReviews();
+        } catch (error) {
+          pendingReviewList.innerText = error.message;
+          myReviewList.innerText = error.message;
+        }
+      }
+
+      function renderPendingReviews() {
+        const reviewedBookingIds = new Set(
+          customerReviews
+            .filter((review) => review.booking_id)
+            .map((review) => String(review.booking_id)),
+        );
+        const reviewableBookings = customerBookings.filter(
+          (booking) =>
+            booking.status === "COMPLETED" &&
+            !reviewedBookingIds.has(String(booking.id)),
+        );
+
+        if (!reviewableBookings.length) {
+          pendingReviewList.innerText = "No completed bookings waiting for review.";
+          reviewFormWrap.style.display = "none";
+          return;
+        }
+
+        pendingReviewList.innerHTML = reviewableBookings
+          .map((booking) => {
+            const label = `${booking.service_type || "Service"} with ${
+              booking.provider_name || "Provider"
+            }`;
+            return `
+              <div style="border:1px solid #eee; border-radius:8px; padding:12px; margin-bottom:10px">
+                <strong>${escapeHTML(label)}</strong>
+                <div>${escapeHTML(formatDate(booking.booking_date))}</div>
+                <button
+                  type="button"
+                  class="btn-save-settings"
+                  style="margin-top:10px"
+                  onclick="selectBookingForReview('${booking.id}')"
+                >
+                  Write Review
+                </button>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMyReviews() {
+        if (!customerReviews.length) {
+          myReviewList.innerText = "No reviews submitted yet.";
+          return;
+        }
+
+        myReviewList.innerHTML = customerReviews
+          .map(
+            (review) => `
+              <div style="border:1px solid #eee; border-radius:8px; padding:12px; margin-bottom:10px">
+                <strong>${escapeHTML(review.title || "Service Review")}</strong>
+                <div style="color:#f59e0b">${renderStars(review.rating)}</div>
+                <div>${escapeHTML(review.provider_name)} | ${escapeHTML(review.service_type || "Service")}</div>
+                <p>${escapeHTML(review.comment || "No comment provided.")}</p>
+                <small>${escapeHTML(formatDate(review.created_at))}</small>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      window.selectBookingForReview = function (bookingId) {
+        const booking = customerBookings.find(
+          (item) => String(item.id) === String(bookingId),
+        );
+        if (!booking) return;
+
+        const label = `${booking.service_type || "Service"} with ${
+          booking.provider_name || "Provider"
+        } on ${formatDate(booking.booking_date)}`;
+        document.getElementById("reviewBookingId").value = booking.id;
+        document.getElementById("reviewBookingLabel").value = label;
+        reviewMessage.textContent = "";
+        reviewFormWrap.style.display = "block";
+      };
+
+      ticketForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!token) {
+          window.location.href = "login.html?next=profile.html";
+          return;
+        }
+
+        supportMessage.textContent = "Creating ticket...";
+        supportMessage.style.color = "#334155";
+
+        try {
+          const response = await fetch(
+            "http://localhost:5000/api/support/tickets",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                category: document.getElementById("ticketCategory").value,
+                subject: document.getElementById("ticketSubject").value.trim(),
+                description: document
+                  .getElementById("ticketDescription")
+                  .value.trim(),
+              }),
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to create ticket.");
+          }
+          supportMessage.textContent = "Support ticket created.";
+          supportMessage.style.color = "#15803d";
+          ticketForm.reset();
+          fetchTickets();
+        } catch (error) {
+          supportMessage.textContent = error.message;
+          supportMessage.style.color = "#b91c1c";
+        }
+      });
+
+      reviewForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!token) {
+          window.location.href = "login.html?next=profile.html";
+          return;
+        }
+
+        const bookingId = document.getElementById("reviewBookingId").value;
+        if (!bookingId) {
+          reviewMessage.textContent = "Choose a completed booking first.";
+          reviewMessage.style.color = "#b91c1c";
+          return;
+        }
+
+        reviewMessage.textContent = "Submitting review...";
+        reviewMessage.style.color = "#334155";
+
+        try {
+          const response = await fetch("http://localhost:5000/api/reviews", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              booking_id: bookingId,
+              rating: document.getElementById("reviewRating").value,
+              title: document.getElementById("reviewTitle").value.trim(),
+              comment: document.getElementById("reviewComment").value.trim(),
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to submit review.");
+          }
+
+          reviewMessage.textContent = "Review submitted.";
+          reviewMessage.style.color = "#15803d";
+          reviewForm.reset();
+          reviewFormWrap.style.display = "none";
+          fetchCustomerReviewData();
+        } catch (error) {
+          reviewMessage.textContent = error.message;
+          reviewMessage.style.color = "#b91c1c";
+        }
+      });
+
+      markAllNotificationsRead.addEventListener("click", async () => {
+        if (!token) return;
+        await fetch("http://localhost:5000/api/notifications/read-all", {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        fetchNotifications();
+      });
+
+      if (token && window.io) {
+        const socket = io("http://localhost:5000");
+        socket.emit("notifications:join", { token });
+        socket.on("notification:new", (notification) => {
+          currentNotifications = [notification, ...currentNotifications];
+          renderNotifications();
+        });
+      }
+
+      fetchNotifications();
+      fetchTickets();
+      fetchCustomerReviewData();
     </script>
   </body>
 </html>

@@ -47,21 +47,75 @@
 .saved-info p {
     color: var(--text-muted);
     font-size: 0.9rem;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
-.btn-view-profile {
+.saved-meta {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
+}
+
+.saved-meta i {
+    color: var(--accent-yellow);
+}
+
+.saved-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn-view-profile,
+.btn-book-again,
+.btn-remove-saved {
     display: block;
     padding: 10px;
-    background-color: var(--primary-blue);
-    color: var(--white);
     text-decoration: none;
     border-radius: 6px;
     font-weight: 500;
     font-size: 0.95rem;
     transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-view-profile {
+    background-color: var(--primary-blue);
+    color: var(--white);
 }
 
 .btn-view-profile:hover {
     background-color: var(--secondary-blue);
+}
+
+.btn-book-again {
+    background-color: #15803d;
+    color: var(--white);
+}
+
+.btn-book-again:hover {
+    background-color: #166534;
+}
+
+.btn-remove-saved {
+    background-color: #f8fafc;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.btn-remove-saved:hover {
+    background-color: #fee2e2;
+}
+
+.saved-empty {
+    grid-column: 1 / -1;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    color: var(--text-muted);
 }

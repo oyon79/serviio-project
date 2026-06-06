@@ -1,5 +1,8 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "..", ".env") });
+require("dotenv").config({
+  path: path.resolve(__dirname, "..", ".env"),
+  quiet: true,
+});
 const mysql = require("mysql2/promise");
 
 const {
@@ -11,7 +14,6 @@ const {
   DB_CONNECTION_LIMIT = 10,
   DB_QUEUE_LIMIT = 0,
   DB_CONNECT_TIMEOUT = 10000,
-  DB_ACQUIRE_TIMEOUT = 10000,
 } = process.env;
 
 if (!DB_NAME) {
@@ -29,7 +31,6 @@ const pool = mysql.createPool({
   connectionLimit: Number(DB_CONNECTION_LIMIT) || 10,
   queueLimit: Number(DB_QUEUE_LIMIT) || 0,
   connectTimeout: Number(DB_CONNECT_TIMEOUT) || 10000,
-  acquireTimeout: Number(DB_ACQUIRE_TIMEOUT) || 10000,
   decimalNumbers: true,
   namedPlaceholders: true,
 });

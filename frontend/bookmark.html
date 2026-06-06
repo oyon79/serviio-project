@@ -27,26 +27,125 @@
 
     <main class="bookmark-wrapper">
       <h2>Saved Service Specialists</h2>
-      <div class="bookmark-grid">
-        <div class="saved-card">
-          <img
-            src="Image/repairman-doing-air-conditioner-service 1.png"
-            alt="Expert"
-            class="saved-img"
-          />
-          <div class="saved-info">
-            <h4>Kamal Hossain</h4>
-            <p>Air Conditioning Engineer</p>
-            <a href="providerInfo1.html" class="btn-view-profile"
-              >View Profile Slot</a
-            >
-          </div>
-        </div>
+      <div class="bookmark-grid" id="bookmarkGrid">
+        <div class="saved-empty">Loading saved providers...</div>
       </div>
     </main>
 
     <footer class="footer">
       <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
     </footer>
+
+    <script>
+      const token = localStorage.getItem("serviio_token");
+      const bookmarkGrid = document.getElementById("bookmarkGrid");
+
+      function escapeHTML(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function formatRating(value) {
+        const rating = Number(value || 0);
+        return rating ? rating.toFixed(1) : "New";
+      }
+
+      async function loadBookmarks() {
+        if (!token) {
+          bookmarkGrid.innerHTML = `
+            <div class="saved-empty">
+              Log in to view your saved specialists.
+              <a href="login.html?next=bookmark.html" class="btn-view-profile">Log In</a>
+            </div>
+          `;
+          return;
+        }
+
+        try {
+          const response = await fetch("http://localhost:5000/api/bookmarks", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load saved providers.");
+          }
+
+          renderBookmarks(data.data || []);
+        } catch (error) {
+          bookmarkGrid.innerHTML = `<div class="saved-empty">${escapeHTML(error.message)}</div>`;
+        }
+      }
+
+      function renderBookmarks(bookmarks) {
+        if (!bookmarks.length) {
+          bookmarkGrid.innerHTML =
+            '<div class="saved-empty">No saved specialists yet.</div>';
+          return;
+        }
+
+        bookmarkGrid.innerHTML = bookmarks
+          .map(
+            (provider) => `
+              <div class="saved-card">
+                <img
+                  src="Image/repairman-doing-air-conditioner-service 1.png"
+                  alt="${escapeHTML(provider.full_name || "Saved provider")}"
+                  class="saved-img"
+                />
+                <div class="saved-info">
+                  <h4>${escapeHTML(provider.full_name || "Provider")}</h4>
+                  <p>${escapeHTML(provider.service_type || "Service Provider")}</p>
+                  <p class="saved-meta">
+                    <i class="fas fa-star"></i> ${escapeHTML(formatRating(provider.average_rating))}
+                    <span>${Number(provider.total_reviews || 0)} reviews</span>
+                  </p>
+                  <p>${escapeHTML(provider.location || "Location not set")}</p>
+                  <div class="saved-actions">
+                    <a href="providerInfo1.html?id=${provider.provider_id}" class="btn-view-profile">
+                      View Profile
+                    </a>
+                    <a href="schedule.html?provider_id=${provider.provider_id}" class="btn-book-again">
+                      Book Again
+                    </a>
+                    <button
+                      type="button"
+                      class="btn-remove-saved"
+                      onclick="removeBookmark('${provider.provider_id}')"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function removeBookmark(providerId) {
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/bookmarks/${providerId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to remove provider.");
+          }
+          loadBookmarks();
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      loadBookmarks();
+    </script>
   </body>
 </html>

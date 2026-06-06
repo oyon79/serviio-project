@@ -172,7 +172,7 @@
           <a href="#">Terms of Use</a>
           <a href="#">Sales and Refunds</a>
         </div>
-        <div class="copyright">© 2026 SERVIIO All Rights Reserved</div>
+        <div class="copyright">&copy; 2026 SERVIIO All Rights Reserved</div>
       </div>
     </footer>
 
@@ -184,30 +184,66 @@
       // Add OpenStreetMap tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: "© OpenStreetMap",
+        attribution: "&copy; OpenStreetMap",
       }).addTo(map);
-
-      // Dummy Data for Providers (Later, we will fetch this from the API just like ProviderList!)
-      const dummyProviders = [
-        {
-          lat: 23.825,
-          lng: 90.395,
-          type: "Electrician",
-          name: "Raju Electric",
-        },
-        { lat: 23.818, lng: 90.4, type: "Plumber", name: "Quick Plumb" },
-        {
-          lat: 23.828,
-          lng: 90.39,
-          type: "Cleaner",
-          name: "Fresh Home Cleaners",
-        },
-        { lat: 23.82, lng: 90.388, type: "Painter", name: "Color Pros" },
-        { lat: 23.83, lng: 90.402, type: "carpenter", name: "WoodWorks" },
-      ];
 
       let currentMarkers = [];
       let selectedService = null;
+      let providers = [];
+
+      const areaCoordinates = {
+        mirpur: [23.8223, 90.3654],
+        uttara: [23.8759, 90.3795],
+        gulshan: [23.7925, 90.4078],
+        banani: [23.7937, 90.4066],
+        dhanmondi: [23.7461, 90.3742],
+        badda: [23.7806, 90.4265],
+        "old dhaka": [23.7104, 90.4074],
+        "notun bazar": [23.7979, 90.4251],
+        unspecified: [23.8223, 90.3966],
+      };
+
+      function getApiBaseUrl() {
+        const hostname = window.location.hostname;
+        const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+        if (window.location.protocol === "file:" || isLocalhost) {
+          return "http://localhost:5000";
+        }
+        return window.location.origin;
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, (char) => {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[char];
+        });
+      }
+
+      function getProviderCoordinates(provider, index) {
+        const key = String(provider.location || "unspecified").toLowerCase();
+        const base = areaCoordinates[key] || areaCoordinates.unspecified;
+        const offset = (index % 5) * 0.0015;
+        return [base[0] + offset, base[1] - offset];
+      }
+
+      async function fetchProviders() {
+        try {
+          const response = await fetch(`${getApiBaseUrl()}/api/providers`);
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result.message || "Failed to load providers");
+          }
+          providers = result.data || [];
+        } catch (error) {
+          console.error("Provider load failed:", error);
+          providers = [];
+        }
+      }
 
       // Handle Service Selection (Clickable Grid)
       const serviceBtns = document.querySelectorAll(".service-btn");
@@ -236,34 +272,55 @@
         currentMarkers.forEach((marker) => map.removeLayer(marker));
         currentMarkers = [];
 
-        // Filter dummy data and drop pins
-        const filtered = dummyProviders.filter(
-          (p) => p.type === selectedService,
-        );
+        const locationQuery = document
+          .querySelector(".location-input")
+          .value.trim()
+          .toLowerCase();
+
+        const filtered = providers.filter((provider) => {
+          const providerService = String(provider.service_type || "").toLowerCase();
+          const providerLocation = String(provider.location || "").toLowerCase();
+          const serviceMatches =
+            !selectedService ||
+            providerService.includes(selectedService.toLowerCase());
+          const locationMatches =
+            !locationQuery || providerLocation.includes(locationQuery);
+          return serviceMatches && locationMatches;
+        });
 
         if (filtered.length === 0) {
           alert(`No ${selectedService} found in this area right now.`);
         } else {
-          filtered.forEach((provider) => {
-            const marker = L.marker([provider.lat, provider.lng])
+          filtered.forEach((provider, index) => {
+            const [lat, lng] = getProviderCoordinates(provider, index);
+            const providerName = `${provider.first_name || ""} ${
+              provider.last_name || ""
+            }`.trim();
+            const marker = L.marker([lat, lng])
               .addTo(map)
               .bindPopup(
-                `<b>${provider.name}</b><br>Accepts ${workload} workloads.`,
+                `<b>${escapeHtml(providerName || "Service Provider")}</b><br>
+                ${escapeHtml(provider.service_type || "General Service")}<br>
+                ${escapeHtml(provider.location || "Location not set")}<br>
+                Accepts ${escapeHtml(workload)} workloads.<br>
+                <a href="schedule.html?provider_id=${encodeURIComponent(provider.id)}">Book now</a>`,
               );
             currentMarkers.push(marker);
           });
 
           // Pan map to the first result
-          map.setView([filtered[0].lat, filtered[0].lng], 15);
+          map.setView(getProviderCoordinates(filtered[0], 0), 14);
         }
       });
+
+      fetchProviders();
 
       // --- Live tracking: subscribe to provider updates (demo providerId=1)
       (function setupLiveTracking() {
         const socketScript = document.createElement("script");
         socketScript.src = "https://cdn.socket.io/4.5.4/socket.io.min.js";
         socketScript.onload = () => {
-          const socket = io("http://localhost:5000");
+          const socket = io(getApiBaseUrl());
           const trackedProviderId = 1; // demo: subscribe to provider 1
           socket.emit("customer:subscribe", { providerId: trackedProviderId });
 

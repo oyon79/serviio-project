@@ -133,7 +133,17 @@
           <div class="summary-details">
             <div class="summary-row">
               <span>Service Type</span>
-              <span style="font-weight: 600">General Maintenance</span>
+              <span id="summaryServiceType" style="font-weight: 600"
+                >General Maintenance</span
+              >
+            </div>
+            <div class="summary-row">
+              <span>Provider</span>
+              <span id="summaryProvider">Loading...</span>
+            </div>
+            <div class="summary-row">
+              <span>Location</span>
+              <span id="summaryLocation">Loading...</span>
             </div>
             <div class="summary-row">
               <span>Base Charge</span>
@@ -207,13 +217,41 @@
       const payBtn = document.getElementById("payBtn");
       const popup = document.getElementById("successPopup");
       const codeDisplay = document.getElementById("handshakeCodeDisplay");
+      const summaryServiceType = document.getElementById("summaryServiceType");
+      const summaryProvider = document.getElementById("summaryProvider");
+      const summaryLocation = document.getElementById("summaryLocation");
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookingId = urlParams.get("booking_id");
+      const token = localStorage.getItem("serviio_token");
+
+      async function loadBookingSummary() {
+        if (!bookingId || !token) return;
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/bookings/${bookingId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) return;
+
+          const booking = data.data;
+          summaryServiceType.textContent =
+            booking.service_type || "General Maintenance";
+          summaryProvider.textContent = booking.provider_name || "Assigned";
+          summaryLocation.textContent =
+            booking.job_location || "Location not provided";
+        } catch (error) {
+          console.error("Unable to load booking summary:", error);
+        }
+      }
 
       payBtn.addEventListener("click", async (e) => {
         e.preventDefault();
-
-        // 1. Get the booking ID from the URL (e.g., payment.html?booking_id=12)
-        const urlParams = new URLSearchParams(window.location.search);
-        const bookingId = urlParams.get("booking_id");
 
         if (!bookingId) {
           alert(
@@ -222,39 +260,74 @@
           return;
         }
 
-        // 2. Change button to show processing state (Simulation of Payment Gateway)
+        if (!token) {
+          alert("Please log in before completing payment.");
+          window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname.split("/").pop() + window.location.search)}`;
+          return;
+        }
+
+        // 2. Change button to show processing state
         payBtn.innerHTML =
           'Processing Payment... <i class="fa-solid fa-spinner fa-spin"></i>';
         payBtn.style.pointerEvents = "none";
 
-        // Simulate a 1.5 second delay for "processing payment"
-        setTimeout(async () => {
-          try {
-            // 3. Fetch the booking details (and handshake code) from the backend API
-            const response = await fetch(
-              `http://localhost:5000/api/bookings/${bookingId}`,
-            );
-            const data = await response.json();
+        try {
+          const selectedMethod =
+            document.querySelector('input[name="payment_method"]:checked')
+              ?.value || "card";
 
-            if (data.success) {
-              // 4. Inject the fetched 4-digit code into the popup UI
-              codeDisplay.innerText = data.data.handshake_code;
+          const paymentResponse = await fetch(
+            "http://localhost:5000/api/payments/process",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                booking_id: bookingId,
+                amount: 550,
+                payment_method: selectedMethod,
+              }),
+            },
+          );
+          const paymentData = await paymentResponse.json();
 
-              // 5. Show the popup
-              popup.style.display = "flex";
-            } else {
-              alert("Error retrieving booking details: " + data.message);
-              payBtn.innerHTML = "Pay Now &rarr;";
-              payBtn.style.pointerEvents = "auto";
-            }
-          } catch (error) {
-            console.error("API Error:", error);
-            alert("Could not connect to the server to verify booking.");
-            payBtn.innerHTML = "Pay Now &rarr;";
-            payBtn.style.pointerEvents = "auto";
+          if (!paymentResponse.ok && paymentResponse.status !== 409) {
+            throw new Error(paymentData.message || "Payment failed.");
           }
-        }, 1500); // 1.5 seconds mock delay
+
+          // 3. Fetch the booking details (and handshake code) from the backend API
+          const response = await fetch(
+            `http://localhost:5000/api/bookings/${bookingId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.message || "Error retrieving booking details.",
+            );
+          }
+
+          // 4. Inject the fetched 4-digit code into the popup UI
+          codeDisplay.innerText = data.data.handshake_code;
+
+          // 5. Show the popup
+          popup.style.display = "flex";
+        } catch (error) {
+          console.error("API Error:", error);
+          alert(error.message || "Could not complete payment.");
+          payBtn.innerHTML = "Pay Now &rarr;";
+          payBtn.style.pointerEvents = "auto";
+        }
       });
+
+      loadBookingSummary();
     </script>
   </body>
 </html>

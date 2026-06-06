@@ -7,6 +7,7 @@ const catFilter = document.getElementById("categoryFilter");
 const areaFilter = document.getElementById("areaFilter");
 const rateFilter = document.getElementById("ratingFilter");
 const clearBtn = document.getElementById("clearBtn");
+const initialParams = new URLSearchParams(window.location.search);
 
 function getApiBaseUrl() {
   const hostname = window.location.hostname;
@@ -31,18 +32,21 @@ async function fetchProviders() {
       providers = result.data.map((p) => ({
         id: p.id,
         name: `${p.first_name} ${p.last_name}`,
-        cat: p.service_type,
-        area: p.location,
-        rate: isNaN(parseFloat(p.rating)) ? 0 : parseFloat(p.rating),
-        // We mock reviews for now since we don't have a reviews table yet
-        reviews: Math.floor(Math.random() * 50) + 10,
+        cat: p.service_type || "General Service",
+        area: p.location || "Unspecified",
+        rate: isNaN(parseFloat(p.average_rating))
+          ? 0
+          : parseFloat(p.average_rating),
+        reviews: Number(p.total_reviews) || 0,
         status: p.is_available ? "Online" : "Offline",
         img: "", // We will handle image uploads later
         desc: p.experience_summary,
       }));
 
+      applyInitialFilters();
+
       // Draw the cards on the screen
-      render(providers);
+      updateFilters();
     }
   } catch (error) {
     console.error("Error fetching providers:", error);
@@ -101,6 +105,27 @@ function updateFilters() {
     );
   });
   render(filtered);
+}
+
+function applyInitialFilters() {
+  const area = initialParams.get("area");
+  const service = initialParams.get("service");
+
+  if (area && areaFilter) {
+    const areaOption = Array.from(areaFilter.options).find(
+      (option) => option.value.toLowerCase() === area.toLowerCase(),
+    );
+    if (areaOption) areaFilter.value = areaOption.value;
+    else searchInput.value = area;
+  }
+
+  if (service && catFilter) {
+    const serviceOption = Array.from(catFilter.options).find(
+      (option) => option.value.toLowerCase() === service.toLowerCase(),
+    );
+    if (serviceOption) catFilter.value = serviceOption.value;
+    else searchInput.value = service;
+  }
 }
 
 // 4. Attach Event Listeners

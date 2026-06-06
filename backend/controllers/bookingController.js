@@ -1,4 +1,8 @@
 const db = require("../config/db");
+const {
+  createNotification,
+  createNotifications,
+} = require("../services/notificationService");
 
 const allowedStatuses = new Set([
   "PENDING",
@@ -73,12 +77,34 @@ exports.createBooking = async (req, res) => {
         handshake_code,
       ],
     );
+    const bookingId = result.insertId;
+
+    await createNotifications([
+      {
+        user_id: provider_id,
+        booking_id: bookingId,
+        notification_type: "BOOKING_CREATED",
+        title: "New booking request",
+        message: `You have a new ${service_type} booking request.`,
+        entity_type: "BOOKING",
+        entity_id: bookingId,
+      },
+      {
+        user_id: customerId,
+        booking_id: bookingId,
+        notification_type: "BOOKING_CREATED",
+        title: "Booking created",
+        message: "Your booking was created. Complete payment to confirm it.",
+        entity_type: "BOOKING",
+        entity_id: bookingId,
+      },
+    ]);
 
     return res.status(201).json({
       success: true,
       message: "Booking created successfully.",
       data: {
-        booking_id: result.insertId,
+        booking_id: bookingId,
         status: "PENDING",
         handshake_code,
       },
@@ -97,6 +123,13 @@ exports.createBooking = async (req, res) => {
 exports.getBookingById = async (req, res) => {
   const bookingId = req.params.id;
 
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required to view booking details.",
+    });
+  }
+
   try {
     // Query the database for the booking, and join provider details if you want their name!
     const query = `
@@ -114,9 +147,21 @@ exports.getBookingById = async (req, res) => {
         .json({ success: false, message: "Booking not found." });
     }
 
+    const bookingRow = booking[0];
+    const userId = String(req.user.id);
+    const isCustomer = String(bookingRow.customer_id) === userId;
+    const isProvider = String(bookingRow.provider_id) === userId;
+
+    if (!isCustomer && !isProvider && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view this booking.",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      data: booking[0],
+      data: bookingRow,
     });
   } catch (error) {
     console.error("Error fetching booking:", error);
@@ -238,6 +283,13 @@ exports.verifyHandshake = async (req, res) => {
   const bookingId = booking_id;
   const code = handshake_code;
 
+  if (!bookingId || !code) {
+    return res.status(400).json({
+      success: false,
+      message: "booking_id and handshake_code are required.",
+    });
+  }
+
   try {
     // Find the booking
     const [booking] = await db.query("SELECT * FROM bookings WHERE id = ?", [
@@ -269,6 +321,15 @@ exports.verifyHandshake = async (req, res) => {
       "IN_PROGRESS",
       bookingId,
     ]);
+    await createNotification({
+      user_id: booking[0].customer_id,
+      booking_id: bookingId,
+      notification_type: "BOOKING_STARTED",
+      title: "Job started",
+      message: "Your provider verified the handshake code and started work.",
+      entity_type: "BOOKING",
+      entity_id: bookingId,
+    });
 
     res.status(200).json({
       success: true,
@@ -330,6 +391,21 @@ exports.updateBookingStatus = async (req, res) => {
       requestedStatus,
       bookingId,
     ]);
+    const [recipientRows] = await db.query(
+      "SELECT customer_id FROM bookings WHERE id = ? LIMIT 1",
+      [bookingId],
+    );
+    if (recipientRows.length > 0) {
+      await createNotification({
+        user_id: recipientRows[0].customer_id,
+        booking_id: bookingId,
+        notification_type: "BOOKING_STATUS_UPDATED",
+        title: "Booking status updated",
+        message: `Your booking is now ${requestedStatus}.`,
+        entity_type: "BOOKING",
+        entity_id: bookingId,
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -401,6 +477,16 @@ exports.cancelBooking = async (req, res) => {
       "CANCELLED",
       bookingId,
     ]);
+    const recipientId = isCustomer ? booking.provider_id : booking.customer_id;
+    await createNotification({
+      user_id: recipientId,
+      booking_id: bookingId,
+      notification_type: "BOOKING_CANCELLED",
+      title: "Booking cancelled",
+      message: `Booking #${bookingId} was cancelled.`,
+      entity_type: "BOOKING",
+      entity_id: bookingId,
+    });
 
     return res.status(200).json({
       success: true,

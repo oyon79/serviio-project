@@ -40,7 +40,7 @@
               >
             </div>
             <p class="specialty" id="specialty">Loading provider profile...</p>
-            <p class="rating-row">
+            <p class="rating-row" id="ratingRow">
               <i class="fas fa-star text-warning"></i> 4.9
               <span>(42 completed tasks)</span>
             </p>
@@ -52,8 +52,13 @@
           <p id="bioText">Loading provider description...</p>
         </div>
 
+        <div class="reviews-section">
+          <h3>Customer Reviews</h3>
+          <div id="providerReviews">Loading reviews...</div>
+        </div>
+
         <div class="action-row">
-          <button class="btn-bookmark" onclick="toggleBookmark()">
+          <button class="btn-bookmark" id="bookmarkBtn" onclick="toggleBookmark()">
             <i class="far fa-bookmark"></i> Save Expert
           </button>
           <button
@@ -74,16 +79,90 @@
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const providerId = urlParams.get("id") || urlParams.get("provider_id");
+      const authToken = localStorage.getItem("serviio_token");
+      const bookmarkBtn = document.getElementById("bookmarkBtn");
+      let isBookmarked = false;
 
-      function toggleBookmark() {
-        alert("Expert successfully added to your bookmark dashboard.");
+      async function toggleBookmark() {
+        if (!providerId) {
+          alert("Provider profile is missing.");
+          return;
+        }
+
+        if (!authToken) {
+          window.location.href = `login.html?next=providerInfo1.html?id=${providerId}`;
+          return;
+        }
+
+        bookmarkBtn.disabled = true;
+        bookmarkBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/bookmarks${isBookmarked ? `/${providerId}` : ""}`,
+            {
+              method: isBookmarked ? "DELETE" : "POST",
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                "Content-Type": "application/json",
+              },
+              body: isBookmarked
+                ? undefined
+                : JSON.stringify({ provider_id: Number(providerId) }),
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to update saved provider.");
+          }
+
+          isBookmarked = !isBookmarked;
+          renderBookmarkButton();
+        } catch (error) {
+          alert(error.message);
+          renderBookmarkButton();
+        } finally {
+          bookmarkBtn.disabled = false;
+        }
       }
+
       function routeToSchedule() {
         if (!providerId) {
           alert("Provider profile is missing.");
           return;
         }
         window.location.href = `schedule.html?provider_id=${providerId}`;
+      }
+
+      function escapeHTML(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toLocaleDateString();
+      }
+
+      function renderStars(rating) {
+        const safeRating = Number(rating) || 0;
+        return Array.from({ length: 5 }, (_, index) =>
+          index < safeRating ? "&#9733;" : "&#9734;",
+        ).join("");
+      }
+
+      function renderBookmarkButton() {
+        bookmarkBtn.classList.toggle("saved", isBookmarked);
+        bookmarkBtn.innerHTML = isBookmarked
+          ? '<i class="fas fa-bookmark"></i> Saved Expert'
+          : '<i class="far fa-bookmark"></i> Save Expert';
       }
 
       async function loadProvider() {
@@ -115,6 +194,10 @@
             provider.is_verified
               ? '<i class="fas fa-check-circle"></i> NID Verified'
               : '<i class="fas fa-hourglass-half"></i> Pending Verification';
+          const rating = Number(provider.average_rating || 0).toFixed(1);
+          const totalReviews = Number(provider.total_reviews || 0);
+          document.getElementById("ratingRow").innerHTML =
+            `<i class="fas fa-star text-warning"></i> ${rating} <span>(${totalReviews} completed tasks)</span>`;
         } catch (error) {
           console.error(error);
           document.getElementById("fullName").textContent =
@@ -124,7 +207,76 @@
         }
       }
 
+      async function loadProviderReviews() {
+        const container = document.getElementById("providerReviews");
+        if (!providerId) {
+          container.innerText = "Reviews are unavailable.";
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/reviews/provider/${providerId}`,
+          );
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Failed to load reviews");
+          }
+
+          if (!data.data.length) {
+            container.innerText = "No customer reviews yet.";
+            return;
+          }
+
+          container.innerHTML = data.data
+            .map(
+              (review) => `
+                <div class="provider-review-item">
+                  <div class="review-heading">
+                    <strong>${escapeHTML(review.title || "Customer Review")}</strong>
+                    <span>${escapeHTML(formatDate(review.created_at))}</span>
+                  </div>
+                  <div class="review-stars">${renderStars(review.rating)}</div>
+                  <p>${escapeHTML(review.comment || "No comment provided.")}</p>
+                  <small>${escapeHTML(review.customer_name)} | ${escapeHTML(review.service_type || "Service")}</small>
+                </div>
+              `,
+            )
+            .join("");
+        } catch (error) {
+          console.error(error);
+          container.innerText = "Unable to load reviews right now.";
+        }
+      }
+
+      async function loadBookmarkStatus() {
+        if (!providerId || !authToken) {
+          renderBookmarkButton();
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `http://localhost:5000/api/bookmarks/${providerId}`,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            },
+          );
+          const data = await response.json();
+          if (response.ok && data.success) {
+            isBookmarked = Boolean(data.data?.is_bookmarked);
+          }
+        } catch (error) {
+          console.error("Unable to load bookmark status", error);
+        }
+
+        renderBookmarkButton();
+      }
+
       loadProvider();
+      loadProviderReviews();
+      loadBookmarkStatus();
     </script>
   </body>
 </html>

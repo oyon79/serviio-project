@@ -1,11 +1,16 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const PASSWORD_RESET_TOKEN_EXPIRY =
-  process.env.PASSWORD_RESET_TOKEN_EXPIRY || "15m";
+const PASSWORD_RESET_EXPIRY_MINUTES = Number(
+  process.env.PASSWORD_RESET_EXPIRY_MINUTES || 15,
+);
+const PASSWORD_RESET_MAX_ATTEMPTS = Number(
+  process.env.PASSWORD_RESET_MAX_ATTEMPTS || 5,
+);
 const FRONTEND_BASE_URL =
   process.env.FRONTEND_BASE_URL || "http://localhost/serviio-project/frontend";
 const EMAIL_HOST = process.env.EMAIL_HOST;
@@ -14,6 +19,7 @@ const EMAIL_SECURE = process.env.EMAIL_SECURE === "true";
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_FROM = process.env.EMAIL_FROM || "SERVIIO <no-reply@serviio.local>";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 if (!JWT_SECRET) {
   console.error("Missing required environment variable: JWT_SECRET");
   process.exit(1);
@@ -21,6 +27,37 @@ if (!JWT_SECRET) {
 
 function buildPasswordResetUrl(token) {
   return `${FRONTEND_BASE_URL.replace(/\/$/, "")}/reset-password.html?token=${encodeURIComponent(token)}`;
+}
+
+function generateResetToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function generateOtp() {
+  return String(crypto.randomInt(100000, 1000000));
+}
+
+function hashResetToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function getResetExpiryDate() {
+  return new Date(Date.now() + PASSWORD_RESET_EXPIRY_MINUTES * 60 * 1000);
+}
+
+function maskEmail(email) {
+  const [name, domain] = String(email || "").split("@");
+  if (!name || !domain) return "your email";
+  const visible = name.slice(0, Math.min(2, name.length));
+  return `${visible}${"*".repeat(Math.max(name.length - visible.length, 2))}@${domain}`;
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || null;
 }
 
 function createEmailTransporter() {
@@ -256,26 +293,44 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    const resetToken = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        type: "password_reset",
-      },
-      JWT_SECRET,
-      { expiresIn: PASSWORD_RESET_TOKEN_EXPIRY },
+    const resetToken = generateResetToken();
+    const resetTokenHash = hashResetToken(resetToken);
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, await bcrypt.genSalt(12));
+    const expiresAt = getResetExpiryDate();
+    const resetUrl = buildPasswordResetUrl(resetToken);
+
+    await db.query(
+      `UPDATE password_reset_requests
+       SET status = 'EXPIRED'
+       WHERE user_id = ? AND status = 'REQUESTED'`,
+      [user.id],
+    );
+    await db.query(
+      `INSERT INTO password_reset_requests
+        (user_id, email, reset_token_hash, otp_hash, channel, requested_ip, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user.id,
+        user.email,
+        resetTokenHash,
+        otpHash,
+        "EMAIL",
+        getClientIp(req),
+        expiresAt,
+      ],
     );
 
-    const resetUrl = buildPasswordResetUrl(resetToken);
     const emailSubject = "SERVIIO Password Reset Request";
     const emailText =
       `Hello ${user.first_name || "there"},\n\n` +
       `We received a request to reset your SERVIIO account password. ` +
-      `Use the link below to choose a new password. This link will expire in ${PASSWORD_RESET_TOKEN_EXPIRY}.\n\n` +
+      `Use the link below and enter this one-time code: ${otp}. ` +
+      `This code will expire in ${PASSWORD_RESET_EXPIRY_MINUTES} minutes.\n\n` +
       `${resetUrl}\n\n` +
       `If you did not request this, you can safely ignore this message.\n\n` +
       `Thanks,\nSERVIIO Team`;
-    const emailHtml = `<!DOCTYPE html><html><body><p>Hello ${user.first_name || "there"},</p><p>We received a request to reset your SERVIIO account password. Use the button below to choose a new password. This link will expire in ${PASSWORD_RESET_TOKEN_EXPIRY}.</p><p><a href="${resetUrl}" style="display:inline-block;padding:10px 18px;background:#007bff;color:#fff;text-decoration:none;border-radius:4px;">Reset Password</a></p><p>If you did not request this, you can ignore this message.</p><p>Thanks,<br/>SERVIIO Team</p></body></html>`;
+    const emailHtml = `<!DOCTYPE html><html><body><p>Hello ${user.first_name || "there"},</p><p>We received a request to reset your SERVIIO account password.</p><p>Your one-time code is <strong style="font-size:20px;letter-spacing:3px;">${otp}</strong>. It expires in ${PASSWORD_RESET_EXPIRY_MINUTES} minutes.</p><p><a href="${resetUrl}" style="display:inline-block;padding:10px 18px;background:#007bff;color:#fff;text-decoration:none;border-radius:4px;">Reset Password</a></p><p>If you did not request this, you can ignore this message.</p><p>Thanks,<br/>SERVIIO Team</p></body></html>`;
 
     const transporter = createEmailTransporter();
     let emailSendStatus = null;
@@ -302,14 +357,14 @@ exports.forgotPassword = async (req, res) => {
         "If an account exists for this email, password reset instructions have been sent.",
     };
 
-    if (!transporter) {
+    if (!transporter && !IS_PRODUCTION) {
       responsePayload.message =
-        "Password reset link was generated, but email delivery is not configured. Please configure email settings and try again.";
+        "Password reset instructions were generated, but email delivery is not configured. Use the local development link and code below.";
       responsePayload.resetUrl = resetUrl;
+      responsePayload.otp = otp;
     } else if (emailSendStatus !== "sent") {
       responsePayload.message =
-        "A password reset link was generated, but email delivery failed. Please contact support or try again later.";
-      responsePayload.resetUrl = resetUrl;
+        "Password reset instructions could not be delivered. Please try again later or contact support.";
     }
 
     return res.status(200).json(responsePayload);
@@ -333,18 +388,45 @@ exports.validateResetToken = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.type !== "password_reset") {
+    const tokenHash = hashResetToken(token);
+    const [requests] = await db.query(
+      `SELECT pr.id, pr.email, pr.expires_at, pr.status
+       FROM password_reset_requests pr
+       WHERE pr.reset_token_hash = ?
+       LIMIT 1`,
+      [tokenHash],
+    );
+
+    if (requests.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Invalid reset token.",
+        message: "Invalid or expired password reset link.",
+      });
+    }
+
+    const resetRequest = requests[0];
+    if (
+      resetRequest.status !== "REQUESTED" ||
+      new Date(resetRequest.expires_at).getTime() < Date.now()
+    ) {
+      if (resetRequest.status === "REQUESTED") {
+        await db.query(
+          "UPDATE password_reset_requests SET status = 'EXPIRED' WHERE id = ?",
+          [resetRequest.id],
+        );
+      }
+      return res.status(400).json({
+        success: false,
+        message:
+          "This password reset link has expired. Please request a new one.",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Reset token is valid.",
-      email: decoded.email,
+      email: maskEmail(resetRequest.email),
+      otp_required: true,
     });
   } catch (error) {
     console.error("Validate reset token error:", error);
@@ -359,12 +441,12 @@ exports.validateResetToken = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { token, password, confirmPassword } = req.body;
+  const { token, otp, password, confirmPassword } = req.body;
 
-  if (!token || !password || !confirmPassword) {
+  if (!token || !otp || !password || !confirmPassword) {
     return res.status(400).json({
       success: false,
-      message: "Token, password, and confirmation are required.",
+      message: "Token, OTP, password, and confirmation are required.",
     });
   }
 
@@ -382,21 +464,84 @@ exports.resetPassword = async (req, res) => {
     });
   }
 
+  let connection;
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.type !== "password_reset") {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    const tokenHash = hashResetToken(token);
+    const [requests] = await connection.query(
+      `SELECT id, user_id, email, otp_hash, status, attempt_count, expires_at
+       FROM password_reset_requests
+       WHERE reset_token_hash = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [tokenHash],
+    );
+
+    if (requests.length === 0) {
+      await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: "Invalid password reset token.",
+        message: "Invalid password reset link.",
       });
     }
 
-    const [users] = await db.query(
+    const resetRequest = requests[0];
+    if (
+      resetRequest.status !== "REQUESTED" ||
+      new Date(resetRequest.expires_at).getTime() < Date.now()
+    ) {
+      if (resetRequest.status === "REQUESTED") {
+        await connection.query(
+          "UPDATE password_reset_requests SET status = 'EXPIRED' WHERE id = ?",
+          [resetRequest.id],
+        );
+      }
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message:
+          "This password reset request has expired. Please request a new code.",
+      });
+    }
+
+    if (resetRequest.attempt_count >= PASSWORD_RESET_MAX_ATTEMPTS) {
+      await connection.query(
+        "UPDATE password_reset_requests SET status = 'EXPIRED' WHERE id = ?",
+        [resetRequest.id],
+      );
+      await connection.rollback();
+      return res.status(429).json({
+        success: false,
+        message: "Too many invalid attempts. Please request a new reset code.",
+      });
+    }
+
+    const otpMatches = await bcrypt.compare(
+      String(otp).trim(),
+      resetRequest.otp_hash,
+    );
+    if (!otpMatches) {
+      await connection.query(
+        "UPDATE password_reset_requests SET attempt_count = attempt_count + 1 WHERE id = ?",
+        [resetRequest.id],
+      );
+      await connection.commit();
+      return res.status(400).json({
+        success: false,
+        message: "Invalid reset code.",
+      });
+    }
+
+    const [users] = await connection.query(
       "SELECT id, email FROM users WHERE id = ? AND email = ? LIMIT 1",
-      [decoded.id, decoded.email],
+      [resetRequest.user_id, resetRequest.email],
     );
 
     if (users.length === 0) {
+      await connection.rollback();
       return res.status(404).json({
         success: false,
         message: "Account not found. Please request a new password reset link.",
@@ -407,10 +552,22 @@ exports.resetPassword = async (req, res) => {
       password,
       await bcrypt.genSalt(12),
     );
-    await db.query("UPDATE users SET password = ? WHERE id = ?", [
+    await connection.query("UPDATE users SET password = ? WHERE id = ?", [
       hashedPassword,
-      decoded.id,
+      resetRequest.user_id,
     ]);
+    await connection.query(
+      "UPDATE password_reset_requests SET status = 'USED', used_at = NOW() WHERE id = ?",
+      [resetRequest.id],
+    );
+    await connection.query(
+      `UPDATE password_reset_requests
+       SET status = 'EXPIRED'
+       WHERE user_id = ? AND status = 'REQUESTED' AND id <> ?`,
+      [resetRequest.user_id, resetRequest.id],
+    );
+
+    await connection.commit();
 
     return res.status(200).json({
       success: true,
@@ -418,13 +575,17 @@ exports.resetPassword = async (req, res) => {
         "Your password has been updated successfully. You can now sign in with your new password.",
     });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error("Reset password error:", error);
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message:
-        error.name === "TokenExpiredError"
-          ? "This password reset link has expired. Please request a new one."
-          : "Invalid password reset token.",
+      message: "Server error while resetting password.",
     });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };

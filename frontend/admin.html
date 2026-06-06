@@ -3,77 +3,1101 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SERVIIO - Admin</title>
+    <title>SERVIIO - Admin Dashboard</title>
     <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
   </head>
   <body>
-    <main style="padding: 20px; max-width: 900px; margin: auto">
-      <h1>Admin - Provider Verification</h1>
-      <div id="providersList">Loading providers...</div>
+    <header class="admin-topbar">
+      <div class="admin-brand">
+        <span class="brand-mark">S</span>
+        <div>
+          <strong>SERVIIO Admin</strong>
+          <small id="adminIdentity">Control center</small>
+        </div>
+      </div>
+      <nav class="admin-nav" aria-label="Admin sections">
+        <button class="nav-tab active" data-panel="overviewPanel">
+          <i class="fa-solid fa-chart-line"></i>
+          Overview
+        </button>
+        <button class="nav-tab" data-panel="verificationPanel">
+          <i class="fa-solid fa-id-card-clip"></i>
+          Verification
+        </button>
+        <button class="nav-tab" data-panel="providersPanel">
+          <i class="fa-solid fa-users-gear"></i>
+          Providers
+        </button>
+        <button class="nav-tab" data-panel="bookingsPanel">
+          <i class="fa-solid fa-calendar-check"></i>
+          Bookings
+        </button>
+        <button class="nav-tab" data-panel="supportPanel">
+          <i class="fa-solid fa-headset"></i>
+          Support
+        </button>
+        <button class="nav-tab" data-panel="notificationsPanel">
+          <i class="fa-solid fa-bell"></i>
+          Notifications
+          <span class="nav-badge" id="notificationBadge">0</span>
+        </button>
+      </nav>
+      <div class="topbar-actions">
+        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
+        <button type="button" class="logout-btn" id="logoutBtn">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-shell">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">Operations Dashboard</p>
+          <h1>Admin Command Center</h1>
+          <p>
+            Review providers, handle support queues, monitor bookings, and keep
+            the SERVIIO marketplace moving.
+          </p>
+        </div>
+        <div class="system-status" id="systemStatus">
+          <span class="status-light"></span>
+          API status: checking
+        </div>
+      </section>
+
+      <section id="overviewPanel" class="admin-panel active">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card loading">Loading overview...</div>
+        </div>
+
+        <div class="two-column-layout">
+          <section class="dashboard-section">
+            <div class="section-header">
+              <div>
+                <h2>Verification Workload</h2>
+                <p>Providers that need review or follow-up.</p>
+              </div>
+              <button
+                type="button"
+                class="text-btn"
+                data-panel-target="verificationPanel"
+              >
+                Open queue
+              </button>
+            </div>
+            <div id="overviewVerificationList" class="compact-list"></div>
+          </section>
+
+          <section class="dashboard-section">
+            <div class="section-header">
+              <div>
+                <h2>Recent Support</h2>
+                <p>Open and urgent customer/provider issues.</p>
+              </div>
+              <button
+                type="button"
+                class="text-btn"
+                data-panel-target="supportPanel"
+              >
+                Open tickets
+              </button>
+            </div>
+            <div id="overviewTicketList" class="compact-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="verificationPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>KYC Verification Queue</h2>
+            <p>Inspect submitted documents and approve or reject providers.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="verificationSearch"
+              placeholder="Search provider, service, email"
+            />
+            <select id="verificationStatusFilter">
+              <option value="">All statuses</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="PENDING">Pending</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="NOT_SUBMITTED">Not submitted</option>
+            </select>
+          </div>
+        </div>
+        <div id="verificationQueue" class="record-grid"></div>
+      </section>
+
+      <section id="providersPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>Provider Management</h2>
+            <p>See verification status, service area, and availability.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="providerSearch"
+              placeholder="Search name, service, location"
+            />
+            <select id="providerStatusFilter">
+              <option value="">All providers</option>
+              <option value="verified">Verified</option>
+              <option value="unverified">Unverified</option>
+            </select>
+          </div>
+        </div>
+        <div id="providersList" class="table-wrap"></div>
+      </section>
+
+      <section id="bookingsPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>Booking Activity</h2>
+            <p>Recent bookings, status, payment state, and assigned providers.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="bookingSearch"
+              placeholder="Search service, customer, provider"
+            />
+            <select id="bookingStatusFilter">
+              <option value="">All bookings</option>
+              <option value="PENDING">Pending</option>
+              <option value="IN_PROGRESS">In progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div id="bookingsList" class="table-wrap"></div>
+      </section>
+
+      <section id="supportPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>Support Tickets</h2>
+            <p>Prioritize, resolve, close, and reply to ticket threads.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="ticketSearch"
+              placeholder="Search ticket, subject, user"
+            />
+            <select id="ticketStatusFilter">
+              <option value="">All statuses</option>
+              <option value="OPEN">Open</option>
+              <option value="IN_REVIEW">In review</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+        </div>
+        <div id="ticketsList" class="record-grid"></div>
+      </section>
+
+      <section id="notificationsPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>Admin Notifications</h2>
+            <p>Live alerts from KYC, support, booking, and wallet activity.</p>
+          </div>
+          <button type="button" class="primary-btn" id="markAllReadBtn">
+            <i class="fa-solid fa-check-double"></i>
+            Mark all read
+          </button>
+        </div>
+        <div id="notificationsList" class="record-grid"></div>
+      </section>
     </main>
 
-    <script>
-      // Client-side admin guard: redirect if not admin
-      (function ensureAdmin() {
-        const stored = localStorage.getItem("serviio_user");
-        const user = stored ? JSON.parse(stored) : null;
-        if (!user || (user.role || "").toLowerCase() !== "admin") {
-          // Not authorized
-          window.location.href = "login.html";
-        }
-      })();
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-      async function fetchProviders() {
-        const token = localStorage.getItem("serviio_token");
+    <div class="modal-backdrop" id="detailModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <h2 id="modalTitle">Details</h2>
+            <p id="modalSubtitle"></p>
+          </div>
+          <button type="button" class="icon-btn" id="closeModalBtn">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      const state = {
+        overview: null,
+        providers: [],
+        verification: [],
+        bookings: [],
+        tickets: [],
+        notifications: [],
+        activePanel: "overviewPanel",
+        loading: false,
+      };
+
+      const token = localStorage.getItem("serviio_token");
+      const storedUser = localStorage.getItem("serviio_user");
+      const adminUser = storedUser ? JSON.parse(storedUser) : null;
+
+      if (!token || !adminUser || (adminUser.role || "").toLowerCase() !== "admin") {
+        window.location.href = "login.html?next=admin.html";
+      }
+
+      const els = {
+        identity: document.getElementById("adminIdentity"),
+        status: document.getElementById("systemStatus"),
+        stats: document.getElementById("statsGrid"),
+        verificationQueue: document.getElementById("verificationQueue"),
+        providersList: document.getElementById("providersList"),
+        bookingsList: document.getElementById("bookingsList"),
+        ticketsList: document.getElementById("ticketsList"),
+        notificationsList: document.getElementById("notificationsList"),
+        overviewVerificationList: document.getElementById(
+          "overviewVerificationList",
+        ),
+        overviewTicketList: document.getElementById("overviewTicketList"),
+        notificationBadge: document.getElementById("notificationBadge"),
+        toast: document.getElementById("toast"),
+        modal: document.getElementById("detailModal"),
+        modalTitle: document.getElementById("modalTitle"),
+        modalSubtitle: document.getElementById("modalSubtitle"),
+        modalBody: document.getElementById("modalBody"),
+      };
+
+      function getApiBaseUrl() {
+        const hostname = window.location.hostname;
+        const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+        if (window.location.protocol === "file:" || isLocalhost) {
+          return "http://localhost:5000";
+        }
+        return window.location.origin;
+      }
+
+      const API_BASE = getApiBaseUrl();
+
+      function authHeaders(extra = {}) {
+        return {
+          Authorization: `Bearer ${token}`,
+          ...extra,
+        };
+      }
+
+      function escapeHTML(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function formatDate(value) {
+        if (!value) return "Not set";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "Not set";
+        return date.toLocaleString();
+      }
+
+      function formatMoney(value) {
+        const amount = Number(value || 0);
+        return `BDT ${amount.toFixed(2)}`;
+      }
+
+      function fullName(row, firstKey = "first_name", lastKey = "last_name") {
+        return `${row[firstKey] || ""} ${row[lastKey] || ""}`.trim() || "Unknown";
+      }
+
+      function showToast(message, type = "success") {
+        els.toast.textContent = message;
+        els.toast.className = `toast show ${type}`;
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          els.toast.className = "toast";
+        }, 3200);
+      }
+
+      async function requestJson(path, options = {}) {
+        const response = await fetch(`${API_BASE}${path}`, {
+          ...options,
+          headers: authHeaders(options.headers || {}),
+        });
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || `Request failed (${response.status})`);
+        }
+        return data;
+      }
+
+      function setApiStatus(isOnline, label) {
+        els.status.classList.toggle("online", isOnline);
+        els.status.classList.toggle("offline", !isOnline);
+        els.status.innerHTML = `<span class="status-light"></span> API status: ${escapeHTML(label)}`;
+      }
+
+      function setPanel(panelId) {
+        state.activePanel = panelId;
+        document.querySelectorAll(".admin-panel").forEach((panel) => {
+          panel.classList.toggle("active", panel.id === panelId);
+        });
+        document.querySelectorAll(".nav-tab").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.panel === panelId);
+        });
+      }
+
+      function matchesSearch(row, query, fields) {
+        if (!query) return true;
+        const needle = query.toLowerCase();
+        return fields.some((field) =>
+          String(row[field] || "").toLowerCase().includes(needle),
+        );
+      }
+
+      function emptyState(message) {
+        return `<div class="empty-state"><i class="fa-regular fa-folder-open"></i><p>${escapeHTML(message)}</p></div>`;
+      }
+
+      function statusPill(status) {
+        const normalized = String(status || "UNKNOWN").toLowerCase();
+        return `<span class="pill ${normalized}">${escapeHTML(status || "UNKNOWN")}</span>`;
+      }
+
+      function renderStats() {
+        const data = state.overview;
+        if (!data) {
+          els.stats.innerHTML = '<div class="stat-card loading">Loading overview...</div>';
+          return;
+        }
+
+        const stats = [
+          {
+            label: "Total users",
+            value: data.users.total,
+            sub: `${data.users.customers} customers, ${data.users.providers} providers`,
+            icon: "fa-users",
+          },
+          {
+            label: "Pending KYC",
+            value: data.providers.pending_kyc,
+            sub: `${data.providers.verified} verified providers`,
+            icon: "fa-id-card-clip",
+          },
+          {
+            label: "Active bookings",
+            value: data.bookings.active,
+            sub: `${data.bookings.completed} completed total`,
+            icon: "fa-calendar-check",
+          },
+          {
+            label: "Open support",
+            value: data.support.open,
+            sub: `${data.support.urgent} urgent tickets`,
+            icon: "fa-headset",
+          },
+          {
+            label: "Paid revenue",
+            value: formatMoney(data.payments.paid_amount),
+            sub: `${data.payments.paid_bookings} paid bookings`,
+            icon: "fa-wallet",
+          },
+          {
+            label: "Unread alerts",
+            value: data.notifications.unread,
+            sub: "Admin notifications",
+            icon: "fa-bell",
+          },
+        ];
+
+        els.stats.innerHTML = stats
+          .map(
+            (stat) => `
+              <article class="stat-card">
+                <div class="stat-icon"><i class="fa-solid ${stat.icon}"></i></div>
+                <div>
+                  <p>${escapeHTML(stat.label)}</p>
+                  <strong>${escapeHTML(stat.value)}</strong>
+                  <small>${escapeHTML(stat.sub)}</small>
+                </div>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      function renderOverviewLists() {
+        const verification = state.verification.slice(0, 4);
+        els.overviewVerificationList.innerHTML = verification.length
+          ? verification
+              .map(
+                (item) => `
+                  <button class="compact-row" type="button" onclick="openVerificationDetails(${item.profile_id})">
+                    <span>
+                      <strong>${escapeHTML(fullName(item))}</strong>
+                      <small>${escapeHTML(item.service_type || "Service not set")} | ${escapeHTML(item.email || "")}</small>
+                    </span>
+                    ${statusPill(item.verification_status)}
+                  </button>
+                `,
+              )
+              .join("")
+          : emptyState("No providers waiting for review.");
+
+        const tickets = state.tickets
+          .filter((ticket) => !["RESOLVED", "CLOSED"].includes(ticket.status))
+          .slice(0, 4);
+        els.overviewTicketList.innerHTML = tickets.length
+          ? tickets
+              .map(
+                (ticket) => `
+                  <button class="compact-row" type="button" onclick="openTicketDetails(${ticket.id})">
+                    <span>
+                      <strong>${escapeHTML(ticket.ticket_number)}</strong>
+                      <small>${escapeHTML(ticket.subject)} | ${escapeHTML(ticket.email || "")}</small>
+                    </span>
+                    ${statusPill(ticket.priority)}
+                  </button>
+                `,
+              )
+              .join("")
+          : emptyState("No open support tickets.");
+      }
+
+      function renderVerificationQueue() {
+        const query = document.getElementById("verificationSearch").value.trim();
+        const status = document.getElementById("verificationStatusFilter").value;
+        const filtered = state.verification.filter((item) => {
+          const statusOk = !status || item.verification_status === status;
+          const searchOk = matchesSearch(item, query, [
+            "first_name",
+            "last_name",
+            "email",
+            "service_type",
+            "location",
+            "nid_number",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.verificationQueue.innerHTML = filtered.length
+          ? filtered
+              .map(
+                (item) => `
+                  <article class="record-card">
+                    <div class="record-head">
+                      <div>
+                        <h3>${escapeHTML(fullName(item))}</h3>
+                        <p>${escapeHTML(item.email)} | ${escapeHTML(item.phone || "No phone")}</p>
+                      </div>
+                      ${statusPill(item.verification_status)}
+                    </div>
+                    <div class="record-meta">
+                      <span><i class="fa-solid fa-screwdriver-wrench"></i> ${escapeHTML(item.service_type || "Unspecified")}</span>
+                      <span><i class="fa-solid fa-location-dot"></i> ${escapeHTML(item.location || "No location")}</span>
+                      <span><i class="fa-solid fa-file-shield"></i> ${Number(item.document_count || 0)} docs</span>
+                      <span><i class="fa-solid fa-clock"></i> ${formatDate(item.verification_submitted_at)}</span>
+                    </div>
+                    <div class="record-actions">
+                      <button type="button" class="secondary-btn" onclick="openVerificationDetails(${item.profile_id})">
+                        Details
+                      </button>
+                      <button type="button" class="primary-btn" onclick="decideVerification(${item.profile_id}, 'VERIFIED')">
+                        Approve
+                      </button>
+                      <button type="button" class="danger-btn" onclick="decideVerification(${item.profile_id}, 'REJECTED')">
+                        Reject
+                      </button>
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : emptyState("No providers match this queue filter.");
+      }
+
+      function renderProviders() {
+        const query = document.getElementById("providerSearch").value.trim();
+        const status = document.getElementById("providerStatusFilter").value;
+        const filtered = state.providers.filter((provider) => {
+          const statusOk =
+            !status ||
+            (status === "verified" && provider.is_verified) ||
+            (status === "unverified" && !provider.is_verified);
+          const searchOk = matchesSearch(provider, query, [
+            "first_name",
+            "last_name",
+            "email",
+            "service_type",
+            "location",
+            "verification_status",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.providersList.innerHTML = filtered.length
+          ? `
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Service</th>
+                  <th>Location</th>
+                  <th>KYC</th>
+                  <th>Verified</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered
+                  .map(
+                    (provider) => `
+                      <tr>
+                        <td>
+                          <strong>${escapeHTML(fullName(provider))}</strong>
+                          <small>${escapeHTML(provider.email)}</small>
+                        </td>
+                        <td>${escapeHTML(provider.service_type || "Unspecified")}</td>
+                        <td>${escapeHTML(provider.location || "Not set")}</td>
+                        <td>${statusPill(provider.verification_status)}</td>
+                        <td>${provider.is_verified ? '<span class="yes">Yes</span>' : '<span class="no">No</span>'}</td>
+                        <td>
+                          <div class="row-actions">
+                            <button type="button" class="secondary-btn" onclick="openVerificationDetails(${provider.profile_id})">Details</button>
+                            ${
+                              provider.is_verified
+                                ? ""
+                                : `<button type="button" class="primary-btn" onclick="verifyProvider(${provider.profile_id})">Verify</button>`
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    `,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          `
+          : emptyState("No providers match this filter.");
+      }
+
+      function renderBookings() {
+        const query = document.getElementById("bookingSearch").value.trim();
+        const status = document.getElementById("bookingStatusFilter").value;
+        const searchable = state.bookings.map((booking) => ({
+          ...booking,
+          customer: booking.customer_name || "",
+          provider: booking.provider_name || "",
+        }));
+        const filtered = searchable.filter((booking) => {
+          const statusOk = !status || booking.status === status;
+          const searchOk = matchesSearch(booking, query, [
+            "service_type",
+            "job_location",
+            "customer",
+            "provider",
+            "customer_email",
+            "provider_email",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.bookingsList.innerHTML = filtered.length
+          ? `
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Booking</th>
+                  <th>Customer</th>
+                  <th>Provider</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered
+                  .map(
+                    (booking) => `
+                      <tr>
+                        <td>
+                          <strong>#${booking.id} ${escapeHTML(booking.service_type || "Service")}</strong>
+                          <small>${escapeHTML(booking.job_location || "No location")}</small>
+                        </td>
+                        <td>
+                          ${escapeHTML(booking.customer_name || "Customer")}
+                          <small>${escapeHTML(booking.customer_email || "")}</small>
+                        </td>
+                        <td>
+                          ${escapeHTML(booking.provider_name || "Provider")}
+                          <small>${escapeHTML(booking.provider_email || "")}</small>
+                        </td>
+                        <td>${statusPill(booking.status)}</td>
+                        <td>
+                          ${statusPill(booking.payment_status)}
+                          <small>${booking.payment_amount ? formatMoney(booking.payment_amount) : "No payment"}</small>
+                        </td>
+                        <td>${formatDate(booking.booking_date)}</td>
+                      </tr>
+                    `,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          `
+          : emptyState("No bookings match this filter.");
+      }
+
+      function renderTickets() {
+        const query = document.getElementById("ticketSearch").value.trim();
+        const status = document.getElementById("ticketStatusFilter").value;
+        const filtered = state.tickets.filter((ticket) => {
+          const statusOk = !status || ticket.status === status;
+          const searchOk = matchesSearch(ticket, query, [
+            "ticket_number",
+            "subject",
+            "category",
+            "priority",
+            "email",
+            "first_name",
+            "last_name",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.ticketsList.innerHTML = filtered.length
+          ? filtered
+              .map(
+                (ticket) => `
+                  <article class="record-card">
+                    <div class="record-head">
+                      <div>
+                        <h3>${escapeHTML(ticket.ticket_number)} - ${escapeHTML(ticket.subject)}</h3>
+                        <p>${escapeHTML(fullName(ticket))} | ${escapeHTML(ticket.email || "")}</p>
+                      </div>
+                      ${statusPill(ticket.status)}
+                    </div>
+                    <div class="record-meta">
+                      <span><i class="fa-solid fa-layer-group"></i> ${escapeHTML(ticket.category)}</span>
+                      <span><i class="fa-solid fa-flag"></i> ${escapeHTML(ticket.priority)}</span>
+                      <span><i class="fa-solid fa-clock"></i> ${formatDate(ticket.updated_at)}</span>
+                    </div>
+                    <div class="record-actions">
+                      <button type="button" class="secondary-btn" onclick="openTicketDetails(${ticket.id})">Open</button>
+                      <button type="button" class="secondary-btn" onclick="updateTicket(${ticket.id}, { status: 'IN_REVIEW' })">In Review</button>
+                      <button type="button" class="primary-btn" onclick="updateTicket(${ticket.id}, { status: 'RESOLVED' })">Resolve</button>
+                      <button type="button" class="danger-btn" onclick="updateTicket(${ticket.id}, { status: 'CLOSED' })">Close</button>
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : emptyState("No support tickets match this filter.");
+      }
+
+      function renderNotifications() {
+        const unread = state.notifications.filter((item) => !item.is_read).length;
+        els.notificationBadge.textContent = unread;
+        els.notificationsList.innerHTML = state.notifications.length
+          ? state.notifications
+              .map(
+                (notification) => `
+                  <article class="record-card notification-card ${notification.is_read ? "" : "unread"}">
+                    <div class="record-head">
+                      <div>
+                        <h3>${escapeHTML(notification.title || notification.notification_type)}</h3>
+                        <p>${escapeHTML(notification.message || "")}</p>
+                      </div>
+                      ${statusPill(notification.is_read ? "READ" : "NEW")}
+                    </div>
+                    <div class="record-meta">
+                      <span><i class="fa-solid fa-bolt"></i> ${escapeHTML(notification.notification_type)}</span>
+                      <span><i class="fa-solid fa-clock"></i> ${formatDate(notification.created_at)}</span>
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : emptyState("No admin notifications yet.");
+      }
+
+      function renderAll() {
+        renderStats();
+        renderOverviewLists();
+        renderVerificationQueue();
+        renderProviders();
+        renderBookings();
+        renderTickets();
+        renderNotifications();
+      }
+
+      async function loadDashboard() {
+        if (state.loading) return;
+        state.loading = true;
+        setApiStatus(false, "loading");
         try {
-          const resp = await fetch(
-            "http://localhost:5000/api/admin/providers",
+          const [
+            overview,
+            providers,
+            verification,
+            bookings,
+            tickets,
+            notifications,
+          ] = await Promise.all([
+            requestJson("/api/admin/overview"),
+            requestJson("/api/admin/providers"),
+            requestJson("/api/admin/verification-queue"),
+            requestJson("/api/admin/bookings"),
+            requestJson("/api/support/tickets/admin"),
+            requestJson("/api/notifications"),
+          ]);
+
+          state.overview = overview.data;
+          state.providers = providers.data || [];
+          state.verification = verification.data || [];
+          state.bookings = bookings.data || [];
+          state.tickets = tickets.data || [];
+          state.notifications = notifications.data || [];
+          setApiStatus(true, "online");
+          renderAll();
+        } catch (error) {
+          setApiStatus(false, "offline");
+          showToast(error.message || "Unable to load admin dashboard.", "error");
+        } finally {
+          state.loading = false;
+        }
+      }
+
+      async function decideVerification(profileId, decision) {
+        const defaultNotes =
+          decision === "REJECTED"
+            ? "Please resubmit valid verification documents."
+            : "Approved by admin.";
+        const notes = window.prompt(
+          decision === "REJECTED" ? "Reason for rejection" : "Approval notes",
+          defaultNotes,
+        );
+        if (notes === null) return;
+
+        try {
+          await requestJson(
+            `/api/admin/providers/${encodeURIComponent(profileId)}/verification-decision`,
             {
-              headers: { Authorization: token ? `Bearer ${token}` : "" },
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ decision, notes }),
             },
           );
-          const data = await resp.json();
-          const container = document.getElementById("providersList");
-          if (!resp.ok)
-            return (container.innerText = data.message || "Failed to load");
+          showToast(
+            decision === "VERIFIED"
+              ? "Provider approved successfully."
+              : "Provider rejected successfully.",
+          );
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
 
-          container.innerHTML = data.data
-            .map(
-              (p) => `
-            <div style="padding:10px; border:1px solid #eee; margin-bottom:8px">
-              <div><strong>${p.first_name} ${p.last_name}</strong> (${p.email})</div>
-              <div>NID: ${p.nid_number || "N/A"} | Service: ${p.service_type || "N/A"}</div>
-              <div>Status: ${p.is_verified ? "Verified" : "Unverified"}</div>
-              ${p.is_verified ? "" : `<button onclick="verify(${p.profile_id})">Verify</button>`}
+      async function verifyProvider(profileId) {
+        try {
+          await requestJson(
+            `/api/admin/providers/${encodeURIComponent(profileId)}/verify`,
+            { method: "POST" },
+          );
+          showToast("Provider verified successfully.");
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function updateTicket(ticketId, patch) {
+        try {
+          await requestJson(`/api/support/tickets/${encodeURIComponent(ticketId)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patch),
+          });
+          showToast("Support ticket updated.");
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function openVerificationDetails(profileId) {
+        try {
+          const result = await requestJson(
+            `/api/admin/verification-queue/${encodeURIComponent(profileId)}`,
+          );
+          const { profile, documents, audit_logs } = result.data;
+          els.modalTitle.textContent = fullName(profile);
+          els.modalSubtitle.textContent = `${profile.service_type || "Provider"} | ${profile.email}`;
+          els.modalBody.innerHTML = `
+            <div class="detail-grid">
+              <div><strong>Status</strong><span>${statusPill(profile.verification_status)}</span></div>
+              <div><strong>NID</strong><span>${escapeHTML(profile.nid_number || "Not provided")}</span></div>
+              <div><strong>Location</strong><span>${escapeHTML(profile.location || "Not set")}</span></div>
+              <div><strong>Submitted</strong><span>${formatDate(profile.verification_submitted_at)}</span></div>
             </div>
-          `,
-            )
-            .join("");
-        } catch (err) {
-          document.getElementById("providersList").innerText =
-            "Error: " + err.message;
+            <h3 class="detail-title">Documents</h3>
+            ${
+              documents.length
+                ? documents
+                    .map(
+                      (doc) => `
+                        <div class="detail-item">
+                          <div>
+                            <strong>${escapeHTML(doc.document_type)}</strong>
+                            <p>${escapeHTML(doc.file_name || doc.document_number || doc.document_url || "Submitted document")}</p>
+                            <small>${escapeHTML(doc.reviewer_notes || "No reviewer notes")}</small>
+                          </div>
+                          <div class="detail-actions">
+                            ${statusPill(doc.status)}
+                            <button class="primary-btn" type="button" onclick="reviewDocument(${doc.id}, 'APPROVED')">Approve</button>
+                            <button class="danger-btn" type="button" onclick="reviewDocument(${doc.id}, 'REJECTED')">Reject</button>
+                          </div>
+                        </div>
+                      `,
+                    )
+                    .join("")
+                : emptyState("No documents submitted.")
+            }
+            <h3 class="detail-title">Audit Trail</h3>
+            ${
+              audit_logs.length
+                ? audit_logs
+                    .map(
+                      (log) => `
+                        <div class="audit-row">
+                          <strong>${escapeHTML(log.action)}</strong>
+                          <span>${escapeHTML(log.old_status || "-")} -> ${escapeHTML(log.new_status || "-")}</span>
+                          <small>${formatDate(log.created_at)} ${log.notes ? `| ${escapeHTML(log.notes)}` : ""}</small>
+                        </div>
+                      `,
+                    )
+                    .join("")
+                : emptyState("No audit events yet.")
+            }
+            <div class="modal-actions">
+              <button class="primary-btn" type="button" onclick="decideVerification(${profile.id}, 'VERIFIED')">Approve Provider</button>
+              <button class="danger-btn" type="button" onclick="decideVerification(${profile.id}, 'REJECTED')">Reject Provider</button>
+            </div>
+          `;
+          openModal();
+        } catch (error) {
+          showToast(error.message, "error");
         }
       }
 
-      async function verify(profileId) {
-        const token = localStorage.getItem("serviio_token");
-        const resp = await fetch(
-          `http://localhost:5000/api/admin/providers/${profileId}/verify`,
-          {
-            method: "POST",
-            headers: { Authorization: token ? `Bearer ${token}` : "" },
-          },
+      async function reviewDocument(documentId, status) {
+        const reviewer_notes = window.prompt(
+          status === "APPROVED" ? "Approval note" : "Rejection note",
+          status === "APPROVED" ? "Document approved." : "Document rejected.",
         );
-        const data = await resp.json();
-        if (resp.ok) {
-          alert("Provider verified");
-          fetchProviders();
-        } else {
-          alert("Error: " + (data.message || "Failed"));
+        if (reviewer_notes === null) return;
+
+        try {
+          await requestJson(
+            `/api/admin/verification-documents/${encodeURIComponent(documentId)}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status, reviewer_notes }),
+            },
+          );
+          showToast("Document review saved.");
+          closeModal();
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
         }
       }
 
-      fetchProviders();
+      async function openTicketDetails(ticketId) {
+        try {
+          const result = await requestJson(
+            `/api/support/tickets/${encodeURIComponent(ticketId)}`,
+          );
+          const { ticket, messages } = result.data;
+          els.modalTitle.textContent = `${ticket.ticket_number} - ${ticket.subject}`;
+          els.modalSubtitle.textContent = `${ticket.category} | ${ticket.status} | ${ticket.priority}`;
+          els.modalBody.innerHTML = `
+            <div class="detail-grid">
+              <div><strong>Created By</strong><span>${escapeHTML(fullName(ticket))}</span></div>
+              <div><strong>Email</strong><span>${escapeHTML(ticket.email || "")}</span></div>
+              <div><strong>Status</strong><span>${statusPill(ticket.status)}</span></div>
+              <div><strong>Priority</strong><span>${statusPill(ticket.priority)}</span></div>
+            </div>
+            <h3 class="detail-title">Conversation</h3>
+            <div class="message-list">
+              ${
+                messages.length
+                  ? messages
+                      .map(
+                        (message) => `
+                          <div class="message-row">
+                            <strong>${escapeHTML(fullName(message))} <span>${escapeHTML(message.role)}</span></strong>
+                            <p>${escapeHTML(message.message)}</p>
+                            <small>${formatDate(message.created_at)}${message.is_internal ? " | internal" : ""}</small>
+                          </div>
+                        `,
+                      )
+                      .join("")
+                  : emptyState("No messages yet.")
+              }
+            </div>
+            <form id="ticketReplyForm" class="reply-form">
+              <label>
+                Reply
+                <textarea id="ticketReplyText" rows="4" required placeholder="Write a response to this ticket"></textarea>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="ticketInternalNote" />
+                Internal note
+              </label>
+              <div class="modal-actions">
+                <button class="primary-btn" type="submit">Send Reply</button>
+                <button class="secondary-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'IN_REVIEW' })">Mark In Review</button>
+                <button class="primary-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'RESOLVED' })">Resolve</button>
+                <button class="danger-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'CLOSED' })">Close</button>
+              </div>
+            </form>
+          `;
+          openModal();
+          document
+            .getElementById("ticketReplyForm")
+            .addEventListener("submit", async (event) => {
+              event.preventDefault();
+              await addTicketMessage(ticket.id);
+            });
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function addTicketMessage(ticketId) {
+        const message = document.getElementById("ticketReplyText").value.trim();
+        const is_internal = document.getElementById("ticketInternalNote").checked;
+        if (!message) return;
+
+        try {
+          await requestJson(
+            `/api/support/tickets/${encodeURIComponent(ticketId)}/messages`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message, is_internal }),
+            },
+          );
+          showToast("Reply sent.");
+          closeModal();
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function markAllNotificationsRead() {
+        try {
+          await requestJson("/api/notifications/read-all", { method: "PATCH" });
+          showToast("Notifications marked as read.");
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      function openModal() {
+        els.modal.classList.add("open");
+        els.modal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        els.modal.classList.remove("open");
+        els.modal.setAttribute("aria-hidden", "true");
+      }
+
+      document.querySelectorAll(".nav-tab").forEach((button) => {
+        button.addEventListener("click", () => setPanel(button.dataset.panel));
+      });
+
+      document.querySelectorAll("[data-panel-target]").forEach((button) => {
+        button.addEventListener("click", () => setPanel(button.dataset.panelTarget));
+      });
+
+      [
+        "verificationSearch",
+        "verificationStatusFilter",
+        "providerSearch",
+        "providerStatusFilter",
+        "bookingSearch",
+        "bookingStatusFilter",
+        "ticketSearch",
+        "ticketStatusFilter",
+      ].forEach((id) => {
+        const input = document.getElementById(id);
+        input.addEventListener("input", renderAll);
+        input.addEventListener("change", renderAll);
+      });
+
+      document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
+      document
+        .getElementById("markAllReadBtn")
+        .addEventListener("click", markAllNotificationsRead);
+      document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+      els.modal.addEventListener("click", (event) => {
+        if (event.target === els.modal) closeModal();
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("serviio_token");
+        localStorage.removeItem("serviio_user");
+        window.location.href = "login.html";
+      });
+
+      if (adminUser) {
+        els.identity.textContent = `${adminUser.first_name || "Admin"} ${adminUser.last_name || ""}`.trim();
+      }
+
+      loadDashboard();
+
+      if (token && window.io) {
+        const socket = io(API_BASE);
+        socket.emit("notifications:join", { token });
+        socket.on("notification:new", (notification) => {
+          state.notifications = [notification, ...state.notifications];
+          renderNotifications();
+          if (
+            notification.entity_type === "PROVIDER_PROFILE" ||
+            notification.entity_type === "SUPPORT_TICKET"
+          ) {
+            loadDashboard();
+          }
+        });
+        socket.on("notifications:error", (payload) => {
+          console.warn(payload?.message || "Notification socket error");
+        });
+      }
     </script>
   </body>
 </html>
