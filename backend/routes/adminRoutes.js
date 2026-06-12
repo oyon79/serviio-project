@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const authMiddleware = require("../middlewares/authMiddleware");
-const adminMiddleware = require("../middlewares/adminMiddleware");
+const authorizeRoles = require("../middlewares/roleMiddleware");
 const {
   validate,
   validators: v,
@@ -11,22 +11,47 @@ const {
 router.get(
   "/overview",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   adminController.getOverview,
 );
 
 router.get(
   "/bookings",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   adminController.listBookings,
+);
+
+router.get(
+  "/emergencies",
+  authMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
+  adminController.listEmergencyLogs,
+);
+
+router.patch(
+  "/emergencies/:id",
+  authMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent"),
+  validate({
+    params: {
+      id: [v.required("id"), v.positiveInteger("id")],
+    },
+    body: {
+      status: [
+        v.required("status"),
+        v.oneOf(["ACTIVE", "RESOLVED", "CANCELLED"], "status"),
+      ],
+    },
+  }),
+  adminController.updateEmergencyStatus,
 );
 
 // Admin: list providers
 router.get(
   "/providers",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   adminController.listProviders,
 );
 
@@ -34,7 +59,7 @@ router.get(
 router.post(
   "/providers/:profileId/verify",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "verification_officer"),
   validate({
     params: {
       profileId: [v.required("profileId"), v.positiveInteger("profileId")],
@@ -46,14 +71,14 @@ router.post(
 router.get(
   "/verification-queue",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   adminController.listVerificationQueue,
 );
 
 router.get(
   "/verification-queue/:profileId",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   validate({
     params: {
       profileId: [v.required("profileId"), v.positiveInteger("profileId")],
@@ -62,10 +87,22 @@ router.get(
   adminController.getProviderVerificationDetails,
 );
 
+router.get(
+  "/verification-documents/:documentId/download",
+  authMiddleware,
+  authorizeRoles("admin", "super_admin", "verification_officer"),
+  validate({
+    params: {
+      documentId: [v.required("documentId"), v.positiveInteger("documentId")],
+    },
+  }),
+  adminController.downloadVerificationDocument,
+);
+
 router.patch(
   "/verification-documents/:documentId",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "verification_officer"),
   validate({
     params: {
       documentId: [v.required("documentId"), v.positiveInteger("documentId")],
@@ -81,7 +118,7 @@ router.patch(
 router.post(
   "/providers/:profileId/verification-decision",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "verification_officer"),
   validate({
     params: {
       profileId: [v.required("profileId"), v.positiveInteger("profileId")],

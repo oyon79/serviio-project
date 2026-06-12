@@ -16,6 +16,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <header class="navbar">
@@ -54,7 +55,7 @@
           >
         </li>
         <li>
-          <div class="notification">
+          <div class="notification" aria-label="Notifications">
             <i class="fa-solid fa-bell"></i>
             <span class="badge">3</span>
           </div>
@@ -71,6 +72,7 @@
           <input
             type="text"
             class="location-input"
+            aria-label="Search location"
             placeholder="Write the location name"
           />
         </div>
@@ -102,7 +104,7 @@
         </div>
 
         <div>
-          <select class="workload-select" id="workload">
+          <select class="workload-select" id="workload" aria-label="Select workload">
             <option value="" disabled selected>Pick workload</option>
             <option value="light">Light Workload</option>
             <option value="moderate">Moderate Workload</option>
@@ -143,34 +145,34 @@
           <div class="footer-col">
             <h4>Product</h4>
             <ul>
-              <li><a href="#">Landing Page</a></li>
-              <li><a href="#">Popup Builder</a></li>
-              <li><a href="#">Web-design</a></li>
+              <li><a href="landing.html">Overview</a></li>
+              <li><a href="providerList.html">Find Providers</a></li>
+              <li><a href="serviceArea.html">Service Areas</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Use Cases</h4>
+            <h4>For Users</h4>
             <ul>
-              <li><a href="#">Web-designers</a></li>
-              <li><a href="#">Marketers</a></li>
-              <li><a href="#">Small Business</a></li>
+              <li><a href="schedule.html">Schedule Service</a></li>
+              <li><a href="emergency.html">SOS Help</a></li>
+              <li><a href="bookmark.html">Saved Providers</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Company</h4>
+            <h4>Account</h4>
             <ul>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#">Careers</a></li>
-              <li><a href="#">FAQs</a></li>
+              <li><a href="profile.html">Customer Profile</a></li>
+              <li><a href="profileBooking.html">Provider Dashboard</a></li>
+              <li><a href="login.html">Sign In</a></li>
             </ul>
           </div>
         </div>
       </div>
       <div class="footer-bottom">
         <div class="legal-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Sales and Refunds</a>
+          <a href="legal.html#privacy">Privacy Policy</a>
+          <a href="legal.html#terms">Terms of Use</a>
+          <a href="legal.html#refunds">Sales and Refunds</a>
         </div>
         <div class="copyright">&copy; 2026 SERVIIO All Rights Reserved</div>
       </div>
@@ -204,12 +206,7 @@
       };
 
       function getApiBaseUrl() {
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-        if (window.location.protocol === "file:" || isLocalhost) {
-          return "http://localhost:5000";
-        }
-        return window.location.origin;
+        return window.Serviio?.apiBaseUrl || window.location.origin;
       }
 
       function escapeHtml(value) {
@@ -260,11 +257,11 @@
         const workload = document.getElementById("workload").value;
 
         if (!selectedService) {
-          alert("Please select a service type first.");
+          Serviio.notify("Please select a service type first.", "warning");
           return;
         }
         if (!workload) {
-          alert("Please pick a workload option.");
+          Serviio.notify("Please pick a workload option.", "warning");
           return;
         }
 
@@ -289,7 +286,7 @@
         });
 
         if (filtered.length === 0) {
-          alert(`No ${selectedService} found in this area right now.`);
+          Serviio.notify(`No ${selectedService} found in this area right now.`, "info");
         } else {
           filtered.forEach((provider, index) => {
             const [lat, lng] = getProviderCoordinates(provider, index);
@@ -315,29 +312,48 @@
 
       fetchProviders();
 
-      // --- Live tracking: subscribe to provider updates (demo providerId=1)
+      // --- Live tracking: subscribe to authenticated active booking rooms.
       (function setupLiveTracking() {
+        const token = localStorage.getItem("serviio_token");
+        if (!token) return;
+
         const socketScript = document.createElement("script");
         socketScript.src = "https://cdn.socket.io/4.5.4/socket.io.min.js";
-        socketScript.onload = () => {
-          const socket = io(getApiBaseUrl());
-          const trackedProviderId = 1; // demo: subscribe to provider 1
-          socket.emit("customer:subscribe", { providerId: trackedProviderId });
-
+        socketScript.onload = async () => {
+          const socket = io(getApiBaseUrl(), { auth: { token } });
+          let trackedBookingId = null;
           let providerMarker = null;
-          socket.on("provider:location", (payload) => {
-            if (payload.providerId !== trackedProviderId) return;
+
+          try {
+            const response = await fetch(`${getApiBaseUrl()}/api/bookings/my`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const result = await response.json();
+            const activeBooking = (result.data || []).find((booking) =>
+              ["ON_THE_WAY", "ARRIVED", "IN_PROGRESS"].includes(booking.status),
+            );
+            if (!activeBooking) return;
+            trackedBookingId = activeBooking.id;
+            socket.emit("user:join_booking", {
+              bookingId: trackedBookingId,
+              token,
+            });
+          } catch (error) {
+            console.warn("Unable to subscribe to active booking tracking", error);
+            return;
+          }
+
+          socket.on("location_update", (payload) => {
+            if (String(payload.bookingId) !== String(trackedBookingId)) return;
             const lat = payload.lat;
             const lng = payload.lng;
             if (!providerMarker) {
               providerMarker = L.marker([lat, lng])
                 .addTo(map)
-                .bindPopup("Live Provider");
+                .bindPopup("Live Provider Location");
             } else {
               providerMarker.setLatLng([lat, lng]);
             }
-            // Optionally pan to provider
-            // map.panTo([lat, lng]);
           });
         };
         document.head.appendChild(socketScript);

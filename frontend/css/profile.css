@@ -8,8 +8,8 @@
 
 .settings-card {
     background-color: var(--white);
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     padding: 35px;
     border: 1px solid var(--border-color);
 }
@@ -37,7 +37,7 @@
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     background-color: #f8f9fa;
     color: #666;
     font-size: 1rem;
@@ -51,11 +51,76 @@
     padding: 14px;
     font-size: 1rem;
     font-weight: bold;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .btn-save-settings:hover {
     background-color: var(--secondary-blue);
+}
+
+.btn-save-settings.secondary-action {
+    margin-top: 10px;
+    background: #ffffff;
+    color: var(--secondary-blue);
+    border: 1px solid var(--border-color);
+}
+
+.btn-save-settings.secondary-action:hover {
+    background: #eef4ff;
+}
+
+.message-thread {
+    display: grid;
+    gap: 12px;
+    min-height: 120px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.message-bubble {
+    width: min(84%, 520px);
+    padding: 12px;
+    border-radius: 8px;
+    background: #eef4ff;
+    color: #334155;
+}
+
+.message-bubble.own {
+    justify-self: end;
+    background: #003393;
+    color: #ffffff;
+}
+
+.message-bubble p {
+    margin: 6px 0;
+    word-break: break-word;
+}
+
+.message-bubble small {
+    opacity: 0.78;
+}
+
+.message-empty {
+    display: grid;
+    place-items: center;
+    min-height: 90px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (max-width: 560px) {
+    .profile-wrapper {
+        margin: 28px auto;
+        padding: 0 14px;
+    }
+
+    .settings-card {
+        padding: 24px 18px;
+    }
 }

@@ -3,6 +3,7 @@ const {
   createAdminNotifications,
   createNotification,
 } = require("../services/notificationService");
+const { isSupportRole } = require("../utils/roles");
 
 const allowedCategories = new Set([
   "GENERAL",
@@ -22,7 +23,7 @@ function makeTicketNumber() {
 
 async function canAccessBooking(connection, bookingId, user) {
   if (!bookingId) return true;
-  if (user.role === "admin") return true;
+  if (isSupportRole(user.role)) return true;
 
   const [bookingRows] = await connection.query(
     "SELECT customer_id, provider_id FROM bookings WHERE id = ? LIMIT 1",
@@ -50,7 +51,7 @@ async function canAccessTicket(connection, ticketId, user) {
   if (ticketRows.length === 0) return null;
   const ticket = ticketRows[0];
 
-  if (user.role === "admin") return ticket;
+  if (isSupportRole(user.role)) return ticket;
   if (String(ticket.created_by) === String(user.id)) return ticket;
   if (String(ticket.assigned_to) === String(user.id)) return ticket;
   return false;
@@ -130,6 +131,19 @@ exports.createTicket = async (req, res) => {
        VALUES (?, ?, ?, FALSE)`,
       [result.insertId, userId, description.trim()],
     );
+
+    if (
+      booking_id &&
+      ["REFUND", "DISPUTE", "SAFETY"].includes(normalizedCategory)
+    ) {
+      await connection.query(
+        `UPDATE escrow_payments
+         SET status = 'DISPUTED'
+         WHERE booking_id = ? AND status = 'HELD'`,
+        [booking_id],
+      );
+    }
+
     await createAdminNotifications(
       {
         notification_type: "SUPPORT_TICKET_CREATED",
@@ -137,6 +151,7 @@ exports.createTicket = async (req, res) => {
         message: `${normalizedCategory} ticket opened: ${subject.trim()}`,
         entity_type: "SUPPORT_TICKET",
         entity_id: result.insertId,
+        staff_roles: ["admin", "super_admin", "support_agent"],
       },
       connection,
     );
@@ -222,7 +237,9 @@ exports.getTicketById = async (req, res) => {
        LIMIT 1`,
       [ticketId],
     );
-    const messageVisibility = req.user.role === "admin" ? "" : "AND m.is_internal = FALSE";
+    const messageVisibility = isSupportRole(req.user.role)
+      ? ""
+      : "AND m.is_internal = FALSE";
     const [messages] = await connection.query(
       `SELECT m.id, m.sender_id, m.message, m.is_internal, m.created_at,
               u.first_name, u.last_name, u.role
@@ -281,7 +298,7 @@ exports.addMessage = async (req, res) => {
       });
     }
 
-    const internal = req.user.role === "admin" ? !!is_internal : false;
+    const internal = isSupportRole(req.user.role) ? !!is_internal : false;
     await connection.query(
       `INSERT INTO support_ticket_messages
         (ticket_id, sender_id, message, is_internal)
@@ -312,6 +329,7 @@ exports.addMessage = async (req, res) => {
           message: "A user added a new support ticket message.",
           entity_type: "SUPPORT_TICKET",
           entity_id: ticketId,
+          staff_roles: ["admin", "super_admin", "support_agent"],
         },
         connection,
       );

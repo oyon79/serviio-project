@@ -1,5 +1,5 @@
 :root {
-    --primary-blue: #0051e7; 
+    --primary-blue: #0051e7;
     --dark-blue: #003393;
     --emergency-red: #ff6b6b;
     --dark-red: #e02828;
@@ -10,29 +10,29 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
 /* Main Design */
-.schedule-container { max-width: 900px; margin: 40px auto; text-align: center; }
+.schedule-container { max-width: 900px; margin: 40px auto; text-align: center; padding: 0 16px; }
 h1 { color: var(--dark-blue); font-size: 32px; margin-bottom: 8px; }
 .subtitle { color: #666; font-size: 14px; margin-bottom: 30px; }
 
 /* Calendar Card */
-.calendar-card { background: var(--gray-bg); border-radius: 20px; padding: 30px; margin-bottom: 25px; }
+.calendar-card { background: var(--gray-bg); border-radius: 8px; padding: 30px; margin-bottom: 25px; }
 .calendar-header { display: flex; justify-content: center; align-items: center; gap: 45px; margin-bottom: 20px; }
 .cal-nav { background: none; border: none; font-size: 20px; cursor: pointer; font-weight: bold; }
-.calendar-grid { 
-    display: grid; 
-    grid-template-columns: repeat(7, 1fr); 
-    gap: 10px; 
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
 }
 .day-label { font-weight: 600; color: #444; padding-bottom: 10px; text-transform: uppercase; font-size: 14px;}
 
 /* Make sure the Date Cell behaves like a button */
-.date-cell { 
-    padding: 12px; 
-    background: #eef1f6; 
-    border-radius: 10px; 
+.date-cell {
+    padding: 12px;
+    background: #eef1f6;
+    border-radius: 8px;
     cursor: pointer; /* Ensures the hand icon appears */
-    transition: 0.3s; 
-    font-weight: 500; 
+    transition: 0.3s;
+    font-weight: 500;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -44,16 +44,27 @@ h1 { color: var(--dark-blue); font-size: 32px; margin-bottom: 8px; }
 .date-cell.empty { background: transparent; cursor: default; }
 
 /* Slots & Info */
-.slots-card { background: var(--gray-bg); border-radius: 20px; padding: 30px; margin-bottom: 20px; text-align: left;}
+.slots-card { background: var(--gray-bg); border-radius: 8px; padding: 30px; margin-bottom: 20px; text-align: left;}
 .provider-info { margin-bottom: 20px; }
 .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-.time-slot { padding: 15px; border: none; background: #dcdcdc; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+.time-slot { padding: 15px; border: none; background: #dcdcdc; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
 .time-slot:hover { background: #cecece; }
 .time-slot.selected { background: var(--dark-blue); color: white; }
 
 /* Action Buttons */
 .action-buttons { display: flex; flex-direction: column; gap: 12px; }
-.btn-confirm { background: var(--dark-blue); color: white; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+.btn-confirm { background: var(--dark-blue); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-confirm:hover { background: var(--primary-blue); }
-.btn-emergency { background: var(--emergency-red); color: white; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+.btn-emergency { background: var(--emergency-red); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; }
 .btn-emergency:hover { background: var(--dark-red); }
+
+@media (max-width: 640px) {
+    h1 { font-size: 26px; }
+    .calendar-card,
+    .slots-card { padding: 18px; }
+    .calendar-header { gap: 18px; }
+    .calendar-grid { gap: 6px; }
+    .date-cell { min-height: 40px; padding: 8px 4px; font-size: 13px; }
+    .day-label { font-size: 11px; }
+    .time-grid { grid-template-columns: 1fr; }
+}

@@ -118,7 +118,18 @@ router.patch(
     body: {
       status: [
         v.required("status"),
-        v.oneOf(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"], "status"),
+        v.oneOf(
+          [
+            "PENDING",
+            "ACCEPTED",
+            "ON_THE_WAY",
+            "ARRIVED",
+            "IN_PROGRESS",
+            "COMPLETED",
+            "CANCELLED",
+          ],
+          "status",
+        ),
       ],
     },
   }),

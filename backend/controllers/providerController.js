@@ -1,5 +1,8 @@
 const db = require("../config/db");
 const { createAdminNotifications } = require("../services/notificationService");
+const {
+  verifyProviderDocument,
+} = require("../services/identityVerificationService");
 
 function shapeProviderRow(row) {
   return {
@@ -111,15 +114,16 @@ exports.getProviderById = async (req, res) => {
   try {
     const query = `
       SELECT
-        u.id, u.first_name, u.last_name, u.email, u.phone,
+        u.id, u.first_name, u.last_name,
         p.id as profile_id, p.service_type, p.experience_summary,
-        p.location, p.nid_number, p.is_available, p.is_verified,
+        p.location, p.is_available, p.is_verified,
         p.verification_status, p.verification_submitted_at,
-        p.verified_at, p.verification_notes,
+        p.verified_at,
         p.hourly_rate, p.total_reviews, p.average_rating
       FROM users u
       JOIN provider_profiles p ON u.id = p.user_id
       WHERE u.id = ? AND u.role = 'provider'
+        AND (p.is_verified = 1 OR p.is_verified = TRUE)
       LIMIT 1
     `;
     const [rows] = await db.query(query, [providerId]);
@@ -356,7 +360,8 @@ exports.getMyVerification = async (req, res) => {
     const profile = profileRows[0];
     const [documents] = await db.query(
       `SELECT id, document_type, document_number, document_url, file_name,
-              file_mime, status, reviewer_notes, reviewed_at, created_at
+              file_mime, status, external_verification_status,
+              external_verification_reference, reviewer_notes, reviewed_at, created_at
        FROM provider_verification_documents
        WHERE provider_profile_id = ?
        ORDER BY created_at DESC`,
@@ -390,12 +395,13 @@ exports.getMyVerification = async (req, res) => {
 
 exports.submitVerificationDocument = async (req, res) => {
   const userId = req.user && req.user.id;
+  const uploadedFile = req.file || null;
   const {
     document_type,
     document_number,
-    document_url,
-    file_name,
-    file_mime,
+    document_url: bodyDocumentUrl,
+    file_name: bodyFileName,
+    file_mime: bodyFileMime,
     notes,
   } = req.body;
 
@@ -413,7 +419,17 @@ exports.submitVerificationDocument = async (req, res) => {
     });
   }
 
-  if (!document_number && !document_url && !file_name) {
+  const storedDocumentUrl = uploadedFile
+    ? pathFromProjectUpload(uploadedFile.path)
+    : bodyDocumentUrl || null;
+  const storedFileName = uploadedFile
+    ? uploadedFile.originalname
+    : bodyFileName || null;
+  const storedFileMime = uploadedFile
+    ? uploadedFile.mimetype
+    : bodyFileMime || null;
+
+  if (!document_number && !storedDocumentUrl && !storedFileName) {
     return res.status(400).json({
       success: false,
       message:
@@ -429,18 +445,37 @@ exports.submitVerificationDocument = async (req, res) => {
         .json({ success: false, message: "Provider profile not found" });
     }
 
+    const [userRows] = await db.query(
+      "SELECT first_name, last_name, phone FROM users WHERE id = ? LIMIT 1",
+      [userId],
+    );
+    const submitter = userRows[0] || {};
+    const externalVerification = await verifyProviderDocument({
+      documentType: normalizedType,
+      documentNumber: document_number,
+      fullName: `${submitter.first_name || ""} ${submitter.last_name || ""}`.trim(),
+      phone: submitter.phone || null,
+    });
+
     const [result] = await db.query(
       `INSERT INTO provider_verification_documents
-        (provider_profile_id, provider_user_id, document_type, document_number, document_url, file_name, file_mime)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (provider_profile_id, provider_user_id, document_type, document_number,
+         document_url, file_name, file_mime, external_verification_status,
+         external_verification_reference, external_verification_payload)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         profile.id,
         userId,
         normalizedType,
         document_number || null,
-        document_url || null,
-        file_name || null,
-        file_mime || null,
+        storedDocumentUrl,
+        storedFileName,
+        storedFileMime,
+        externalVerification.status || "NOT_CHECKED",
+        externalVerification.reference || null,
+        externalVerification.payload
+          ? JSON.stringify(externalVerification.payload)
+          : externalVerification.message || null,
       ],
     );
 
@@ -471,6 +506,8 @@ exports.submitVerificationDocument = async (req, res) => {
         id: result.insertId,
         document_type: normalizedType,
         status: "PENDING",
+        external_verification_status:
+          externalVerification.status || "NOT_CHECKED",
       },
     });
   } catch (error) {
@@ -481,6 +518,14 @@ exports.submitVerificationDocument = async (req, res) => {
     });
   }
 };
+
+function pathFromProjectUpload(filePath) {
+  const normalized = String(filePath || "").replace(/\\/g, "/");
+  const marker = "/backend/uploads/";
+  const markerIndex = normalized.lastIndexOf(marker);
+  if (markerIndex === -1) return null;
+  return `uploads/${normalized.slice(markerIndex + marker.length)}`;
+}
 
 exports.submitVerificationForReview = async (req, res) => {
   const userId = req.user && req.user.id;
@@ -534,6 +579,7 @@ exports.submitVerificationForReview = async (req, res) => {
       message: `Provider #${userId} submitted verification for review.`,
       entity_type: "PROVIDER_PROFILE",
       entity_id: profile.id,
+      staff_roles: ["admin", "super_admin", "verification_officer"],
     });
 
     return res.status(200).json({

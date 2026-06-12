@@ -14,8 +14,8 @@
 .search-filter-section {
     background: white;
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
@@ -95,9 +95,9 @@
 /* --- Provider Card Styling --- */
 .card {
     background: white;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
@@ -152,7 +152,7 @@
     background: #e0f2fe;
     color: #0284c7;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 10px;
@@ -232,4 +232,26 @@
 
 .book-btn:hover {
     background: #0051e7;
+}
+
+@media (max-width: 720px) {
+    .main-container {
+        margin: 24px auto;
+    }
+
+    .search-filter-section,
+    .filters {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .search-box,
+    .filter-dropdown,
+    .clear-btn {
+        width: 100%;
+    }
+
+    .provider-grid {
+        grid-template-columns: 1fr;
+    }
 }

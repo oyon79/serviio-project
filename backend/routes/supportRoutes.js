@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const supportController = require("../controllers/supportController");
 const authMiddleware = require("../middlewares/authMiddleware");
-const adminMiddleware = require("../middlewares/adminMiddleware");
+const authorizeRoles = require("../middlewares/roleMiddleware");
 const {
   validate,
   validators: v,
@@ -36,7 +36,7 @@ router.get("/tickets/my", authMiddleware, supportController.getMyTickets);
 router.get(
   "/tickets/admin",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent", "verification_officer"),
   supportController.listAllTickets,
 );
 router.get(
@@ -70,7 +70,7 @@ router.post(
 router.patch(
   "/tickets/:id",
   authMiddleware,
-  adminMiddleware,
+  authorizeRoles("admin", "super_admin", "support_agent"),
   validate({
     params: {
       id: [v.required("id"), v.positiveInteger("id")],

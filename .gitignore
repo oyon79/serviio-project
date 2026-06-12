@@ -6,5 +6,12 @@ backend/routes/node_modules/
 backend/.env
 *.log
 
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/verification/
+!backend/uploads/verification/.gitkeep
+database/backups/*
+!database/backups/.gitkeep
+
 .DS_Store
 Thumbs.db

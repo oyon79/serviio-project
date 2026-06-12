@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 function isEmpty(value) {
   return value === undefined || value === null || value === "";
 }
@@ -72,6 +74,15 @@ const validators = {
     });
   },
 
+  numberRange(min, max, label = "Field") {
+    return makeValidator((value) => {
+      const number = Number(value);
+      return Number.isFinite(number) && number >= min && number <= max
+        ? null
+        : `${label} must be between ${min} and ${max}.`;
+    });
+  },
+
   boolean(label = "Field") {
     return makeValidator((value) =>
       typeof value === "boolean" ? null : `${label} must be a boolean.`,
@@ -134,6 +145,7 @@ function validate(rules) {
     }
 
     if (errors.length > 0) {
+      cleanupUploadedFiles(req);
       return res.status(400).json({
         success: false,
         message: "Validation failed.",
@@ -145,6 +157,26 @@ function validate(rules) {
   };
 }
 
+function cleanupFile(file) {
+  if (!file?.path) return;
+  try {
+    fs.unlinkSync(file.path);
+  } catch (_) {
+    // Best-effort cleanup for validation failures.
+  }
+}
+
+function cleanupUploadedFiles(req) {
+  cleanupFile(req.file);
+  if (Array.isArray(req.files)) {
+    req.files.forEach(cleanupFile);
+    return;
+  }
+  if (req.files && typeof req.files === "object") {
+    Object.values(req.files).flat().forEach(cleanupFile);
+  }
+}
+
 function required(label = "Field") {
   const validator = validators.required(label);
   Object.defineProperty(validator, "name", { value: "requiredValidator" });
@@ -153,6 +185,7 @@ function required(label = "Field") {
 
 module.exports = {
   validate,
+  cleanupUploadedFiles,
   validators: {
     ...validators,
     required,

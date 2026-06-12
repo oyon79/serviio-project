@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <header class="navbar">
@@ -50,7 +51,7 @@
           >
         </li>
         <li>
-          <div class="notification">
+          <div class="notification" aria-label="Notifications">
             <i class="fa-solid fa-bell"></i>
             <span class="badge">3</span>
           </div>
@@ -147,15 +148,15 @@
             </div>
             <div class="summary-row">
               <span>Base Charge</span>
-              <span>৳ 500.00</span>
+              <span id="summaryBaseCharge">BDT 0.00</span>
             </div>
             <div class="summary-row">
               <span>Platform Fee</span>
-              <span>৳ 50.00</span>
+              <span id="summaryPlatformFee">Included</span>
             </div>
             <div class="summary-row total-row">
               <span>Total Payable</span>
-              <span>৳ 550.00</span>
+              <span id="summaryTotalPayable">BDT 0.00</span>
             </div>
           </div>
 
@@ -171,12 +172,17 @@
       </div>
     </main>
 
-    <div class="popup-overlay" id="successPopup">
-      <div class="popup-content">
+    <div class="popup-overlay" id="successPopup" aria-hidden="true">
+      <div
+        class="popup-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="paymentSuccessTitle"
+      >
         <div class="success-icon">
           <i class="fa-solid fa-check"></i>
         </div>
-        <h2>Payment Successful!</h2>
+        <h2 id="paymentSuccessTitle">Payment Successful!</h2>
         <p>
           Your booking is officially confirmed. The provider is on their way.
         </p>
@@ -208,7 +214,7 @@
             padding-top: 10px;
           "
         >
-          <p>© 2026 SERVIIO All Rights Reserved</p>
+          <p>&copy; 2026 SERVIIO All Rights Reserved</p>
         </div>
       </div>
     </footer>
@@ -220,16 +226,19 @@
       const summaryServiceType = document.getElementById("summaryServiceType");
       const summaryProvider = document.getElementById("summaryProvider");
       const summaryLocation = document.getElementById("summaryLocation");
+      const summaryBaseCharge = document.getElementById("summaryBaseCharge");
+      const summaryTotalPayable = document.getElementById("summaryTotalPayable");
       const urlParams = new URLSearchParams(window.location.search);
       const bookingId = urlParams.get("booking_id");
       const token = localStorage.getItem("serviio_token");
+      let payableAmount = 0;
 
       async function loadBookingSummary() {
         if (!bookingId || !token) return;
 
         try {
           const response = await fetch(
-            `http://localhost:5000/api/bookings/${bookingId}`,
+            Serviio.apiUrl(`/api/bookings/${bookingId}`),
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -245,6 +254,12 @@
           summaryProvider.textContent = booking.provider_name || "Assigned";
           summaryLocation.textContent =
             booking.job_location || "Location not provided";
+          payableAmount = Number(
+            booking.quoted_amount || booking.payment_amount || 0,
+          );
+          const amountLabel = `BDT ${payableAmount.toFixed(2)}`;
+          summaryBaseCharge.textContent = amountLabel;
+          summaryTotalPayable.textContent = amountLabel;
         } catch (error) {
           console.error("Unable to load booking summary:", error);
         }
@@ -254,14 +269,15 @@
         e.preventDefault();
 
         if (!bookingId) {
-          alert(
+          Serviio.notify(
             "Error: No booking ID found. Please start over from the schedule page.",
+            "error",
           );
           return;
         }
 
         if (!token) {
-          alert("Please log in before completing payment.");
+          Serviio.notify("Please log in before completing payment.", "warning");
           window.location.href = `login.html?next=${encodeURIComponent(window.location.pathname.split("/").pop() + window.location.search)}`;
           return;
         }
@@ -277,7 +293,7 @@
               ?.value || "card";
 
           const paymentResponse = await fetch(
-            "http://localhost:5000/api/payments/process",
+            Serviio.apiUrl("/api/payments/process"),
             {
               method: "POST",
               headers: {
@@ -286,7 +302,7 @@
               },
               body: JSON.stringify({
                 booking_id: bookingId,
-                amount: 550,
+                amount: payableAmount || 0,
                 payment_method: selectedMethod,
               }),
             },
@@ -299,7 +315,7 @@
 
           // 3. Fetch the booking details (and handshake code) from the backend API
           const response = await fetch(
-            `http://localhost:5000/api/bookings/${bookingId}`,
+            Serviio.apiUrl(`/api/bookings/${bookingId}`),
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -319,9 +335,10 @@
 
           // 5. Show the popup
           popup.style.display = "flex";
+          popup.setAttribute("aria-hidden", "false");
         } catch (error) {
           console.error("API Error:", error);
-          alert(error.message || "Could not complete payment.");
+          Serviio.notify(error.message || "Could not complete payment.", "error");
           payBtn.innerHTML = "Pay Now &rarr;";
           payBtn.style.pointerEvents = "auto";
         }

@@ -4,12 +4,7 @@ const forgotPhoneInput = document.getElementById("forgotPhone");
 const forgotSubmitButton = document.getElementById("forgotSubmitButton");
 
 function getApiBaseUrl() {
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-  if (window.location.protocol === "file:" || isLocalhost) {
-    return "http://localhost:5000";
-  }
-  return window.location.origin;
+  return window.Serviio?.apiBaseUrl || window.location.origin;
 }
 
 function getForgotMessageElement() {
@@ -84,7 +79,8 @@ async function handleForgotPassword(event) {
       showForgotMessage(message, false);
       const messageEl = getForgotMessageElement();
       if (messageEl) {
-        messageEl.innerHTML = `${message}<br>`;
+        messageEl.textContent = message;
+        messageEl.appendChild(document.createElement("br"));
         messageEl.appendChild(link);
         if (data.otp) {
           const otpEl = document.createElement("div");

@@ -18,12 +18,16 @@ CREATE TABLE IF NOT EXISTS users (
 	email VARCHAR(255) NOT NULL UNIQUE,
 	phone VARCHAR(20) DEFAULT NULL,
 	password VARCHAR(255) NOT NULL,
-	role ENUM('customer','provider','admin') DEFAULT 'customer',
+	role ENUM('customer','provider','admin','super_admin','support_agent','verification_officer') DEFAULT 'customer',
 	is_active BOOLEAN DEFAULT TRUE,
+	account_verified BOOLEAN DEFAULT TRUE,
+	email_verified_at TIMESTAMP NULL,
+	phone_verified_at TIMESTAMP NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	INDEX idx_email (email),
-	INDEX idx_role (role)
+	INDEX idx_role (role),
+	INDEX idx_account_verified (account_verified)
 );
 
 -- ============================================================
@@ -35,12 +39,54 @@ CREATE TABLE IF NOT EXISTS password_reset_requests (
 	email VARCHAR(255) NOT NULL,
 	reset_token_hash CHAR(64) NOT NULL UNIQUE,
 	otp_hash VARCHAR(255) NOT NULL,
-	channel ENUM('EMAIL','SMS','MANUAL') DEFAULT 'EMAIL',
+	channel ENUM('EMAIL','SMS','EMAIL_SMS','MANUAL') DEFAULT 'EMAIL',
 	status ENUM('REQUESTED','USED','EXPIRED') DEFAULT 'REQUESTED',
 	requested_ip VARCHAR(45) DEFAULT NULL,
 	attempt_count INT DEFAULT 0,
 	expires_at TIMESTAMP NOT NULL,
 	used_at TIMESTAMP NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+	INDEX idx_user_id (user_id),
+	INDEX idx_email (email),
+	INDEX idx_status (status),
+	INDEX idx_expires_at (expires_at)
+);
+
+-- ============================================================
+-- 2B. AUTH LOGIN ATTEMPTS TABLE: Persistent brute-force lockout
+-- ============================================================
+CREATE TABLE IF NOT EXISTS auth_login_attempts (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	email VARCHAR(255) NOT NULL,
+	ip_address VARCHAR(45) NOT NULL,
+	attempt_count INT DEFAULT 0,
+	locked_until TIMESTAMP NULL,
+	last_attempt_at TIMESTAMP NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	UNIQUE KEY uniq_auth_attempt_email_ip (email, ip_address),
+	INDEX idx_email (email),
+	INDEX idx_locked_until (locked_until),
+	INDEX idx_last_attempt_at (last_attempt_at)
+);
+
+-- ============================================================
+-- 2C. REGISTRATION VERIFICATION REQUESTS TABLE: Account OTP onboarding
+-- ============================================================
+CREATE TABLE IF NOT EXISTS registration_verification_requests (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	user_id INT NOT NULL,
+	email VARCHAR(255) NOT NULL,
+	phone VARCHAR(20) DEFAULT NULL,
+	otp_hash VARCHAR(255) NOT NULL,
+	channel ENUM('EMAIL','SMS','EMAIL_SMS','MANUAL') DEFAULT 'EMAIL',
+	status ENUM('PENDING','VERIFIED','EXPIRED') DEFAULT 'PENDING',
+	requested_ip VARCHAR(45) DEFAULT NULL,
+	attempt_count INT DEFAULT 0,
+	expires_at DATETIME NOT NULL,
+	verified_at TIMESTAMP NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -92,6 +138,9 @@ CREATE TABLE IF NOT EXISTS provider_verification_documents (
 	file_name VARCHAR(255) DEFAULT NULL,
 	file_mime VARCHAR(100) DEFAULT NULL,
 	status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+	external_verification_status ENUM('NOT_CHECKED','PENDING','MATCHED','MISMATCHED','ERROR') DEFAULT 'NOT_CHECKED',
+	external_verification_reference VARCHAR(255) DEFAULT NULL,
+	external_verification_payload TEXT DEFAULT NULL,
 	reviewer_id INT DEFAULT NULL,
 	reviewer_notes TEXT DEFAULT NULL,
 	reviewed_at TIMESTAMP NULL,
@@ -103,7 +152,8 @@ CREATE TABLE IF NOT EXISTS provider_verification_documents (
 	INDEX idx_provider_profile_id (provider_profile_id),
 	INDEX idx_provider_user_id (provider_user_id),
 	INDEX idx_document_type (document_type),
-	INDEX idx_status (status)
+	INDEX idx_status (status),
+	INDEX idx_external_verification_status (external_verification_status)
 );
 
 -- ============================================================
@@ -140,13 +190,20 @@ CREATE TABLE IF NOT EXISTS bookings (
 	job_location VARCHAR(255) DEFAULT NULL,
 	booking_date DATETIME DEFAULT NULL,
 	estimated_price_range VARCHAR(100) DEFAULT NULL,
-	status ENUM('PENDING','IN_PROGRESS','COMPLETED','CANCELLED') DEFAULT 'PENDING',
+	quoted_amount DECIMAL(10, 2) DEFAULT NULL,
+	status ENUM('PENDING','ACCEPTED','ON_THE_WAY','ARRIVED','IN_PROGRESS','COMPLETED','CANCELLED') DEFAULT 'PENDING',
 	handshake_code VARCHAR(10) DEFAULT NULL,
 	is_emergency BOOLEAN DEFAULT FALSE,
 	payment_status ENUM('UNPAID','PAID','FAILED','REFUNDED') DEFAULT 'UNPAID',
 	payment_transaction_id VARCHAR(100) DEFAULT NULL,
 	payment_amount DECIMAL(10, 2) DEFAULT NULL,
 	payment_date TIMESTAMP NULL,
+	accepted_at TIMESTAMP NULL,
+	on_the_way_at TIMESTAMP NULL,
+	arrived_at TIMESTAMP NULL,
+	started_at TIMESTAMP NULL,
+	completed_at TIMESTAMP NULL,
+	cancelled_at TIMESTAMP NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -193,6 +250,7 @@ CREATE TABLE IF NOT EXISTS wallets (
 	currency CHAR(3) DEFAULT 'BDT',
 	balance DECIMAL(10, 2) DEFAULT 0.00,
 	pending_balance DECIMAL(10, 2) DEFAULT 0.00,
+	payout_reserved_balance DECIMAL(10, 2) DEFAULT 0.00,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -207,7 +265,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
 	wallet_id INT NOT NULL,
 	user_id INT NOT NULL,
 	booking_id INT DEFAULT NULL,
-	type ENUM('CREDIT','DEBIT','ESCROW_HOLD','ESCROW_RELEASE','REFUND','PAYOUT') NOT NULL,
+	type ENUM('CREDIT','DEBIT','ESCROW_HOLD','ESCROW_RELEASE','REFUND','PAYOUT','PAYOUT_REQUEST','PAYOUT_REJECTED','PAYOUT_PAID') NOT NULL,
 	amount DECIMAL(10, 2) NOT NULL,
 	balance_after DECIMAL(10, 2) DEFAULT NULL,
 	reference_id VARCHAR(100) DEFAULT NULL,
@@ -246,6 +304,35 @@ CREATE TABLE IF NOT EXISTS escrow_payments (
 	INDEX idx_provider_id (provider_id),
 	INDEX idx_status (status),
 	INDEX idx_release_available_at (release_available_at)
+);
+
+-- ============================================================
+-- 10B. PAYOUT REQUESTS TABLE: Provider withdrawal workflow
+-- ============================================================
+CREATE TABLE IF NOT EXISTS payout_requests (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	provider_id INT NOT NULL,
+	wallet_id INT NOT NULL,
+	amount DECIMAL(10, 2) NOT NULL,
+	currency CHAR(3) DEFAULT 'BDT',
+	payout_method ENUM('BKASH','NAGAD','BANK') NOT NULL,
+	account_ref VARCHAR(255) NOT NULL,
+	status ENUM('REQUESTED','APPROVED','REJECTED','PAID','CANCELLED') DEFAULT 'REQUESTED',
+	provider_notes TEXT DEFAULT NULL,
+	reviewer_id INT DEFAULT NULL,
+	reviewer_notes TEXT DEFAULT NULL,
+	external_reference VARCHAR(255) DEFAULT NULL,
+	requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	reviewed_at TIMESTAMP NULL,
+	paid_at TIMESTAMP NULL,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE CASCADE,
+	FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+	INDEX idx_provider_id (provider_id),
+	INDEX idx_status (status),
+	INDEX idx_requested_at (requested_at),
+	INDEX idx_reviewer_id (reviewer_id)
 );
 
 -- ============================================================
@@ -382,7 +469,69 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- ============================================================
--- 17. AUDIT LOG TABLE: Track all critical system actions
+-- 15B. PROVIDER LOCATIONS TABLE: Last known provider location for tracking
+-- ============================================================
+CREATE TABLE IF NOT EXISTS provider_locations (
+	provider_id INT PRIMARY KEY,
+	booking_id INT DEFAULT NULL,
+	latitude DECIMAL(10, 8) NOT NULL,
+	longitude DECIMAL(11, 8) NOT NULL,
+	bearing DECIMAL(8, 2) DEFAULT NULL,
+	speed DECIMAL(8, 2) DEFAULT NULL,
+	accuracy DECIMAL(8, 2) DEFAULT NULL,
+	last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL,
+	INDEX idx_booking_id (booking_id),
+	INDEX idx_last_seen_at (last_seen_at)
+);
+
+-- ============================================================
+-- 17. BOOKING MESSAGES TABLE: Customer/provider booking chat
+-- ============================================================
+CREATE TABLE IF NOT EXISTS booking_messages (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	booking_id INT NOT NULL,
+	sender_id INT NOT NULL,
+	message TEXT NOT NULL,
+	is_read BOOLEAN DEFAULT FALSE,
+	read_at TIMESTAMP NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+	FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+	INDEX idx_booking_id (booking_id),
+	INDEX idx_sender_id (sender_id),
+	INDEX idx_is_read (is_read),
+	INDEX idx_created_at (created_at)
+);
+
+-- ============================================================
+-- 18. BOOKING CALL REQUESTS TABLE: Consent-based voice/video coordination
+-- ============================================================
+CREATE TABLE IF NOT EXISTS booking_call_requests (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	booking_id INT NOT NULL,
+	requester_id INT NOT NULL,
+	recipient_id INT NOT NULL,
+	call_type ENUM('VOICE','VIDEO') DEFAULT 'VOICE',
+	status ENUM('REQUESTED','ACCEPTED','DECLINED','COMPLETED','MISSED','CANCELLED') DEFAULT 'REQUESTED',
+	reason VARCHAR(500) DEFAULT NULL,
+	accepted_at TIMESTAMP NULL,
+	completed_at TIMESTAMP NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+	FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+	FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+	INDEX idx_booking_id (booking_id),
+	INDEX idx_requester_id (requester_id),
+	INDEX idx_recipient_id (recipient_id),
+	INDEX idx_status (status),
+	INDEX idx_created_at (created_at)
+);
+
+-- ============================================================
+-- 19. AUDIT LOG TABLE: Track all critical system actions
 -- For compliance, debugging, and admin investigation
 -- ============================================================
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -427,6 +576,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- 6. Added wallet, wallet_transactions, and escrow_payments tables:
 --    - Holds provider funds in pending balance until escrow release
 --    - Keeps immutable wallet movement ledger entries
+--    - Supports provider payout reservation and operations review
 --
 -- 7. Added support_tickets and support_ticket_messages tables:
 --    - Tracks complaints, refund requests, disputes, and support replies
@@ -453,5 +603,17 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 --    - Stores hashed reset tokens and OTPs
 --    - Enforces expiry, attempt tracking, and one-time use
 --
--- 14. All tables use utf8mb4 for proper emoji/unicode support
+-- 14. Added registration_verification_requests and user account verification:
+--    - Blocks production login until registration OTP is verified
+--    - Supports email/SMS/manual delivery tracking and attempt limits
+--
+-- 15. Expanded user roles for tiered operations:
+--    - admin, super_admin, support_agent, verification_officer
+--    - Enables least-privilege support, KYC, SOS, and refund workflows
+--
+-- 16. All tables use utf8mb4 for proper emoji/unicode support
+--
+-- 17. Added booking_messages and booking_call_requests:
+--    - Enables booking-scoped chat and consent-based voice/video requests
+--    - Uses participant-only access through API and booking socket rooms
 -- ============================================================

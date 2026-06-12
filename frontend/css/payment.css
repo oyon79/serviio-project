@@ -26,8 +26,8 @@
     min-width: 300px;
     background: white;
     padding: 35px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
 }
 
 .section-header {
@@ -57,7 +57,7 @@
     align-items: center;
     padding: 20px;
     border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     background: white;
@@ -65,6 +65,12 @@
 
 .method-card:hover {
     border-color: #94a3b8;
+}
+
+.method-card:has(input:checked) {
+    border-color: #003393;
+    background: #f0f4ff;
+    box-shadow: 0 8px 18px rgba(0, 51, 147, 0.08);
 }
 
 /* Custom Radio Button Logic */
@@ -144,8 +150,8 @@
     min-width: 300px;
     background: white;
     padding: 35px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     height: fit-content;
 }
 
@@ -204,6 +210,10 @@
     background: #0051e7;
 }
 
+.pay-btn[style*="pointer-events: none"] {
+    opacity: 0.76;
+}
+
 .cancel-btn {
     width: 100%;
     background: transparent;
@@ -242,7 +252,7 @@
 .popup-content {
     background: white;
     padding: 40px;
-    border-radius: 20px;
+    border-radius: 8px;
     text-align: center;
     max-width: 450px;
     width: 90%;
@@ -287,7 +297,7 @@
     background: #f8fafc;
     border: 2px dashed #003393;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 8px;
     margin-bottom: 25px;
 }
 
@@ -332,4 +342,51 @@
 
 .done-btn:hover {
     background: #0051e7;
+}
+
+@media (max-width: 780px) {
+    .payment-main {
+        padding: 28px 14px;
+    }
+
+    .payment-methods-section,
+    .summary-section {
+        padding: 24px;
+        min-width: 100%;
+    }
+
+    .method-card {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .radio-wrapper {
+        margin-right: 4px;
+        flex: 0 0 24px;
+    }
+
+    .method-icons {
+        font-size: 22px;
+    }
+
+    .summary-row {
+        gap: 16px;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .method-card,
+    .summary-row {
+        flex-direction: column;
+    }
+
+    .summary-row span:last-child {
+        font-weight: 600;
+    }
+
+    .handshake-box h1 {
+        font-size: 36px;
+        letter-spacing: 5px;
+    }
 }

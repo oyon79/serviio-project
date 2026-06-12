@@ -52,21 +52,8 @@ async function testConnection() {
 
 pool.testConnection = testConnection;
 
-function closePool() {
-  pool
-    .end()
-    .then(() => {
-      console.log("MySQL pool closed.");
-    })
-    .catch((error) => {
-      console.error("Error closing MySQL pool:", error.message || error);
-    });
+if (process.env.SERVIIO_SKIP_DB_HEALTHCHECK !== "true") {
+  testConnection();
 }
-
-process.on("SIGINT", closePool);
-process.on("SIGTERM", closePool);
-process.on("exit", closePool);
-
-testConnection();
 
 module.exports = pool;

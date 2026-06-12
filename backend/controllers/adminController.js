@@ -1,8 +1,16 @@
 const db = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 const { createNotification } = require("../services/notificationService");
 
 const allowedDocumentReviewStatuses = new Set(["APPROVED", "REJECTED"]);
 const allowedProviderDecisions = new Set(["VERIFIED", "REJECTED"]);
+const uploadsRoot = path.resolve(__dirname, "..", "uploads");
+
+function isInsideDirectory(parentDir, targetPath) {
+  const relative = path.relative(parentDir, targetPath);
+  return Boolean(relative) && !relative.startsWith("..") && !path.isAbsolute(relative);
+}
 
 function toNumber(value) {
   return Number(value || 0);
@@ -40,15 +48,19 @@ exports.getOverview = async (req, res) => {
       [providerRows],
       [bookingRows],
       [ticketRows],
+      [payoutRows],
       [paymentRows],
       [notificationRows],
+      [emergencyRows],
     ] = await Promise.all([
       db.query(
         `SELECT
            COUNT(*) AS total_users,
            SUM(role = 'customer') AS customers,
            SUM(role = 'provider') AS providers,
-           SUM(role = 'admin') AS admins
+           SUM(role IN ('admin', 'super_admin')) AS admins,
+           SUM(role = 'support_agent') AS support_agents,
+           SUM(role = 'verification_officer') AS verification_officers
          FROM users`,
       ),
       db.query(
@@ -64,7 +76,7 @@ exports.getOverview = async (req, res) => {
         `SELECT
            COUNT(*) AS total_bookings,
            SUM(status = 'PENDING') AS pending_bookings,
-           SUM(status = 'IN_PROGRESS') AS active_bookings,
+           SUM(status IN ('ACCEPTED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS')) AS active_bookings,
            SUM(status = 'COMPLETED') AS completed_bookings,
            SUM(status = 'CANCELLED') AS cancelled_bookings
          FROM bookings`,
@@ -75,6 +87,14 @@ exports.getOverview = async (req, res) => {
            SUM(status IN ('OPEN', 'IN_REVIEW')) AS open_tickets,
            SUM(priority IN ('HIGH', 'URGENT') AND status NOT IN ('RESOLVED', 'CLOSED')) AS urgent_tickets
          FROM support_tickets`,
+      ),
+      db.query(
+        `SELECT
+           COUNT(*) AS total_payouts,
+           SUM(status = 'REQUESTED') AS requested_payouts,
+           SUM(status = 'APPROVED') AS approved_payouts,
+           COALESCE(SUM(CASE WHEN status IN ('REQUESTED','APPROVED') THEN amount ELSE 0 END), 0) AS pending_payout_amount
+         FROM payout_requests`,
       ),
       db.query(
         `SELECT
@@ -89,6 +109,12 @@ exports.getOverview = async (req, res) => {
          WHERE user_id = ? AND is_read = FALSE`,
         [req.user.id],
       ),
+      db.query(
+        `SELECT
+           COUNT(*) AS total_emergencies,
+           SUM(status = 'ACTIVE') AS active_emergencies
+         FROM emergency_logs`,
+      ),
     ]);
 
     return res.status(200).json({
@@ -99,6 +125,8 @@ exports.getOverview = async (req, res) => {
           customers: toNumber(userRows[0].customers),
           providers: toNumber(userRows[0].providers),
           admins: toNumber(userRows[0].admins),
+          support_agents: toNumber(userRows[0].support_agents),
+          verification_officers: toNumber(userRows[0].verification_officers),
         },
         providers: {
           total: toNumber(providerRows[0].provider_profiles),
@@ -119,12 +147,22 @@ exports.getOverview = async (req, res) => {
           open: toNumber(ticketRows[0].open_tickets),
           urgent: toNumber(ticketRows[0].urgent_tickets),
         },
+        payouts: {
+          total: toNumber(payoutRows[0].total_payouts),
+          requested: toNumber(payoutRows[0].requested_payouts),
+          approved: toNumber(payoutRows[0].approved_payouts),
+          pending_amount: toNumber(payoutRows[0].pending_payout_amount),
+        },
         payments: {
           paid_amount: toNumber(paymentRows[0].paid_amount),
           paid_bookings: toNumber(paymentRows[0].paid_bookings),
         },
         notifications: {
           unread: toNumber(notificationRows[0].unread_admin_notifications),
+        },
+        emergencies: {
+          total: toNumber(emergencyRows[0].total_emergencies),
+          active: toNumber(emergencyRows[0].active_emergencies),
         },
       },
     });
@@ -174,6 +212,87 @@ exports.listBookings = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while fetching bookings.",
+    });
+  }
+};
+
+exports.listEmergencyLogs = async (req, res) => {
+  const status = req.query.status
+    ? String(req.query.status).toUpperCase()
+    : null;
+  const values = [];
+  let where = "";
+
+  if (status) {
+    if (!["ACTIVE", "RESOLVED", "CANCELLED"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid emergency status.",
+      });
+    }
+    where = "WHERE e.status = ?";
+    values.push(status);
+  }
+
+  try {
+    const [rows] = await db.query(
+      `SELECT
+         e.*, u.first_name, u.last_name, u.email, u.phone
+       FROM emergency_logs e
+       LEFT JOIN users u ON u.id = e.user_id
+       ${where}
+       ORDER BY e.created_at DESC
+       LIMIT 100`,
+      values,
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: rows.length,
+      data: rows,
+    });
+  } catch (error) {
+    console.error("Admin listEmergencyLogs error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching emergency logs.",
+    });
+  }
+};
+
+exports.updateEmergencyStatus = async (req, res) => {
+  const emergencyId = req.params.id;
+  const status = String(req.body.status || "").toUpperCase();
+
+  if (!["ACTIVE", "RESOLVED", "CANCELLED"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid emergency status.",
+    });
+  }
+
+  try {
+    const [result] = await db.query(
+      "UPDATE emergency_logs SET status = ? WHERE id = ?",
+      [status, emergencyId],
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency log not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Emergency status updated.",
+    });
+  } catch (error) {
+    console.error("Admin updateEmergencyStatus error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating emergency status.",
     });
   }
 };
@@ -352,6 +471,59 @@ exports.getProviderVerificationDetails = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while fetching verification details.",
+    });
+  }
+};
+
+exports.downloadVerificationDocument = async (req, res) => {
+  const documentId = req.params.documentId;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT document_url, file_name
+       FROM provider_verification_documents
+       WHERE id = ?
+       LIMIT 1`,
+      [documentId],
+    );
+
+    if (rows.length === 0 || !rows[0].document_url) {
+      return res.status(404).json({
+        success: false,
+        message: "Verification document file not found.",
+      });
+    }
+
+    const documentUrl = String(rows[0].document_url || "");
+    if (!documentUrl.replace(/\\/g, "/").startsWith("uploads/")) {
+      return res.status(400).json({
+        success: false,
+        message: "Only locally uploaded verification files can be downloaded.",
+      });
+    }
+
+    const resolvedPath = path.resolve(__dirname, "..", documentUrl);
+
+    if (!isInsideDirectory(uploadsRoot, resolvedPath)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification document path.",
+      });
+    }
+
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Verification document file not found.",
+      });
+    }
+
+    return res.download(resolvedPath, rows[0].file_name || undefined);
+  } catch (error) {
+    console.error("Admin downloadVerificationDocument error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while downloading verification document.",
     });
   }
 };

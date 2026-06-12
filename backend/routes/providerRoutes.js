@@ -5,6 +5,10 @@ const reviewController = require("../controllers/reviewController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const authorizeRoles = require("../middlewares/roleMiddleware");
 const {
+  verificationUpload,
+  handleUploadErrors,
+} = require("../middlewares/uploadMiddleware");
+const {
   validate,
   validators: v,
 } = require("../middlewares/validationMiddleware");
@@ -70,6 +74,7 @@ router.post(
   "/me/verification/documents",
   authMiddleware,
   authorizeRoles("provider"),
+  handleUploadErrors(verificationUpload.single("document_file")),
   validate({
     body: {
       document_type: [

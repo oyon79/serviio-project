@@ -9,8 +9,9 @@ module.exports = function authMiddleware(req, res, next) {
     });
   }
 
-  const [scheme, token] = authHeader.split(" ");
-  if (scheme !== "Bearer" || !token) {
+  const parts = String(authHeader).trim().split(/\s+/);
+  const [scheme, token] = parts;
+  if (parts.length !== 2 || String(scheme).toLowerCase() !== "bearer" || !token) {
     return res.status(401).json({
       success: false,
       message: "Authorization header must be in the format: Bearer <token>.",

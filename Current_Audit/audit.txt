@@ -262,8 +262,8 @@ The schema contains primary entities: `Users`, `Providers`, `Bookings`, `Reviews
 
 **Still to do next:**
 
-* File upload hardening for KYC/profile assets if local file upload is introduced. Current KYC flow stores document references only.
-* Expand endpoint-level test coverage for booking, payment/escrow, notification, review, and support flows.
+* Run strict live readiness with real SMTP/SMS/payment/KYC probe credentials.
+* Complete final human exploratory QA against production-like credentials and payment/KYC sandboxes.
 
 **Completed in this continuation:**
 
@@ -275,3 +275,70 @@ The schema contains primary entities: `Users`, `Providers`, `Bookings`, `Reviews
 * Added validation middleware tests in `backend/tests/validationMiddleware.test.js`.
 * Removed invalid `mysql2` pool option `acquireTimeout` and quieted `dotenv` startup output.
 * Verified backend syntax, test suite, and controlled server startup with MySQL connection.
+
+**Completed in later production-readiness pass:**
+
+* Added provider payout requests, reserved wallet balances, payout ledger
+  entries, and admin/support approve/reject/mark-paid review controls.
+* Expanded release smoke coverage to verify escrow release plus provider payout
+  creation, admin queue visibility, approval, and paid status.
+* Added focused Socket.IO tests for booking-room authorization, super-admin
+  access, provider location broadcasting, and invalid coordinate rejection.
+* Tightened frontend static QA so API/socket scripts must load after the shared
+  `frontend/js/config.js` deployment wrapper.
+
+**Completed in 2026-06-10 hardening pass:**
+
+* Hardened KYC upload handling with MIME allow-listing, content signature checks,
+  sanitized filenames, size limits, validation-failure cleanup, and safe local-only
+  admin document downloads.
+* Escaped provider dashboard booking, review, message, wallet, KYC, audit, and
+  notification render paths to prevent user-supplied content from being injected
+  through `innerHTML` templates.
+* Removed raw reset-message `innerHTML` rendering in the forgot-password flow.
+* Added frontend QA regression checks for provider list and provider dashboard
+  escaping.
+* Fixed registration OTP expiry to use MySQL `NOW()` for both code creation and
+  verification, preventing app/database timezone drift from expiring fresh codes.
+* Re-verified: backend tests 71/71, frontend static QA, runtime config validation,
+  dependency audit, migrations, demo seed, API smoke, headless browser smoke, and
+  local live readiness all pass.
+
+**Completed in deploy-host cleanup pass:**
+
+* Added `Serviio.apiUrl()` to the shared frontend config.
+* Converted customer profile, provider dashboard, payment, schedule, provider
+  detail, bookmarks, emergency, auth, reset, registration, home, and admin API
+  usage away from page-level hardcoded `http://localhost:5000` values.
+* Added frontend QA coverage so only `frontend/js/config.js` may contain the local
+  backend development default.
+* Re-verified backend tests 71/71 and the full release verifier.
+
+**Completed in release-hygiene / OTP durability pass:**
+
+* Removed unreferenced ad-hoc backend scripts: `backend/test_register.js`,
+  `backend/scripts/debug_provider.js`, and
+  `backend/scripts/clear_test_accounts.js`.
+* Added `backend/scripts/release_hygiene.js` and wired it into
+  `npm run verify:release`.
+* Migrated `registration_verification_requests.expires_at` from `TIMESTAMP` to
+  `DATETIME` so fresh OTP expiry is not affected by MySQL TIMESTAMP timezone
+  conversion.
+* Gated realtime Socket.IO debug logs behind `SERVIIO_SOCKET_DEBUG` /
+  `SERVIIO_DEBUG_LOGS` so production logs stay focused on actionable errors.
+* Hardened strict live readiness so missing SMTP/SMS/payment/KYC provider
+  configuration or probe values are reported as failures instead of soft skips.
+* Removed fixed localhost/mock assumptions from `backend/scripts/e2e_test.ps1`
+  by adding `SERVIIO_E2E_BASE_URL`, `SERVIIO_E2E_PAYMENT_METHOD`, and
+  `SERVIIO_E2E_GATEWAY_REFERENCE`.
+* Replaced direct `role === "admin"` controller checks with shared
+  `isAdminRole()` logic so `super_admin` has consistent booking, payment, and
+  communication access. Added regression coverage in
+  `backend/tests/adminRoleAccess.test.js`.
+* Sanitized admin dashboard dynamic status/toast class tokens and added a
+  frontend QA regression check so user-controlled status values cannot break
+  class attributes.
+* Added shared platform commission-rate validation and payment-side guard so
+  invalid values cannot create negative provider escrow amounts.
+* Added server-level graceful shutdown for `SIGINT`/`SIGTERM`, closing
+  Socket.IO, the HTTP server, and the MySQL pool with a configurable timeout.

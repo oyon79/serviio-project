@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+          MARIADB_DATABASE: serviio_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: serviio_db
+      JWT_SECRET: ci-test-secret-change-for-production
+      PAYMENT_MODE: mock
+      MOCK_PAYMENTS_ENABLED: "true"
+      SMS_MOCK_ENABLED: "true"
+      NID_VERIFICATION_MODE: disabled
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install MariaDB client
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+      - name: Run frontend QA checks
+        working-directory: backend
+        run: npm run qa:frontend
+
+      - name: Validate backend config
+        working-directory: backend
+        run: npm run validate-config
+
+      - name: Audit backend dependencies
+        working-directory: backend
+        run: npm audit --omit=dev
+
+      - name: Load schema and run migrations
+        run: |
+          mysql -h 127.0.0.1 -u root < database/serviio_schema.sql
+          npm --prefix backend run migrate
+
+      - name: Seed demo fixtures
+        run: npm --prefix backend run seed:demo
+
+      - name: Run API smoke test
+        working-directory: backend
+        run: npm run smoke:api

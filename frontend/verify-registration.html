@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Account - SERVIIO</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/user.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <script src="js/config.js"></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+
+    <main class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h2>Verify Account</h2>
+          <p>Enter the six-digit code sent to your email or phone.</p>
+        </div>
+
+        <form id="verifyRegistrationForm">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrapper">
+              <i class="fas fa-envelope input-icon"></i>
+              <input type="email" id="email" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="otp">Verification Code</label>
+            <div class="input-wrapper">
+              <i class="fas fa-key input-icon"></i>
+              <input
+                type="text"
+                id="otp"
+                maxlength="6"
+                pattern="\\d{6}"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                required
+              />
+            </div>
+          </div>
+
+          <div
+            id="errorBox"
+            class="alert-box error"
+            style="display: none"
+            aria-live="polite"
+          ></div>
+          <div
+            id="successBox"
+            class="alert-box success"
+            style="display: none"
+            aria-live="polite"
+          ></div>
+
+          <button type="submit" class="btn-auth" id="verifySubmitBtn">
+            Verify & Continue
+          </button>
+          <button
+            type="button"
+            class="btn-auth secondary"
+            id="resendOtpBtn"
+            style="margin-top: 12px"
+          >
+            Resend Code
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p><a href="login.html">Back to Sign In</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const emailInput = document.getElementById("email");
+      const otpInput = document.getElementById("otp");
+      const errorBox = document.getElementById("errorBox");
+      const successBox = document.getElementById("successBox");
+      const submitBtn = document.getElementById("verifySubmitBtn");
+      const resendBtn = document.getElementById("resendOtpBtn");
+      const apiBase = window.getApiBaseUrl?.() || window.Serviio?.apiBaseUrl || window.location.origin;
+
+      function showMessage(text, type) {
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
+        const box = type === "success" ? successBox : errorBox;
+        box.textContent = text;
+        box.style.display = "block";
+      }
+
+      function loadPrefill() {
+        const email = params.get("email") || sessionStorage.getItem("serviio_pending_verification_email") || "";
+        emailInput.value = email;
+        if (email) {
+          sessionStorage.setItem("serviio_pending_verification_email", email);
+          const localOtp = sessionStorage.getItem(
+            `serviio_registration_otp_${email.toLowerCase()}`,
+          );
+          if (localOtp) {
+            otpInput.value = localOtp;
+            showMessage("Local development code loaded.", "success");
+          }
+        }
+      }
+
+      function redirectAfterVerification(user) {
+        const role = String(user?.role || params.get("role") || "customer").toLowerCase();
+        if (role === "provider") {
+          window.location.href = "profileBooking.html";
+        } else if (
+          role === "admin" ||
+          role === "super_admin" ||
+          role === "support_agent" ||
+          role === "verification_officer"
+        ) {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "home.html";
+        }
+      }
+
+      document
+        .getElementById("verifyRegistrationForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const email = emailInput.value.trim().toLowerCase();
+          const otp = otpInput.value.trim();
+
+          if (!/^\d{6}$/.test(otp)) {
+            showMessage("Enter the six-digit verification code.", "error");
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Verifying...";
+
+          try {
+            const response = await fetch(`${apiBase}/api/auth/verify-registration`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, otp }),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              showMessage(data.message || "Verification failed.", "error");
+              return;
+            }
+
+            localStorage.setItem("serviio_token", data.token);
+            localStorage.setItem("serviio_user", JSON.stringify(data.user || {}));
+            sessionStorage.removeItem("serviio_pending_verification_email");
+            sessionStorage.removeItem(`serviio_registration_otp_${email}`);
+            showMessage("Account verified. Redirecting...", "success");
+            setTimeout(() => redirectAfterVerification(data.user), 600);
+          } catch (error) {
+            console.error("Verification request failed:", error);
+            showMessage("Unable to reach the server. Please try again later.", "error");
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Verify & Continue";
+          }
+        });
+
+      resendBtn.addEventListener("click", async () => {
+        const email = emailInput.value.trim().toLowerCase();
+        if (!email) {
+          showMessage("Enter your email address first.", "error");
+          return;
+        }
+
+        resendBtn.disabled = true;
+        resendBtn.textContent = "Sending...";
+
+        try {
+          const response = await fetch(`${apiBase}/api/auth/resend-registration-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            showMessage(data.message || "Could not resend the code.", "error");
+            return;
+          }
+
+          if (data.otp) {
+            sessionStorage.setItem(`serviio_registration_otp_${email}`, data.otp);
+            otpInput.value = data.otp;
+          }
+          showMessage(data.message || "Verification code sent.", "success");
+        } catch (error) {
+          console.error("Resend verification request failed:", error);
+          showMessage("Unable to reach the server. Please try again later.", "error");
+        } finally {
+          resendBtn.disabled = false;
+          resendBtn.textContent = "Resend Code";
+        }
+      });
+
+      loadPrefill();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SERVIIO - Policies</title>
+    <link rel="stylesheet" href="css/global.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+    <style>
+      .policy-main {
+        width: min(980px, 100%);
+        margin: 36px auto;
+        padding: 0 20px;
+      }
+
+      .policy-main h1 {
+        color: #0f172a;
+        margin-bottom: 10px;
+      }
+
+      .policy-main > p {
+        color: #64748b;
+        margin-bottom: 24px;
+      }
+
+      .policy-section {
+        margin-bottom: 18px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .policy-section h2 {
+        color: #003393;
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+      }
+
+      .policy-section p {
+        color: #475569;
+        line-height: 1.7;
+      }
+    </style>
+    <script src="js/config.js"></script>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">SERVIIO</div>
+      <ul class="nav-links">
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li>
+          <a href="providerList.html"
+            ><i class="fa-solid fa-users"></i> Providers</a
+          >
+        </li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+      </ul>
+    </header>
+
+    <main class="policy-main">
+      <h1>Policies and Help</h1>
+      <p>Operational policies for SERVIIO bookings, payments, safety, and support.</p>
+
+      <section id="privacy" class="policy-section">
+        <h2>Privacy Policy</h2>
+        <p>
+          SERVIIO stores account, booking, payment, support, verification, and
+          location data only for marketplace operations, safety review, and
+          customer/provider support. Uploaded KYC documents are available only
+          to authenticated admins through protected routes.
+        </p>
+      </section>
+
+      <section id="terms" class="policy-section">
+        <h2>Terms of Use</h2>
+        <p>
+          Customers must provide accurate booking details and release handshake
+          codes only after the provider arrives. Providers must keep profile,
+          availability, service area, and verification information accurate.
+        </p>
+      </section>
+
+      <section id="refunds" class="policy-section">
+        <h2>Sales and Refunds</h2>
+        <p>
+          Paid bookings are held in escrow. Refunds for paid bookings require
+          admin or support review, especially when a dispute, safety issue, or
+          service failure is reported.
+        </p>
+      </section>
+
+      <section id="support" class="policy-section">
+        <h2>Support Policy</h2>
+        <p>
+          Customers and providers can open support tickets from their profile
+          dashboards. Refund, dispute, and safety tickets place escrow under
+          review until an admin resolves the case.
+        </p>
+      </section>
+
+      <section id="verification" class="policy-section">
+        <h2>Verification</h2>
+        <p>
+          Providers submit NID, police clearance, skill certificates, live
+          selfie, or experience evidence. Admin review decisions are logged for
+          accountability.
+        </p>
+      </section>
+
+      <section id="safety" class="policy-section">
+        <h2>Safety</h2>
+        <p>
+          SOS incidents are logged for admin review. Live location sharing and
+          booking-scoped messages help customers and providers coordinate while
+          preserving an auditable record.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 SERVIIO. All Rights Reserved.</p>
+    </footer>
+  </body>
+</html>

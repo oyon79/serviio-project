@@ -12,6 +12,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <!-- Global Navbar -->
@@ -30,7 +31,7 @@
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="provider-profile-summary">
-          <img src="default-avatar.png" alt="Provider" id="providerAvatar" />
+          <img src="Image/logo 2.png" alt="Provider" id="providerAvatar" />
           <h3 id="providerName">Loading...</h3>
           <p class="badge" id="providerBadge">Verified Provider</p>
           <p id="providerMeta" class="provider-meta"></p>
@@ -57,38 +58,43 @@
         </div>
         <ul class="sidebar-menu">
           <li>
-            <a href="#" class="active" data-tab="active-jobs"
-              ><i class="fas fa-briefcase"></i> Active Jobs</a
+            <button type="button" class="active" data-tab="active-jobs"
+              ><i class="fas fa-briefcase"></i> Active Jobs</button
             >
           </li>
           <li>
-            <a href="#" data-tab="job-history"
-              ><i class="fas fa-history"></i> Job History</a
+            <button type="button" data-tab="messages"
+              ><i class="fas fa-comments"></i> Messages</button
             >
           </li>
           <li>
-            <a href="#" data-tab="reviews"
-              ><i class="fas fa-star"></i> My Reviews</a
+            <button type="button" data-tab="job-history"
+              ><i class="fas fa-history"></i> Job History</button
             >
           </li>
           <li>
-            <a href="#" data-tab="wallet"
-              ><i class="fas fa-wallet"></i> Wallet</a
+            <button type="button" data-tab="reviews"
+              ><i class="fas fa-star"></i> My Reviews</button
             >
           </li>
           <li>
-            <a href="#" data-tab="verification"
-              ><i class="fas fa-id-card"></i> Verification</a
+            <button type="button" data-tab="wallet"
+              ><i class="fas fa-wallet"></i> Wallet</button
             >
           </li>
           <li>
-            <a href="#" data-tab="notifications"
-              ><i class="fas fa-bell"></i> Notifications</a
+            <button type="button" data-tab="verification"
+              ><i class="fas fa-id-card"></i> Verification</button
             >
           </li>
           <li>
-            <a href="#" data-tab="settings"
-              ><i class="fas fa-cog"></i> Settings</a
+            <button type="button" data-tab="notifications"
+              ><i class="fas fa-bell"></i> Notifications</button
+            >
+          </li>
+          <li>
+            <button type="button" data-tab="settings"
+              ><i class="fas fa-cog"></i> Settings</button
             >
           </li>
         </ul>
@@ -135,6 +141,44 @@
             </div>
           </section>
 
+          <section id="messagesPanel" class="dashboard-panel">
+            <div class="panel-toolbar">
+              <h3>Booking Messages</h3>
+              <p>Coordinate safely with customers inside each booking record.</p>
+            </div>
+            <form id="bookingMessageForm" class="profile-settings-form">
+              <label>
+                Booking
+                <select id="messageBookingSelect"></select>
+              </label>
+              <div id="bookingMessageList" class="message-thread">
+                <div class="loader">Select a booking to load messages...</div>
+              </div>
+              <label>
+                Message
+                <textarea
+                  id="bookingMessageText"
+                  rows="3"
+                  maxlength="2000"
+                  placeholder="Write a booking update"
+                ></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="dashboard-action-btn primary">
+                  Send Message
+                </button>
+                <button
+                  type="button"
+                  class="dashboard-action-btn secondary"
+                  id="requestVoiceCallBtn"
+                >
+                  Request Voice Call
+                </button>
+                <p id="bookingMessageStatus" class="settings-message"></p>
+              </div>
+            </form>
+          </section>
+
           <section id="walletPanel" class="dashboard-panel">
             <div class="panel-toolbar">
               <h3>Wallet & Escrow</h3>
@@ -173,6 +217,14 @@
                 <label>
                   Document URL
                   <input type="url" id="verificationDocumentUrl" placeholder="https://..." />
+                </label>
+                <label>
+                  Upload File
+                  <input
+                    type="file"
+                    id="verificationDocumentFile"
+                    accept=".pdf,image/jpeg,image/png,image/webp"
+                  />
                 </label>
                 <label>
                   File Name
@@ -294,21 +346,15 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", async () => {
-        const token = localStorage.getItem("serviio_token");
-        if (!token) {
-          window.location.href = "login.html";
+        const session = window.Serviio.requireAuth({
+          roles: ["provider"],
+          next: "profileBooking.html",
+        });
+        if (!session.allowed) {
           return;
         }
-
-        const storedUser = localStorage.getItem("serviio_user");
-        const currentUser = storedUser ? JSON.parse(storedUser) : null;
-        if (
-          !currentUser ||
-          (currentUser.role || "").toLowerCase() !== "provider"
-        ) {
-          window.location.href = "login.html";
-          return;
-        }
+        const token = session.token;
+        const currentUser = session.user;
 
         const providerName = document.getElementById("providerName");
         const providerBadge = document.getElementById("providerBadge");
@@ -320,11 +366,12 @@
           "availabilityBtnText",
         );
         const shareBtn = document.getElementById("shareLocationBtn");
-        const menuLinks = document.querySelectorAll(".sidebar-menu li a");
+        const menuLinks = document.querySelectorAll(".sidebar-menu li button");
         const dashboardTitle = document.getElementById("dashboardTitle");
         const dashboardSummary = document.getElementById("dashboardSummary");
         const activeJobsPanel = document.getElementById("activeJobsPanel");
         const historyPanel = document.getElementById("historyPanel");
+        const messagesPanel = document.getElementById("messagesPanel");
         const reviewsPanel = document.getElementById("reviewsPanel");
         const walletPanel = document.getElementById("walletPanel");
         const verificationPanel = document.getElementById("verificationPanel");
@@ -334,6 +381,7 @@
         const settingsPanel = document.getElementById("settingsPanel");
         const tabPanels = {
           "active-jobs": activeJobsPanel,
+          messages: messagesPanel,
           "job-history": historyPanel,
           reviews: reviewsPanel,
           wallet: walletPanel,
@@ -346,6 +394,20 @@
           "activeJobsContainer",
         );
         const historyContainer = document.getElementById("historyContainer");
+        const messageBookingSelect = document.getElementById(
+          "messageBookingSelect",
+        );
+        const bookingMessageForm =
+          document.getElementById("bookingMessageForm");
+        const bookingMessageList =
+          document.getElementById("bookingMessageList");
+        const bookingMessageText =
+          document.getElementById("bookingMessageText");
+        const bookingMessageStatus = document.getElementById(
+          "bookingMessageStatus",
+        );
+        const requestVoiceCallBtn =
+          document.getElementById("requestVoiceCallBtn");
         const reviewsContainer = document.getElementById("reviewsContainer");
         const walletContainer = document.getElementById("walletContainer");
         const verificationContainer = document.getElementById(
@@ -385,6 +447,36 @@
         let currentWallet = null;
         let currentVerification = null;
         let currentNotifications = [];
+        let bookingSocket = null;
+
+        function escapeHtml(value) {
+          return String(value || "").replace(/[&<>"']/g, (char) => {
+            return {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[char];
+          });
+        }
+
+        function escapeJsArg(value) {
+          return escapeHtml(JSON.stringify(String(value ?? "")));
+        }
+
+        function statusClass(value) {
+          return String(value || "unknown")
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]/g, "-");
+        }
+
+        function formatDisplayDate(value, fallback = "N/A", withTime = true) {
+          if (!value) return fallback;
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return fallback;
+          return withTime ? date.toLocaleString() : date.toLocaleDateString();
+        }
 
         function setActivePanel(tabName) {
           activeTab = tabName;
@@ -408,6 +500,12 @@
             dashboardTitle.textContent = "Job History";
             dashboardSummary.textContent =
               "See completed and cancelled jobs, plus your recent work records.";
+          } else if (tabName === "messages") {
+            dashboardTitle.textContent = "Booking Messages";
+            dashboardSummary.textContent =
+              "Use booking-scoped messages and call requests to coordinate with customers.";
+            renderMessageBookingOptions();
+            loadBookingMessages();
           } else if (tabName === "reviews") {
             dashboardTitle.textContent = "My Reviews";
             dashboardSummary.textContent =
@@ -484,7 +582,7 @@
 
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/availability",
+              Serviio.apiUrl("/api/providers/me/availability"),
               {
                 method: "PUT",
                 headers: {
@@ -504,7 +602,10 @@
             console.error("Unable to update availability", error);
             providerIsAvailable = !nextState;
             updateAvailabilityButton();
-            alert("Unable to update availability. Please try again.");
+            Serviio.notify(
+              "Unable to update availability. Please try again.",
+              "error",
+            );
           } finally {
             availabilityRequestPending = false;
             availabilityBtn.disabled = false;
@@ -515,7 +616,7 @@
         async function fetchProfile() {
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me",
+              Serviio.apiUrl("/api/providers/me"),
               {
                 headers: { Authorization: `Bearer ${token}` },
               },
@@ -552,7 +653,7 @@
         async function fetchBookings() {
           try {
             const response = await fetch(
-              "http://localhost:5000/api/bookings/provider",
+              Serviio.apiUrl("/api/bookings/provider"),
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -565,6 +666,7 @@
               currentBookings = result.data || [];
               renderActiveJobs();
               renderHistory();
+              renderMessageBookingOptions();
             } else {
               throw new Error(result.message || "Unable to fetch bookings");
             }
@@ -584,7 +686,7 @@
         async function fetchReviews() {
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/reviews",
+              Serviio.apiUrl("/api/providers/me/reviews"),
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -613,7 +715,7 @@
           }
 
           try {
-            const response = await fetch("http://localhost:5000/api/wallet/me", {
+            const response = await fetch(Serviio.apiUrl("/api/wallet/me"), {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -641,7 +743,7 @@
 
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/verification",
+              Serviio.apiUrl("/api/providers/me/verification"),
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -669,7 +771,7 @@
         async function fetchNotifications() {
           try {
             const response = await fetch(
-              "http://localhost:5000/api/notifications",
+              Serviio.apiUrl("/api/notifications"),
               {
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -693,12 +795,18 @@
         }
 
         function displayEmptyState(container, message) {
-          container.innerHTML = `<div class="section-empty">${message}</div>`;
+          container.innerHTML = `<div class="section-empty">${escapeHtml(message)}</div>`;
         }
 
         function renderActiveJobs() {
           const activeJobs = currentBookings.filter((job) =>
-            ["PENDING", "IN_PROGRESS"].includes(job.status),
+            [
+              "PENDING",
+              "ACCEPTED",
+              "ON_THE_WAY",
+              "ARRIVED",
+              "IN_PROGRESS",
+            ].includes(job.status),
           );
           if (activeJobs.length === 0) {
             displayEmptyState(
@@ -725,18 +833,19 @@
           }
           historyContainer.innerHTML = historyJobs
             .map((job) => {
+              const status = String(job.status || "UNKNOWN").toUpperCase();
               return `
                 <div class="booking-card">
                   <div class="job-header">
-                    <h4>${job.service_type}</h4>
-                    <span class="status ${job.status.toLowerCase()}">${job.status}</span>
+                    <h4>${escapeHtml(job.service_type || "Service")}</h4>
+                    <span class="status ${statusClass(status)}">${escapeHtml(status)}</span>
                   </div>
                   <div class="job-details">
-                    <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${job.customer_name}</p>
-                    <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${job.job_location || "N/A"}</p>
-                    <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${job.booking_date ? new Date(job.booking_date).toLocaleString() : "N/A"}</p>
-                    <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${job.customer_phone || "N/A"}</p>
-                    <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${job.estimated_price_range || "N/A"}</p>
+                    <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${escapeHtml(job.customer_name || "Customer")}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${escapeHtml(job.job_location || "N/A")}</p>
+                    <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${escapeHtml(formatDisplayDate(job.booking_date))}</p>
+                    <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${escapeHtml(job.customer_phone || "N/A")}</p>
+                    <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${escapeHtml(job.estimated_price_range || "N/A")}</p>
                   </div>
                 </div>
               `;
@@ -745,52 +854,91 @@
         }
 
         function renderBookingCard(job) {
-          const actionRegion =
-            job.status === "PENDING"
-              ? `
+          const status = String(job.status || "").toUpperCase();
+          const jobId = String(job.id ?? "");
+          const safeJobId = escapeHtml(jobId);
+          const jobIdArg = escapeJsArg(jobId);
+          let actionRegion = "";
+
+          if (status === "PENDING") {
+            actionRegion = `
                 <div class="handshake-section">
-                  <label>Enter 4-Digit Handshake Code:</label>
+                  <p class="verify-msg" id="msg-${safeJobId}">New request. Accept it when you are ready to serve this customer.</p>
                   <div class="code-inputs">
-                    <input type="text" maxlength="4" class="handshake-input" id="code-${job.id}" placeholder="----" autocomplete="off" />
-                    <button class="btn-verify" onclick="verifyHandshake('${job.id}')">Verify & Start</button>
-                  </div>
-                  <p class="verify-msg" id="msg-${job.id}"></p>
-                </div>
-              `
-              : job.status === "IN_PROGRESS"
-                ? `
-                <div class="handshake-section">
-                  <p class="verify-msg" id="msg-${job.id}">Job is active. Update its status when work is complete.</p>
-                  <div class="code-inputs">
-                    <button class="btn-verify" onclick="updateStatus('${job.id}', 'COMPLETED')">Mark Completed</button>
-                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus('${job.id}', 'CANCELLED')">Cancel Job</button>
+                    <button class="btn-verify" onclick="updateStatus(${jobIdArg}, 'ACCEPTED')">Accept Job</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus(${jobIdArg}, 'CANCELLED')">Decline</button>
                   </div>
                 </div>
-              `
-                : job.status === "COMPLETED"
-                  ? `
+              `;
+          } else if (status === "ACCEPTED") {
+            actionRegion = `
+                <div class="handshake-section">
+                  <p class="verify-msg" id="msg-${safeJobId}">Booking accepted. Start travelling when you are ready.</p>
+                  <div class="code-inputs">
+                    <button class="btn-verify" onclick="updateStatus(${jobIdArg}, 'ON_THE_WAY')">On The Way</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus(${jobIdArg}, 'CANCELLED')">Cancel Job</button>
+                  </div>
+                </div>
+              `;
+          } else if (status === "ON_THE_WAY") {
+            actionRegion = `
+                <div class="handshake-section">
+                  <p class="verify-msg" id="msg-${safeJobId}">You are travelling to the customer.</p>
+                  <div class="code-inputs">
+                    <button class="btn-verify" onclick="updateStatus(${jobIdArg}, 'ARRIVED')">Mark Arrived</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus(${jobIdArg}, 'CANCELLED')">Cancel Job</button>
+                  </div>
+                </div>
+              `;
+          } else if (status === "ARRIVED") {
+            actionRegion = `
+                <div class="handshake-section">
+                  <label>Enter Customer's 4-Digit Handshake Code:</label>
+                  <div class="code-inputs">
+                    <input type="text" maxlength="4" class="handshake-input" id="code-${safeJobId}" aria-label="Customer handshake code" placeholder="----" autocomplete="one-time-code" inputmode="numeric" />
+                    <button class="btn-verify" onclick="verifyHandshake(${jobIdArg})">Verify & Start</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus(${jobIdArg}, 'CANCELLED')">Cancel Job</button>
+                  </div>
+                  <p class="verify-msg" id="msg-${safeJobId}"></p>
+                </div>
+              `;
+          } else if (status === "IN_PROGRESS") {
+            actionRegion = `
+                <div class="handshake-section">
+                  <p class="verify-msg" id="msg-${safeJobId}">Job is active. Update its status when work is complete.</p>
+                  <div class="code-inputs">
+                    <button class="btn-verify" onclick="updateStatus(${jobIdArg}, 'COMPLETED')">Mark Completed</button>
+                    <button class="btn-verify" style="background:#b3261e" onclick="updateStatus(${jobIdArg}, 'CANCELLED')">Cancel Job</button>
+                  </div>
+                </div>
+              `;
+          } else if (status === "COMPLETED") {
+            actionRegion = `
                 <div class="job-completed-msg">
                   <i class="fas fa-check-circle"></i> Job Completed
                 </div>
-              `
-                  : `
+              `;
+          } else {
+            actionRegion = `
                 <div class="job-completed-msg">
                   <i class="fas fa-ban"></i> Job Cancelled
                 </div>
               `;
+          }
 
           return `
-            <div class="booking-card" data-id="${job.id}">
+            <div class="booking-card" data-id="${safeJobId}">
               <div class="job-header">
-                <h4>${job.service_type}</h4>
-                <span class="status ${job.status.toLowerCase()}">${job.status}</span>
+                <h4>${escapeHtml(job.service_type || "Service")}</h4>
+                <span class="status ${statusClass(status)}">${escapeHtml(status || "UNKNOWN")}</span>
               </div>
               <div class="job-details">
-                <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${job.customer_name}</p>
-                <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${job.job_location || "N/A"}</p>
-                <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${job.booking_date ? new Date(job.booking_date).toLocaleString() : "N/A"}</p>
-                <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${job.customer_phone || "N/A"}</p>
-                <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${job.estimated_price_range || "N/A"}</p>
+                <p><i class="fas fa-user"></i> <strong>Customer:</strong> ${escapeHtml(job.customer_name || "Customer")}</p>
+                <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${escapeHtml(job.job_location || "N/A")}</p>
+                <p><i class="fas fa-calendar-alt"></i> <strong>Date:</strong> ${escapeHtml(formatDisplayDate(job.booking_date))}</p>
+                <p><i class="fas fa-phone"></i> <strong>Phone:</strong> ${escapeHtml(job.customer_phone || "N/A")}</p>
+                <p><i class="fas fa-tag"></i> <strong>Price:</strong> ${escapeHtml(job.estimated_price_range || "N/A")}</p>
+                <p><i class="fas fa-money-check-alt"></i> <strong>Payment:</strong> ${escapeHtml(job.payment_status || "UNPAID")}</p>
               </div>
               ${actionRegion}
             </div>
@@ -801,7 +949,7 @@
           if (!currentReviews || currentReviews.length === 0) {
             displayEmptyState(
               reviewsContainer,
-              "You don’t have reviews yet. Complete jobs to collect feedback.",
+              "You do not have reviews yet. Complete jobs to collect feedback.",
             );
             return;
           }
@@ -811,26 +959,161 @@
               const stars = Array.from(
                 { length: 5 },
                 (_, index) =>
-                  `<span>${index < review.rating ? "★" : "☆"}</span>`,
+                  `<span>${index < review.rating ? "&#9733;" : "&#9734;"}</span>`,
               ).join("");
               return `
                 <div class="review-card">
-                  <h4>${review.title || "Customer Review"}</h4>
+                  <h4>${escapeHtml(review.title || "Customer Review")}</h4>
                   <div class="review-meta">
-                    <span>${review.customer_name}</span>
+                    <span>${escapeHtml(review.customer_name || "Customer")}</span>
                     <span class="rating-stars">${stars}</span>
                   </div>
-                  <p class="review-comment">${review.comment || "No comment provided."}</p>
-                  <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
+                  <p class="review-comment">${escapeHtml(review.comment || "No comment provided.")}</p>
+                  <span class="review-date">${escapeHtml(formatDisplayDate(review.created_at, "N/A", false))}</span>
                 </div>
               `;
             })
             .join("");
         }
 
+        function renderMessageBookingOptions() {
+          if (!messageBookingSelect) return;
+          const selected = messageBookingSelect.value;
+          const bookings = (currentBookings || []).filter((job) =>
+            ["PENDING", "ACCEPTED", "ON_THE_WAY", "ARRIVED", "IN_PROGRESS", "COMPLETED"].includes(job.status),
+          );
+          messageBookingSelect.innerHTML = bookings.length
+            ? bookings
+                .map((job) => {
+                  const label = `#${job.id} - ${job.service_type || "Service"} with ${job.customer_name || "Customer"}`;
+                  return `<option value="${escapeHtml(job.id)}">${escapeHtml(label)}</option>`;
+                })
+                .join("")
+            : '<option value="">No messageable bookings</option>';
+          if (selected && bookings.some((job) => String(job.id) === selected)) {
+            messageBookingSelect.value = selected;
+          }
+        }
+
+        function renderBookingMessages(messages) {
+          if (!messages || messages.length === 0) {
+            bookingMessageList.innerHTML =
+              '<div class="section-empty">No messages yet.</div>';
+            return;
+          }
+
+          bookingMessageList.innerHTML = messages
+            .map((message) => {
+              const own = String(message.sender_id) === String(currentUser.id);
+              return `
+                <div class="message-bubble ${own ? "own" : ""}">
+                  <strong>${escapeHtml(message.sender_name || "User")}</strong>
+                  <p>${escapeHtml(message.message || "")}</p>
+                  <small>${escapeHtml(formatDisplayDate(message.created_at))}</small>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        async function loadBookingMessages() {
+          const bookingId = messageBookingSelect?.value;
+          if (!bookingId) {
+            bookingMessageList.innerHTML =
+              '<div class="section-empty">Select a booking to load messages.</div>';
+            return;
+          }
+
+          bookingMessageStatus.textContent = "";
+          try {
+            const response = await fetch(
+              Serviio.apiUrl(`/api/communications/bookings/${bookingId}/messages`),
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to load messages.");
+            }
+            renderBookingMessages(result.data || []);
+            if (bookingSocket) {
+              bookingSocket.emit("booking:join", { bookingId, token });
+            }
+          } catch (error) {
+            bookingMessageList.innerHTML = `<div class="section-empty">${escapeHtml(error.message)}</div>`;
+          }
+        }
+
+        async function sendBookingMessage(event) {
+          event.preventDefault();
+          const bookingId = messageBookingSelect.value;
+          const message = bookingMessageText.value.trim();
+          if (!bookingId || !message) return;
+
+          bookingMessageStatus.textContent = "Sending...";
+          bookingMessageStatus.style.color = "#334155";
+          try {
+            const response = await fetch(
+              Serviio.apiUrl(`/api/communications/bookings/${bookingId}/messages`),
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message }),
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to send message.");
+            }
+            bookingMessageText.value = "";
+            bookingMessageStatus.textContent = "Message sent.";
+            bookingMessageStatus.style.color = "#16a34a";
+            await loadBookingMessages();
+          } catch (error) {
+            bookingMessageStatus.textContent = error.message;
+            bookingMessageStatus.style.color = "#b91c1c";
+          }
+        }
+
+        async function requestVoiceCall() {
+          const bookingId = messageBookingSelect.value;
+          if (!bookingId) return;
+          bookingMessageStatus.textContent = "Requesting call...";
+          bookingMessageStatus.style.color = "#334155";
+          try {
+            const response = await fetch(
+              Serviio.apiUrl(`/api/communications/bookings/${bookingId}/call-requests`),
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  call_type: "VOICE",
+                  reason: "Provider requested a booking coordination call.",
+                }),
+              },
+            );
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to request call.");
+            }
+            bookingMessageStatus.textContent = "Call request sent.";
+            bookingMessageStatus.style.color = "#16a34a";
+          } catch (error) {
+            bookingMessageStatus.textContent = error.message;
+            bookingMessageStatus.style.color = "#b91c1c";
+          }
+        }
+
         function formatMoney(amount, currency = "BDT") {
           const value = Number(amount || 0).toFixed(2);
-          return `${currency} ${value}`;
+          return `${String(currency || "BDT").toUpperCase()} ${value}`;
         }
 
         function renderWallet() {
@@ -842,18 +1125,54 @@
           const wallet = currentWallet.wallet;
           const escrows = currentWallet.escrows || [];
           const transactions = currentWallet.transactions || [];
+          const payouts = currentWallet.payouts || [];
           const heldEscrows = escrows.filter((escrow) => escrow.status === "HELD");
 
           walletContainer.innerHTML = `
             <div class="booking-card">
               <div class="job-header">
                 <h4>Available Balance</h4>
-                <span class="status completed">${formatMoney(wallet.balance, wallet.currency)}</span>
+                <span class="status completed">${escapeHtml(formatMoney(wallet.balance, wallet.currency))}</span>
               </div>
               <div class="job-details">
-                <p><i class="fas fa-hourglass-half"></i> <strong>Pending Escrow:</strong> ${formatMoney(wallet.pending_balance, wallet.currency)}</p>
+                <p><i class="fas fa-hourglass-half"></i> <strong>Pending Escrow:</strong> ${escapeHtml(formatMoney(wallet.pending_balance, wallet.currency))}</p>
+                <p><i class="fas fa-money-bill-transfer"></i> <strong>Payout Reserved:</strong> ${escapeHtml(formatMoney(wallet.payout_reserved_balance, wallet.currency))}</p>
                 <p><i class="fas fa-lock"></i> <strong>Held Jobs:</strong> ${heldEscrows.length}</p>
               </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Request Payout</h4>
+                <span class="status pending">Min BDT 100</span>
+              </div>
+              <form id="payoutRequestForm" class="profile-settings-form" style="margin-top:12px">
+                <div class="form-grid">
+                  <label>
+                    Amount
+                    <input type="number" id="payoutAmount" min="100" step="10" max="${Number(wallet.balance || 0)}" required />
+                  </label>
+                  <label>
+                    Method
+                    <select id="payoutMethod" required>
+                      <option value="BKASH">bKash</option>
+                      <option value="NAGAD">Nagad</option>
+                      <option value="BANK">Bank</option>
+                    </select>
+                  </label>
+                  <label>
+                    Account / Wallet Number
+                    <input type="text" id="payoutAccountRef" maxlength="255" required />
+                  </label>
+                  <label>
+                    Notes
+                    <input type="text" id="payoutNotes" maxlength="1000" />
+                  </label>
+                </div>
+                <button type="submit" class="btn-verify">
+                  <i class="fas fa-paper-plane"></i>
+                  Submit payout request
+                </button>
+              </form>
             </div>
             <div class="booking-card">
               <div class="job-header">
@@ -865,22 +1184,54 @@
                     ? escrows
                         .slice(0, 5)
                         .map(
-                          (escrow) => `
+                          (escrow) => {
+                            const bookingId = String(escrow.booking_id ?? "");
+                            const bookingIdArg = escapeJsArg(bookingId);
+                            const escrowStatus = String(escrow.status || "UNKNOWN").toUpperCase();
+                            return `
                             <p>
                               <i class="fas fa-receipt"></i>
-                              <strong>Booking #${escrow.booking_id}:</strong>
-                              ${formatMoney(escrow.provider_amount, wallet.currency)}
-                              <span class="status ${String(escrow.status).toLowerCase()}">${escrow.status}</span>
+                              <strong>Booking #${escapeHtml(bookingId)}:</strong>
+                              ${escapeHtml(formatMoney(escrow.provider_amount, wallet.currency))}
+                              <span class="status ${statusClass(escrowStatus)}">${escapeHtml(escrowStatus)}</span>
                               ${
                                 escrow.status === "HELD"
-                                  ? `<button class="btn-verify" style="margin-left:8px;padding:6px 10px" onclick="releaseEscrow('${escrow.booking_id}')">Release</button>`
+                                  ? `<button class="btn-verify" style="margin-left:8px;padding:6px 10px" onclick="releaseEscrow(${bookingIdArg})">Release</button>`
                                   : ""
                               }
                             </p>
-                          `,
+                          `;
+                          },
                         )
                         .join("")
                     : "<p>No escrow records yet.</p>"
+                }
+              </div>
+            </div>
+            <div class="booking-card">
+              <div class="job-header">
+                <h4>Payout Requests</h4>
+              </div>
+              <div class="job-details">
+                ${
+                  payouts.length
+                    ? payouts
+                        .slice(0, 5)
+                        .map(
+                          (payout) => {
+                            const payoutStatus = String(payout.status || "UNKNOWN").toUpperCase();
+                            return `
+                            <p>
+                              <i class="fas fa-money-bill-transfer"></i>
+                              <strong>${escapeHtml(payout.payout_method || "PAYOUT")}:</strong>
+                              ${escapeHtml(formatMoney(payout.amount, payout.currency || wallet.currency))}
+                              <span class="status ${statusClass(payoutStatus)}">${escapeHtml(payoutStatus)}</span>
+                            </p>
+                          `;
+                          },
+                        )
+                        .join("")
+                    : "<p>No payout requests yet.</p>"
                 }
               </div>
             </div>
@@ -897,9 +1248,9 @@
                           (tx) => `
                             <p>
                               <i class="fas fa-wallet"></i>
-                              <strong>${tx.type}:</strong>
-                              ${formatMoney(tx.amount, wallet.currency)}
-                              ${tx.booking_id ? `for booking #${tx.booking_id}` : ""}
+                              <strong>${escapeHtml(tx.type || "TRANSACTION")}:</strong>
+                              ${escapeHtml(formatMoney(tx.amount, wallet.currency))}
+                              ${tx.booking_id ? `for booking #${escapeHtml(tx.booking_id)}` : ""}
                             </p>
                           `,
                         )
@@ -909,6 +1260,50 @@
               </div>
             </div>
           `;
+
+          const payoutForm = document.getElementById("payoutRequestForm");
+          if (payoutForm) {
+            payoutForm.addEventListener("submit", submitPayoutRequest);
+          }
+        }
+
+        async function submitPayoutRequest(event) {
+          event.preventDefault();
+          const amount = Number(document.getElementById("payoutAmount").value);
+          const payout_method = document.getElementById("payoutMethod").value;
+          const account_ref = document.getElementById("payoutAccountRef").value.trim();
+          const provider_notes = document.getElementById("payoutNotes").value.trim();
+
+          if (!Number.isFinite(amount) || amount < 100) {
+            Serviio.notify("Enter a payout amount of at least BDT 100.", "error");
+            return;
+          }
+
+          try {
+            const response = await fetch(Serviio.apiUrl("/api/wallet/payout-requests"), {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                amount,
+                payout_method,
+                account_ref,
+                provider_notes,
+              }),
+            });
+            const result = await parseJsonResponse(response);
+            if (!response.ok || !result.success) {
+              throw new Error(result.message || "Unable to request payout.");
+            }
+            currentWallet = null;
+            await fetchWallet();
+            Serviio.notify("Payout request submitted for operations review.", "success");
+          } catch (error) {
+            console.error(error);
+            Serviio.notify(error.message || "Unable to request payout right now.", "error");
+          }
         }
 
         window.releaseEscrow = async (bookingId) => {
@@ -916,7 +1311,7 @@
 
           try {
             const response = await fetch(
-              `http://localhost:5000/api/wallet/escrow/${bookingId}/release`,
+              Serviio.apiUrl(`/api/wallet/escrow/${bookingId}/release`),
               {
                 method: "POST",
                 headers: {
@@ -930,10 +1325,16 @@
             }
             currentWallet = null;
             await fetchWallet();
-            alert("Escrow released to your available wallet balance.");
+            Serviio.notify(
+              "Escrow released to your available wallet balance.",
+              "success",
+            );
           } catch (error) {
             console.error(error);
-            alert(error.message || "Unable to release escrow right now.");
+            Serviio.notify(
+              error.message || "Unable to release escrow right now.",
+              "error",
+            );
           }
         };
 
@@ -954,12 +1355,12 @@
             <div class="booking-card">
               <div class="job-header">
                 <h4>Verification Status</h4>
-                <span class="status ${String(profile.verification_status).toLowerCase()}">${profile.verification_status}</span>
+                <span class="status ${statusClass(profile.verification_status)}">${escapeHtml(profile.verification_status || "PENDING")}</span>
               </div>
               <div class="job-details">
-                <p><i class="fas fa-id-card"></i> <strong>NID:</strong> ${profile.nid_number || "Not provided"}</p>
+                <p><i class="fas fa-id-card"></i> <strong>NID:</strong> ${escapeHtml(profile.nid_number || "Not provided")}</p>
                 <p><i class="fas fa-certificate"></i> <strong>Verified:</strong> ${profile.is_verified ? "Yes" : "No"}</p>
-                <p><i class="fas fa-note-sticky"></i> <strong>Admin Notes:</strong> ${profile.verification_notes || "None"}</p>
+                <p><i class="fas fa-note-sticky"></i> <strong>Admin Notes:</strong> ${escapeHtml(profile.verification_notes || "None")}</p>
               </div>
             </div>
             <div class="booking-card">
@@ -971,14 +1372,17 @@
                   documents.length
                     ? documents
                         .map(
-                          (doc) => `
+                          (doc) => {
+                            const docStatus = String(doc.status || "PENDING").toUpperCase();
+                            return `
                             <p>
                               <i class="fas fa-file-shield"></i>
-                              <strong>${doc.document_type}:</strong>
-                              ${doc.file_name || doc.document_number || doc.document_url || "Submitted"}
-                              <span class="status ${String(doc.status).toLowerCase()}">${doc.status}</span>
+                              <strong>${escapeHtml(doc.document_type || "Document")}:</strong>
+                              ${escapeHtml(doc.file_name || doc.document_number || doc.document_url || "Submitted")}
+                              <span class="status ${statusClass(docStatus)}">${escapeHtml(docStatus)}</span>
                             </p>
-                          `,
+                          `;
+                          },
                         )
                         .join("")
                     : "<p>No verification documents submitted yet.</p>"
@@ -998,9 +1402,9 @@
                           (log) => `
                             <p>
                               <i class="fas fa-clock-rotate-left"></i>
-                              <strong>${log.action}:</strong>
-                              ${log.new_status || ""}
-                              ${log.notes ? `- ${log.notes}` : ""}
+                              <strong>${escapeHtml(log.action || "Audit")}:</strong>
+                              ${escapeHtml(log.new_status || "")}
+                              ${log.notes ? `- ${escapeHtml(log.notes)}` : ""}
                             </p>
                           `,
                         )
@@ -1018,29 +1422,45 @@
           verificationMessage.style.color = "#334155";
 
           try {
+            const fileInput = document.getElementById(
+              "verificationDocumentFile",
+            );
+            const documentFile = fileInput.files && fileInput.files[0];
+            const payload = new FormData();
+            payload.append(
+              "document_type",
+              document.getElementById("verificationDocumentType").value,
+            );
+            payload.append(
+              "document_number",
+              document
+                .getElementById("verificationDocumentNumber")
+                .value.trim(),
+            );
+            payload.append(
+              "document_url",
+              document.getElementById("verificationDocumentUrl").value.trim(),
+            );
+            payload.append(
+              "file_name",
+              document.getElementById("verificationFileName").value.trim(),
+            );
+            payload.append(
+              "notes",
+              document.getElementById("verificationNotes").value.trim(),
+            );
+            if (documentFile) {
+              payload.append("document_file", documentFile);
+            }
+
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/verification/documents",
+              Serviio.apiUrl("/api/providers/me/verification/documents"),
               {
                 method: "POST",
                 headers: {
                   Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                  document_type: document.getElementById(
-                    "verificationDocumentType",
-                  ).value,
-                  document_number: document
-                    .getElementById("verificationDocumentNumber")
-                    .value.trim(),
-                  document_url: document
-                    .getElementById("verificationDocumentUrl")
-                    .value.trim(),
-                  file_name: document
-                    .getElementById("verificationFileName")
-                    .value.trim(),
-                  notes: document.getElementById("verificationNotes").value.trim(),
-                }),
+                body: payload,
               },
             );
             const result = await parseJsonResponse(response);
@@ -1065,7 +1485,7 @@
 
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/verification/submit",
+              Serviio.apiUrl("/api/providers/me/verification/submit"),
               {
                 method: "POST",
                 headers: {
@@ -1099,18 +1519,21 @@
 
           notificationsContainer.innerHTML = currentNotifications
             .map(
-              (notification) => `
+              (notification) => {
+                const title = notification.title || notification.notification_type || "Notification";
+                return `
                 <div class="booking-card">
                   <div class="job-header">
-                    <h4>${notification.title || notification.notification_type}</h4>
+                    <h4>${escapeHtml(title)}</h4>
                     <span class="status ${notification.is_read ? "completed" : "pending"}">${notification.is_read ? "READ" : "NEW"}</span>
                   </div>
                   <div class="job-details">
-                    <p>${notification.message || ""}</p>
-                    <p><i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString()}</p>
+                    <p>${escapeHtml(notification.message || "")}</p>
+                    <p><i class="fas fa-clock"></i> ${escapeHtml(formatDisplayDate(notification.created_at))}</p>
                   </div>
                 </div>
-              `,
+              `;
+              },
             )
             .join("");
         }
@@ -1118,7 +1541,7 @@
         async function markNotificationsRead() {
           try {
             const response = await fetch(
-              "http://localhost:5000/api/notifications/read-all",
+              Serviio.apiUrl("/api/notifications/read-all"),
               {
                 method: "PATCH",
                 headers: {
@@ -1133,7 +1556,10 @@
             await fetchNotifications();
           } catch (error) {
             console.error(error);
-            alert(error.message || "Unable to update notifications.");
+            Serviio.notify(
+              error.message || "Unable to update notifications.",
+              "error",
+            );
           }
         }
 
@@ -1155,7 +1581,7 @@
 
           try {
             const response = await fetch(
-              "http://localhost:5000/api/providers/me/settings",
+              Serviio.apiUrl("/api/providers/me/settings"),
               {
                 method: "PUT",
                 headers: {
@@ -1194,7 +1620,7 @@
           }
           try {
             const response = await fetch(
-              "http://localhost:5000/api/bookings/verify-handshake",
+              Serviio.apiUrl("/api/bookings/verify-handshake"),
               {
                 method: "POST",
                 headers: {
@@ -1225,7 +1651,7 @@
           const msgElement = document.getElementById(`msg-${bookingId}`);
           try {
             const response = await fetch(
-              `http://localhost:5000/api/bookings/${bookingId}/status`,
+              Serviio.apiUrl(`/api/bookings/${bookingId}/status`),
               {
                 method: "PATCH",
                 headers: {
@@ -1268,6 +1694,9 @@
           "submit",
           submitVerificationDocument,
         );
+        messageBookingSelect.addEventListener("change", loadBookingMessages);
+        bookingMessageForm.addEventListener("submit", sendBookingMessage);
+        requestVoiceCallBtn.addEventListener("click", requestVoiceCall);
         submitVerificationBtn.addEventListener(
           "click",
           submitVerificationForReview,
@@ -1294,7 +1723,25 @@
         }
 
         let watchId = null;
-        const socket = io("http://localhost:5000");
+        const socket = io(Serviio.apiBaseUrl, { auth: { token } });
+        bookingSocket = socket;
+        socket.on("booking:message:new", (message) => {
+          if (
+            activeTab === "messages" &&
+            String(message.booking_id) === String(messageBookingSelect.value)
+          ) {
+            loadBookingMessages();
+          }
+        });
+        socket.on("booking:call:requested", (callRequest) => {
+          if (
+            activeTab === "messages" &&
+            String(callRequest.booking_id) === String(messageBookingSelect.value)
+          ) {
+            bookingMessageStatus.textContent = "New call request received.";
+            bookingMessageStatus.style.color = "#0056b3";
+          }
+        });
         socket.emit("notifications:join", { token });
         socket.on("notification:new", (notification) => {
           currentNotifications = [notification, ...(currentNotifications || [])];
@@ -1313,14 +1760,18 @@
         if (shareBtn) {
           shareBtn.addEventListener("click", () => {
             if (!navigator.geolocation) {
-              alert("Geolocation not supported in this browser.");
+              Serviio.notify(
+                "Geolocation not supported in this browser.",
+                "warning",
+              );
               return;
             }
 
             const providerId = currentUser ? currentUser.id : null;
             if (!providerId) {
-              alert(
+              Serviio.notify(
                 "Provider not found. Ensure you are logged in as provider.",
+                "error",
               );
               return;
             }
@@ -1332,11 +1783,12 @@
               return;
             }
 
-            socket.emit("provider:join", { providerId });
+            socket.emit("provider:join", { providerId, token });
             watchId = navigator.geolocation.watchPosition(
               (pos) => {
                 socket.emit("provider:location", {
                   providerId,
+                  token,
                   lat: pos.coords.latitude,
                   lng: pos.coords.longitude,
                 });

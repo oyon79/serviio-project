@@ -6,12 +6,7 @@ const resetSubmitButton = document.getElementById("resetSubmitButton");
 const resetHint = document.getElementById("resetHint");
 
 function getApiBaseUrl() {
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-  if (window.location.protocol === "file:" || isLocalhost) {
-    return "http://localhost:5000";
-  }
-  return window.location.origin;
+  return window.Serviio?.apiBaseUrl || window.location.origin;
 }
 
 function getResetMessageElement() {

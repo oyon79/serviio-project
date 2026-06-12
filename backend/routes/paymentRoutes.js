@@ -15,6 +15,7 @@ router.post(
       booking_id: [v.required("booking_id"), v.positiveInteger("booking_id")],
       amount: [v.required("amount"), v.positiveNumber("amount")],
       payment_method: [v.maxLength(50, "payment_method")],
+      gateway_reference: [v.maxLength(255, "gateway_reference")],
     },
   }),
   paymentController.processPayment,

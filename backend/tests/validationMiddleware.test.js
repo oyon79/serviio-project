@@ -1,5 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const {
   validate,
   validators: v,
@@ -113,4 +116,39 @@ test("validate rejects invalid positive integer params", () => {
   assert.equal(result.nextCalled, false);
   assert.equal(result.statusCode, 400);
   assert.equal(result.payload.errors[0].message, "id must be a positive integer.");
+});
+
+test("validate accepts signed coordinate ranges", () => {
+  const middleware = validate({
+    body: {
+      latitude: [v.numberRange(-90, 90, "latitude")],
+      longitude: [v.numberRange(-180, 180, "longitude")],
+    },
+  });
+
+  const result = runMiddleware(middleware, {
+    body: { latitude: "-23.5", longitude: "90.4" },
+  });
+
+  assert.equal(result.nextCalled, true);
+});
+
+test("validate deletes uploaded file when request validation fails", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "serviio-validation-"));
+  const tempFile = path.join(tempDir, "upload.pdf");
+  fs.writeFileSync(tempFile, "%PDF-1.7");
+  const middleware = validate({
+    body: {
+      document_type: [v.required("document_type")],
+    },
+  });
+
+  const result = runMiddleware(middleware, {
+    body: {},
+    file: { path: tempFile },
+  });
+
+  assert.equal(result.nextCalled, false);
+  assert.equal(result.statusCode, 400);
+  assert.equal(fs.existsSync(tempFile), false);
 });

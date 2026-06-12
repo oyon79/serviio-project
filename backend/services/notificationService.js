@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const { OPERATIONS_ROLES } = require("../utils/roles");
 
 let realtimeServer = null;
 
@@ -28,6 +29,11 @@ function emitNotification(notification) {
     is_read: false,
     created_at: new Date().toISOString(),
   });
+}
+
+function emitBookingEvent(bookingId, eventName, payload) {
+  if (!realtimeServer || !bookingId || !eventName) return;
+  realtimeServer.to(`booking_room:${bookingId}`).emit(eventName, payload);
 }
 
 async function createNotification(input, executor = db) {
@@ -70,13 +76,17 @@ async function createNotifications(notifications, executor = db) {
 }
 
 async function createAdminNotifications(input, executor = db) {
+  const roles = Array.from(input.staff_roles || OPERATIONS_ROLES);
+  const placeholders = roles.map(() => "?").join(", ");
   const [admins] = await executor.query(
-    "SELECT id FROM users WHERE role = 'admin' AND is_active = TRUE",
+    `SELECT id FROM users WHERE role IN (${placeholders}) AND is_active = TRUE`,
+    roles,
   );
 
   return createNotifications(
     admins.map((admin) => ({
       ...input,
+      staff_roles: undefined,
       user_id: admin.id,
     })),
     executor,
@@ -85,6 +95,7 @@ async function createAdminNotifications(input, executor = db) {
 
 module.exports = {
   setNotificationRealtimeServer,
+  emitBookingEvent,
   createNotification,
   createNotifications,
   createAdminNotifications,

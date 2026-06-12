@@ -10,6 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <header class="navbar">
@@ -46,7 +47,7 @@
           >
         </li>
         <li>
-          <div class="notification">
+          <div class="notification" aria-label="Notifications">
             <i class="fa-solid fa-bell"></i>
             <span class="badge">3</span>
           </div>
@@ -61,12 +62,13 @@
           <input
             type="text"
             id="searchInput"
+            aria-label="Search providers"
             placeholder="Search by name or skill..."
           />
         </div>
 
         <div class="filters">
-          <select id="categoryFilter" class="filter-dropdown">
+          <select id="categoryFilter" class="filter-dropdown" aria-label="Filter by service category">
             <option value="">All Categories</option>
             <option value="Electrician">Electrician</option>
             <option value="Plumber">Plumber</option>
@@ -74,7 +76,7 @@
             <option value="Painter">Painter</option>
           </select>
 
-          <select id="areaFilter" class="filter-dropdown">
+          <select id="areaFilter" class="filter-dropdown" aria-label="Filter by area">
             <option value="">All Areas</option>
             <option value="Uttara">Uttara</option>
             <option value="Mirpur">Mirpur</option>
@@ -82,7 +84,7 @@
             <option value="Dhanmondi">Dhanmondi</option>
           </select>
 
-          <select id="ratingFilter" class="filter-dropdown">
+          <select id="ratingFilter" class="filter-dropdown" aria-label="Filter by rating">
             <option value="">All Ratings</option>
             <option value="4.5">4.5+ Stars</option>
             <option value="4.0">4.0+ Stars</option>
@@ -114,34 +116,34 @@
           <div class="footer-col">
             <h4>Product</h4>
             <ul>
-              <li><a href="#">Landing Page</a></li>
-              <li><a href="#">Popup Builder</a></li>
-              <li><a href="#">Web-design</a></li>
-              <li><a href="#">Content</a></li>
+              <li><a href="landing.html">Overview</a></li>
+              <li><a href="providerList.html">Find Providers</a></li>
+              <li><a href="serviceArea.html">Service Areas</a></li>
+              <li><a href="schedule.html">Schedule Service</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Use Cases</h4>
+            <h4>For Users</h4>
             <ul>
-              <li><a href="#">Web-designers</a></li>
-              <li><a href="#">Marketers</a></li>
-              <li><a href="#">Small Business</a></li>
+              <li><a href="emergency.html">Emergency Help</a></li>
+              <li><a href="bookmark.html">Saved Providers</a></li>
+              <li><a href="profile.html">Customer Profile</a></li>
             </ul>
           </div>
           <div class="footer-col">
             <h4>Resources</h4>
             <ul>
-              <li><a href="#">Academy</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Themes</a></li>
+              <li><a href="legal.html#support">Support Policy</a></li>
+              <li><a href="legal.html#verification">Verification</a></li>
+              <li><a href="legal.html#safety">Safety</a></li>
             </ul>
           </div>
           <div class="footer-col">
-            <h4>Company</h4>
+            <h4>Account</h4>
             <ul>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#">Careers</a></li>
-              <li><a href="#">FAQs</a></li>
+              <li><a href="login.html">Sign In</a></li>
+              <li><a href="role.html">Create Account</a></li>
+              <li><a href="profileBooking.html">Provider Dashboard</a></li>
             </ul>
           </div>
           <div class="footer-col">
@@ -157,12 +159,12 @@
       </div>
       <div class="footer-bottom">
         <div class="legal-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Sales and Refunds</a>
-          <a href="#">Legal</a>
+          <a href="legal.html#privacy">Privacy Policy</a>
+          <a href="legal.html#terms">Terms of Use</a>
+          <a href="legal.html#refunds">Sales and Refunds</a>
+          <a href="legal.html">Legal</a>
         </div>
-        <div class="copyright">© 2026 SERVIIO All Rights Reserved</div>
+        <div class="copyright">&copy; 2026 SERVIIO All Rights Reserved</div>
       </div>
     </footer>
 

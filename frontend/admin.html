@@ -10,6 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <header class="admin-topbar">
@@ -37,9 +38,17 @@
           <i class="fa-solid fa-calendar-check"></i>
           Bookings
         </button>
+        <button class="nav-tab" data-panel="payoutsPanel">
+          <i class="fa-solid fa-money-bill-transfer"></i>
+          Payouts
+        </button>
         <button class="nav-tab" data-panel="supportPanel">
           <i class="fa-solid fa-headset"></i>
           Support
+        </button>
+        <button class="nav-tab" data-panel="emergencyPanel">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          SOS
         </button>
         <button class="nav-tab" data-panel="notificationsPanel">
           <i class="fa-solid fa-bell"></i>
@@ -48,7 +57,13 @@
         </button>
       </nav>
       <div class="topbar-actions">
-        <button type="button" class="icon-btn" id="refreshBtn" title="Refresh">
+        <button
+          type="button"
+          class="icon-btn"
+          id="refreshBtn"
+          title="Refresh"
+          aria-label="Refresh dashboard"
+        >
           <i class="fa-solid fa-rotate"></i>
         </button>
         <button type="button" class="logout-btn" id="logoutBtn">
@@ -126,9 +141,10 @@
             <input
               type="search"
               id="verificationSearch"
+              aria-label="Search verification queue"
               placeholder="Search provider, service, email"
             />
-            <select id="verificationStatusFilter">
+            <select id="verificationStatusFilter" aria-label="Filter verification status">
               <option value="">All statuses</option>
               <option value="UNDER_REVIEW">Under review</option>
               <option value="PENDING">Pending</option>
@@ -150,9 +166,10 @@
             <input
               type="search"
               id="providerSearch"
+              aria-label="Search providers"
               placeholder="Search name, service, location"
             />
-            <select id="providerStatusFilter">
+            <select id="providerStatusFilter" aria-label="Filter provider status">
               <option value="">All providers</option>
               <option value="verified">Verified</option>
               <option value="unverified">Unverified</option>
@@ -172,11 +189,15 @@
             <input
               type="search"
               id="bookingSearch"
+              aria-label="Search bookings"
               placeholder="Search service, customer, provider"
             />
-            <select id="bookingStatusFilter">
+            <select id="bookingStatusFilter" aria-label="Filter booking status">
               <option value="">All bookings</option>
               <option value="PENDING">Pending</option>
+              <option value="ACCEPTED">Accepted</option>
+              <option value="ON_THE_WAY">On the way</option>
+              <option value="ARRIVED">Arrived</option>
               <option value="IN_PROGRESS">In progress</option>
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
@@ -184,6 +205,31 @@
           </div>
         </div>
         <div id="bookingsList" class="table-wrap"></div>
+      </section>
+
+      <section id="payoutsPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>Financial Hub</h2>
+            <p>Review provider withdrawal requests and mark external payouts paid.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="payoutSearch"
+              aria-label="Search payout requests"
+              placeholder="Search provider, method, reference"
+            />
+            <select id="payoutStatusFilter" aria-label="Filter payout status">
+              <option value="">All payouts</option>
+              <option value="REQUESTED">Requested</option>
+              <option value="APPROVED">Approved</option>
+              <option value="PAID">Paid</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div id="payoutsList" class="record-grid"></div>
       </section>
 
       <section id="supportPanel" class="admin-panel">
@@ -196,9 +242,10 @@
             <input
               type="search"
               id="ticketSearch"
+              aria-label="Search support tickets"
               placeholder="Search ticket, subject, user"
             />
-            <select id="ticketStatusFilter">
+            <select id="ticketStatusFilter" aria-label="Filter ticket status">
               <option value="">All statuses</option>
               <option value="OPEN">Open</option>
               <option value="IN_REVIEW">In review</option>
@@ -208,6 +255,30 @@
           </div>
         </div>
         <div id="ticketsList" class="record-grid"></div>
+      </section>
+
+      <section id="emergencyPanel" class="admin-panel">
+        <div class="section-header">
+          <div>
+            <h2>SOS Radar</h2>
+            <p>Monitor active emergency alerts and mark incidents resolved.</p>
+          </div>
+          <div class="toolbar">
+            <input
+              type="search"
+              id="emergencySearch"
+              aria-label="Search emergency alerts"
+              placeholder="Search message, location, user"
+            />
+            <select id="emergencyStatusFilter" aria-label="Filter emergency status">
+              <option value="">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div id="emergencyList" class="record-grid"></div>
       </section>
 
       <section id="notificationsPanel" class="admin-panel">
@@ -228,13 +299,23 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <div class="modal-backdrop" id="detailModal" aria-hidden="true">
-      <div class="modal-card" role="dialog" aria-modal="true">
+      <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
         <div class="modal-header">
           <div>
             <h2 id="modalTitle">Details</h2>
             <p id="modalSubtitle"></p>
           </div>
-          <button type="button" class="icon-btn" id="closeModalBtn">
+          <button
+            type="button"
+            class="icon-btn"
+            id="closeModalBtn"
+            aria-label="Close details modal"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -249,19 +330,21 @@
         providers: [],
         verification: [],
         bookings: [],
+        payouts: [],
         tickets: [],
+        emergencies: [],
         notifications: [],
         activePanel: "overviewPanel",
         loading: false,
+        pendingModalResolve: null,
       };
 
-      const token = localStorage.getItem("serviio_token");
-      const storedUser = localStorage.getItem("serviio_user");
-      const adminUser = storedUser ? JSON.parse(storedUser) : null;
-
-      if (!token || !adminUser || (adminUser.role || "").toLowerCase() !== "admin") {
-        window.location.href = "login.html?next=admin.html";
-      }
+      const session = window.Serviio.requireAuth({
+        roles: ["admin", "super_admin", "support_agent", "verification_officer"],
+        next: "admin.html",
+      });
+      const token = session.token;
+      const adminUser = session.user;
 
       const els = {
         identity: document.getElementById("adminIdentity"),
@@ -270,7 +353,9 @@
         verificationQueue: document.getElementById("verificationQueue"),
         providersList: document.getElementById("providersList"),
         bookingsList: document.getElementById("bookingsList"),
+        payoutsList: document.getElementById("payoutsList"),
         ticketsList: document.getElementById("ticketsList"),
+        emergencyList: document.getElementById("emergencyList"),
         notificationsList: document.getElementById("notificationsList"),
         overviewVerificationList: document.getElementById(
           "overviewVerificationList",
@@ -285,12 +370,7 @@
       };
 
       function getApiBaseUrl() {
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-        if (window.location.protocol === "file:" || isLocalhost) {
-          return "http://localhost:5000";
-        }
-        return window.location.origin;
+        return window.Serviio?.apiBaseUrl || window.location.origin;
       }
 
       const API_BASE = getApiBaseUrl();
@@ -311,6 +391,15 @@
           .replace(/'/g, "&#039;");
       }
 
+      function safeClassToken(value, fallback = "unknown") {
+        const token = String(value || fallback)
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        return token || fallback;
+      }
+
       function formatDate(value) {
         if (!value) return "Not set";
         const date = new Date(value);
@@ -329,11 +418,92 @@
 
       function showToast(message, type = "success") {
         els.toast.textContent = message;
-        els.toast.className = `toast show ${type}`;
+        els.toast.className = `toast show ${safeClassToken(type, "success")}`;
         window.clearTimeout(showToast.timer);
         showToast.timer = window.setTimeout(() => {
           els.toast.className = "toast";
         }, 3200);
+      }
+
+      function buildActionField(field) {
+        const value = escapeHTML(field.value || "");
+        const required = field.required === false ? "" : "required";
+        const maxLength = field.maxLength ? `maxlength="${field.maxLength}"` : "";
+        const inputMode = field.inputMode ? `inputmode="${escapeHTML(field.inputMode)}"` : "";
+        const fieldId = `action-${field.name}`;
+        if (field.type === "input") {
+          return `
+            <label>
+              ${escapeHTML(field.label)}
+              <input
+                type="${escapeHTML(field.inputType || "text")}"
+                id="${fieldId}"
+                name="${escapeHTML(field.name)}"
+                value="${value}"
+                ${required}
+                ${maxLength}
+                ${inputMode}
+              />
+            </label>
+          `;
+        }
+
+        return `
+          <label>
+            ${escapeHTML(field.label)}
+            <textarea
+              id="${fieldId}"
+              name="${escapeHTML(field.name)}"
+              rows="${Number(field.rows || 4)}"
+              ${required}
+              ${maxLength}
+            >${value}</textarea>
+          </label>
+        `;
+      }
+
+      function openActionModal({
+        title,
+        subtitle = "",
+        fields = [],
+        confirmLabel = "Save",
+        confirmClass = "primary-btn",
+      }) {
+        if (state.pendingModalResolve) {
+          state.pendingModalResolve(null);
+          state.pendingModalResolve = null;
+        }
+
+        els.modalTitle.textContent = title;
+        els.modalSubtitle.textContent = subtitle;
+        els.modalBody.innerHTML = `
+          <form id="adminActionForm" class="reply-form action-form">
+            ${fields.map(buildActionField).join("")}
+            <div class="modal-actions">
+              <button class="${escapeHTML(confirmClass)}" type="submit">${escapeHTML(confirmLabel)}</button>
+              <button class="secondary-btn" type="button" id="cancelActionBtn">Cancel</button>
+            </div>
+          </form>
+        `;
+        openModal();
+
+        return new Promise((resolve) => {
+          state.pendingModalResolve = resolve;
+          const form = document.getElementById("adminActionForm");
+          const cancelBtn = document.getElementById("cancelActionBtn");
+          cancelBtn.addEventListener("click", () => closeModal(null));
+          form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const values = {};
+            for (const field of fields) {
+              values[field.name] = String(formData.get(field.name) || "").trim();
+            }
+            closeModal(values);
+          });
+          const firstControl = form.querySelector("textarea, input, select, button");
+          firstControl?.focus();
+        });
       }
 
       async function requestJson(path, options = {}) {
@@ -361,7 +531,9 @@
           panel.classList.toggle("active", panel.id === panelId);
         });
         document.querySelectorAll(".nav-tab").forEach((tab) => {
-          tab.classList.toggle("active", tab.dataset.panel === panelId);
+          const isActive = tab.dataset.panel === panelId;
+          tab.classList.toggle("active", isActive);
+          tab.setAttribute("aria-selected", isActive ? "true" : "false");
         });
       }
 
@@ -378,7 +550,7 @@
       }
 
       function statusPill(status) {
-        const normalized = String(status || "UNKNOWN").toLowerCase();
+        const normalized = safeClassToken(status);
         return `<span class="pill ${normalized}">${escapeHTML(status || "UNKNOWN")}</span>`;
       }
 
@@ -421,10 +593,22 @@
             icon: "fa-wallet",
           },
           {
+            label: "Pending payouts",
+            value: formatMoney(data.payouts?.pending_amount || 0),
+            sub: `${data.payouts?.requested || 0} requested, ${data.payouts?.approved || 0} approved`,
+            icon: "fa-money-bill-transfer",
+          },
+          {
             label: "Unread alerts",
             value: data.notifications.unread,
             sub: "Admin notifications",
             icon: "fa-bell",
+          },
+          {
+            label: "Active SOS",
+            value: data.emergencies?.active || 0,
+            sub: `${data.emergencies?.total || 0} emergency logs`,
+            icon: "fa-triangle-exclamation",
           },
         ];
 
@@ -631,6 +815,7 @@
                   <th>Status</th>
                   <th>Payment</th>
                   <th>Date</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -656,6 +841,13 @@
                           <small>${booking.payment_amount ? formatMoney(booking.payment_amount) : "No payment"}</small>
                         </td>
                         <td>${formatDate(booking.booking_date)}</td>
+                        <td>
+                          ${
+                            booking.payment_status === "PAID"
+                              ? `<button type="button" class="danger-btn" onclick="refundEscrow(${booking.id})">Refund</button>`
+                              : ""
+                          }
+                        </td>
                       </tr>
                     `,
                   )
@@ -664,6 +856,62 @@
             </table>
           `
           : emptyState("No bookings match this filter.");
+      }
+
+      function renderPayouts() {
+        const query = document.getElementById("payoutSearch").value.trim();
+        const status = document.getElementById("payoutStatusFilter").value;
+        const filtered = state.payouts.filter((payout) => {
+          const statusOk = !status || payout.status === status;
+          const searchOk = matchesSearch(payout, query, [
+            "provider_name",
+            "email",
+            "phone",
+            "payout_method",
+            "account_ref",
+            "external_reference",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.payoutsList.innerHTML = filtered.length
+          ? filtered
+              .map(
+                (payout) => `
+                  <article class="record-card">
+                    <div class="record-header">
+                      <div>
+                        <strong>${escapeHTML(payout.provider_name || "Provider")}</strong>
+                        <small>${escapeHTML(payout.email || "")}</small>
+                      </div>
+                      ${statusPill(payout.status)}
+                    </div>
+                    <p><i class="fa-solid fa-money-bill-transfer"></i> ${formatMoney(payout.amount)} via ${escapeHTML(payout.payout_method)}</p>
+                    <p><i class="fa-solid fa-building-columns"></i> ${escapeHTML(payout.account_ref)}</p>
+                    <p><i class="fa-regular fa-clock"></i> Requested ${formatDate(payout.requested_at)}</p>
+                    ${
+                      payout.external_reference
+                        ? `<p><i class="fa-solid fa-hashtag"></i> ${escapeHTML(payout.external_reference)}</p>`
+                        : ""
+                    }
+                    <div class="card-actions">
+                      ${
+                        payout.status === "REQUESTED"
+                          ? `<button type="button" class="primary-btn" onclick="updatePayout(${payout.id}, 'APPROVED')">Approve</button>
+                             <button type="button" class="danger-btn" onclick="updatePayout(${payout.id}, 'REJECTED')">Reject</button>`
+                          : ""
+                      }
+                      ${
+                        ["REQUESTED", "APPROVED"].includes(payout.status)
+                          ? `<button type="button" class="primary-btn" onclick="updatePayout(${payout.id}, 'PAID')">Mark Paid</button>`
+                          : ""
+                      }
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : emptyState("No payout requests match this filter.");
       }
 
       function renderTickets() {
@@ -739,13 +987,66 @@
           : emptyState("No admin notifications yet.");
       }
 
+      function renderEmergencies() {
+        const query = document.getElementById("emergencySearch").value.trim();
+        const status = document.getElementById("emergencyStatusFilter").value;
+        const filtered = state.emergencies.filter((incident) => {
+          const statusOk = !status || incident.status === status;
+          const searchOk = matchesSearch(incident, query, [
+            "emergency_type",
+            "message",
+            "location",
+            "email",
+            "phone",
+            "first_name",
+            "last_name",
+          ]);
+          return statusOk && searchOk;
+        });
+
+        els.emergencyList.innerHTML = filtered.length
+          ? filtered
+              .map(
+                (incident) => `
+                  <article class="record-card ${incident.status === "ACTIVE" ? "urgent-card" : ""}">
+                    <div class="record-head">
+                      <div>
+                        <h3>${escapeHTML(incident.emergency_type || "SOS Alert")} #${incident.id}</h3>
+                        <p>${escapeHTML(incident.message || "No message provided.")}</p>
+                      </div>
+                      ${statusPill(incident.status)}
+                    </div>
+                    <div class="record-meta">
+                      <span><i class="fa-solid fa-user-shield"></i> ${escapeHTML(fullName(incident))}</span>
+                      <span><i class="fa-solid fa-phone"></i> ${escapeHTML(incident.phone || "No phone")}</span>
+                      <span><i class="fa-solid fa-location-dot"></i> ${escapeHTML(incident.location || "No location")}</span>
+                      <span><i class="fa-solid fa-clock"></i> ${formatDate(incident.created_at)}</span>
+                    </div>
+                    ${
+                      incident.latitude && incident.longitude
+                        ? `<p class="record-note">GPS: ${escapeHTML(incident.latitude)}, ${escapeHTML(incident.longitude)}</p>`
+                        : ""
+                    }
+                    <div class="record-actions">
+                      <button type="button" class="primary-btn" onclick="updateEmergency(${incident.id}, 'RESOLVED')">Resolve</button>
+                      <button type="button" class="danger-btn" onclick="updateEmergency(${incident.id}, 'CANCELLED')">Cancel</button>
+                    </div>
+                  </article>
+                `,
+              )
+              .join("")
+          : emptyState("No emergency incidents match this filter.");
+      }
+
       function renderAll() {
         renderStats();
         renderOverviewLists();
         renderVerificationQueue();
         renderProviders();
         renderBookings();
+        renderPayouts();
         renderTickets();
+        renderEmergencies();
         renderNotifications();
       }
 
@@ -759,14 +1060,18 @@
             providers,
             verification,
             bookings,
+            payouts,
             tickets,
+            emergencies,
             notifications,
           ] = await Promise.all([
             requestJson("/api/admin/overview"),
             requestJson("/api/admin/providers"),
             requestJson("/api/admin/verification-queue"),
             requestJson("/api/admin/bookings"),
+            requestJson("/api/wallet/payout-requests/admin"),
             requestJson("/api/support/tickets/admin"),
+            requestJson("/api/admin/emergencies"),
             requestJson("/api/notifications"),
           ]);
 
@@ -774,7 +1079,9 @@
           state.providers = providers.data || [];
           state.verification = verification.data || [];
           state.bookings = bookings.data || [];
+          state.payouts = payouts.data || [];
           state.tickets = tickets.data || [];
+          state.emergencies = emergencies.data || [];
           state.notifications = notifications.data || [];
           setApiStatus(true, "online");
           renderAll();
@@ -791,11 +1098,24 @@
           decision === "REJECTED"
             ? "Please resubmit valid verification documents."
             : "Approved by admin.";
-        const notes = window.prompt(
-          decision === "REJECTED" ? "Reason for rejection" : "Approval notes",
-          defaultNotes,
-        );
-        if (notes === null) return;
+        const action = await openActionModal({
+          title:
+            decision === "REJECTED"
+              ? "Reject Provider Verification"
+              : "Approve Provider Verification",
+          subtitle: "This decision is recorded in the provider verification audit trail.",
+          fields: [
+            {
+              name: "notes",
+              label: decision === "REJECTED" ? "Reason for rejection" : "Approval notes",
+              value: defaultNotes,
+              maxLength: 1000,
+            },
+          ],
+          confirmLabel: decision === "REJECTED" ? "Reject Provider" : "Approve Provider",
+          confirmClass: decision === "REJECTED" ? "danger-btn" : "primary-btn",
+        });
+        if (!action) return;
 
         try {
           await requestJson(
@@ -803,7 +1123,7 @@
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ decision, notes }),
+              body: JSON.stringify({ decision, notes: action.notes }),
             },
           );
           showToast(
@@ -873,6 +1193,11 @@
                           </div>
                           <div class="detail-actions">
                             ${statusPill(doc.status)}
+                            ${
+                              String(doc.document_url || "").replace(/\\/g, "/").startsWith("uploads/")
+                                ? `<button class="secondary-btn" type="button" onclick="downloadVerificationDocument(${doc.id})">Download</button>`
+                                : ""
+                            }
                             <button class="primary-btn" type="button" onclick="reviewDocument(${doc.id}, 'APPROVED')">Approve</button>
                             <button class="danger-btn" type="button" onclick="reviewDocument(${doc.id}, 'REJECTED')">Reject</button>
                           </div>
@@ -910,11 +1235,21 @@
       }
 
       async function reviewDocument(documentId, status) {
-        const reviewer_notes = window.prompt(
-          status === "APPROVED" ? "Approval note" : "Rejection note",
-          status === "APPROVED" ? "Document approved." : "Document rejected.",
-        );
-        if (reviewer_notes === null) return;
+        const action = await openActionModal({
+          title: status === "APPROVED" ? "Approve Document" : "Reject Document",
+          subtitle: "Document review notes are visible in the KYC audit trail.",
+          fields: [
+            {
+              name: "reviewer_notes",
+              label: status === "APPROVED" ? "Approval note" : "Rejection note",
+              value: status === "APPROVED" ? "Document approved." : "Document rejected.",
+              maxLength: 1000,
+            },
+          ],
+          confirmLabel: status === "APPROVED" ? "Approve Document" : "Reject Document",
+          confirmClass: status === "APPROVED" ? "primary-btn" : "danger-btn",
+        });
+        if (!action) return;
 
         try {
           await requestJson(
@@ -922,12 +1257,47 @@
             {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status, reviewer_notes }),
+              body: JSON.stringify({ status, reviewer_notes: action.reviewer_notes }),
             },
           );
           showToast("Document review saved.");
           closeModal();
           await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function downloadVerificationDocument(documentId) {
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/admin/verification-documents/${encodeURIComponent(documentId)}/download`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          if (!response.ok) {
+            let message = "Unable to download document.";
+            try {
+              const payload = await response.json();
+              message = payload.message || message;
+            } catch (error) {
+              // keep fallback message
+            }
+            throw new Error(message);
+          }
+
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "verification-document";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
         } catch (error) {
           showToast(error.message, "error");
         }
@@ -980,6 +1350,12 @@
                 <button class="secondary-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'IN_REVIEW' })">Mark In Review</button>
                 <button class="primary-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'RESOLVED' })">Resolve</button>
                 <button class="danger-btn" type="button" onclick="updateTicket(${ticket.id}, { status: 'CLOSED' })">Close</button>
+                ${
+                  ticket.booking_id &&
+                  ["REFUND", "DISPUTE", "SAFETY"].includes(ticket.category)
+                    ? `<button class="danger-btn" type="button" onclick="refundEscrow(${ticket.booking_id})">Refund Escrow</button>`
+                    : ""
+                }
               </div>
             </form>
           `;
@@ -1027,14 +1403,125 @@
         }
       }
 
+      async function updateEmergency(id, status) {
+        try {
+          await requestJson(`/api/admin/emergencies/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          });
+          showToast("Emergency incident updated.");
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function refundEscrow(bookingId) {
+        const action = await openActionModal({
+          title: "Refund Escrow",
+          subtitle: `Booking #${bookingId}`,
+          fields: [
+            {
+              name: "reason",
+              label: "Refund reason",
+              value: "Refund issued after support/admin review.",
+              maxLength: 1000,
+            },
+          ],
+          confirmLabel: "Refund Escrow",
+          confirmClass: "danger-btn",
+        });
+        if (!action) return;
+
+        try {
+          await requestJson(
+            `/api/wallet/escrow/${encodeURIComponent(bookingId)}/refund`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reason: action.reason }),
+            },
+          );
+          showToast("Escrow refunded.");
+          closeModal();
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function updatePayout(payoutId, status) {
+        const action = await openActionModal({
+          title: `${status.charAt(0)}${status.slice(1).toLowerCase()} Payout`,
+          subtitle: `Payout request #${payoutId}`,
+          fields: [
+            {
+              name: "reviewer_notes",
+              label: "Review notes",
+              value:
+                status === "PAID"
+                  ? "External payout completed."
+                  : status === "REJECTED"
+                    ? "Rejected after operations review."
+                    : "Approved for payout.",
+              maxLength: 1000,
+            },
+            ...(status === "PAID"
+              ? [
+                  {
+                    name: "external_reference",
+                    label: "External payment reference",
+                    type: "input",
+                    value: "",
+                    maxLength: 255,
+                  },
+                ]
+              : []),
+          ],
+          confirmLabel:
+            status === "PAID"
+              ? "Mark Paid"
+              : status === "REJECTED"
+                ? "Reject Payout"
+                : "Approve Payout",
+          confirmClass: status === "REJECTED" ? "danger-btn" : "primary-btn",
+        });
+        if (!action) return;
+
+        try {
+          await requestJson(
+            `/api/wallet/payout-requests/${encodeURIComponent(payoutId)}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                status,
+                reviewer_notes: action.reviewer_notes,
+                external_reference: action.external_reference || "",
+              }),
+            },
+          );
+          showToast(`Payout ${status.toLowerCase()}.`);
+          await loadDashboard();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
       function openModal() {
         els.modal.classList.add("open");
         els.modal.setAttribute("aria-hidden", "false");
       }
 
-      function closeModal() {
+      function closeModal(value = null) {
         els.modal.classList.remove("open");
         els.modal.setAttribute("aria-hidden", "true");
+        if (state.pendingModalResolve) {
+          const resolve = state.pendingModalResolve;
+          state.pendingModalResolve = null;
+          resolve(value);
+        }
       }
 
       document.querySelectorAll(".nav-tab").forEach((button) => {
@@ -1052,8 +1539,12 @@
         "providerStatusFilter",
         "bookingSearch",
         "bookingStatusFilter",
+        "payoutSearch",
+        "payoutStatusFilter",
         "ticketSearch",
         "ticketStatusFilter",
+        "emergencySearch",
+        "emergencyStatusFilter",
       ].forEach((id) => {
         const input = document.getElementById(id);
         input.addEventListener("input", renderAll);
@@ -1089,7 +1580,8 @@
           renderNotifications();
           if (
             notification.entity_type === "PROVIDER_PROFILE" ||
-            notification.entity_type === "SUPPORT_TICKET"
+            notification.entity_type === "SUPPORT_TICKET" ||
+            notification.entity_type === "PAYOUT_REQUEST"
           ) {
             loadDashboard();
           }

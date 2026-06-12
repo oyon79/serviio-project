@@ -8,26 +8,31 @@
     padding: 20px;
     gap: 28px;
     min-height: 70vh;
+    width: 100%;
 }
 
 .dashboard-content {
     flex: 1;
     background: var(--white);
-    border-radius: 24px;
+    border-radius: 8px;
     padding: 32px;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    box-shadow: var(--shadow-md);
+    min-width: 0;
 }
 
 /* Sidebar Styling */
 .sidebar {
     width: 300px;
     background: var(--white);
-    border-radius: 24px;
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
     padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    align-self: flex-start;
+    position: sticky;
+    top: 92px;
 }
 
 .provider-profile-summary {
@@ -57,9 +62,10 @@
     background-color: #e0f2fe;
     color: #0369a1;
     padding: 6px 14px;
-    border-radius: 999px;
+    border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 700;
+    display: inline-flex;
 }
 
 .provider-meta {
@@ -99,7 +105,7 @@
 
 .dashboard-action-btn {
     border: none;
-    border-radius: 14px;
+    border-radius: 8px;
     padding: 12px 18px;
     font-weight: 700;
     font-size: 0.95rem;
@@ -170,37 +176,41 @@
     padding: 0;
 }
 
-.sidebar-menu li a {
+.sidebar-menu li button {
     display: flex;
     align-items: center;
+    width: 100%;
     padding: 14px 16px;
     color: var(--text-dark);
-    text-decoration: none;
-    border-radius: 14px;
+    border-radius: 8px;
+    border: 0;
     transition: all 0.25s ease;
     margin-bottom: 12px;
     font-weight: 600;
     background: #f8fafc;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
 }
 
-.sidebar-menu li a i {
+.sidebar-menu li button i {
     margin-right: 12px;
     width: 20px;
     text-align: center;
     color: var(--primary-blue);
 }
 
-.sidebar-menu li a:hover {
+.sidebar-menu li button:hover {
     background: #eef4fd;
     color: var(--text-dark);
 }
 
-.sidebar-menu li a.active {
+.sidebar-menu li button.active {
     background-color: var(--primary-blue);
     color: var(--white);
 }
 
-.sidebar-menu li a.active i {
+.sidebar-menu li button.active i {
     color: var(--white);
 }
 
@@ -274,7 +284,7 @@
 
 .review-card {
     background: var(--white);
-    border-radius: 18px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     padding: 24px;
     box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
@@ -319,9 +329,43 @@
     font-size: 0.9rem;
 }
 
+.message-thread {
+    display: grid;
+    gap: 12px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.message-bubble {
+    width: min(82%, 560px);
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #eef4ff;
+    color: #334155;
+}
+
+.message-bubble.own {
+    justify-self: end;
+    background: #003393;
+    color: #ffffff;
+}
+
+.message-bubble p {
+    margin: 6px 0;
+    word-break: break-word;
+}
+
+.message-bubble small {
+    opacity: 0.78;
+}
+
 .profile-settings-form {
     background: var(--bg-light);
-    border-radius: 20px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     padding: 30px;
     display: grid;
@@ -336,10 +380,11 @@
 }
 
 .profile-settings-form input,
+.profile-settings-form select,
 .profile-settings-form textarea {
     width: 100%;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 14px 16px;
     font-size: 0.95rem;
     color: var(--text-dark);
@@ -348,6 +393,7 @@
 }
 
 .profile-settings-form input:focus,
+.profile-settings-form select:focus,
 .profile-settings-form textarea:focus {
     outline: none;
     border-color: var(--primary-blue);
@@ -379,11 +425,12 @@
 .provider-profile-summary {
     background: #f8fbff;
     padding: 28px 24px 24px;
+    border-radius: 8px;
 }
 
 .dashboard-panel {
     background: #ffffff;
-    border-radius: 22px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     padding: 24px;
 }
@@ -396,7 +443,7 @@
     grid-column: 1 / -1;
     background: #eef4ff;
     padding: 28px;
-    border-radius: 16px;
+    border-radius: 8px;
     text-align: center;
     color: var(--text-dark);
     font-weight: 600;
@@ -420,8 +467,8 @@
 /* Booking Card */
 .booking-card {
     background: var(--white);
-    border-radius: 18px;
-    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
     padding: 26px;
     border: 1px solid var(--border-color);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -435,7 +482,8 @@
 .job-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 14px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 14px;
     margin-bottom: 16px;
@@ -449,7 +497,7 @@
 .status {
     font-size: 0.75rem;
     padding: 5px 12px;
-    border-radius: 999px;
+    border-radius: 8px;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -459,9 +507,29 @@
     color: #8f6d00;
 }
 
+.status.accepted {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.status.on_the_way,
+.status.arrived {
+    background-color: #ede9fe;
+    color: #5b21b6;
+}
+
 .status.completed {
     background-color: #def7e0;
     color: #0f766e;
+}
+
+.status.paid,
+.status.released,
+.status.approved,
+.status.verified,
+.status.read {
+    background-color: #dcfce7;
+    color: #166534;
 }
 
 .status.in_progress {
@@ -469,15 +537,28 @@
     color: #1d4ed8;
 }
 
-.status.cancelled {
+.status.cancelled,
+.status.failed,
+.status.rejected,
+.status.disputed {
     background-color: #fee2e2;
     color: #b91c1c;
+}
+
+.status.unpaid,
+.status.held,
+.status.under_review,
+.status.not_submitted,
+.status.new {
+    background-color: #fef3c7;
+    color: #92400e;
 }
 
 .job-details p {
     color: #475569;
     font-size: 0.95rem;
     margin-bottom: 12px;
+    word-break: break-word;
 }
 
 .job-details i {
@@ -491,6 +572,9 @@
     margin-top: 24px;
     padding-top: 22px;
     border-top: 1px solid var(--border-color);
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 18px;
 }
 
 .handshake-section label {
@@ -512,7 +596,7 @@
     min-width: 140px;
     padding: 12px 14px;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1.1rem;
     text-align: center;
     letter-spacing: 10px;
@@ -530,7 +614,7 @@
     background-color: var(--primary-blue);
     color: var(--white);
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 0 22px;
     font-weight: 700;
     cursor: pointer;
@@ -554,13 +638,14 @@
     background-color: #f0f9ff;
     border: 1px solid #bae6fd;
     color: #0369a1;
-    border-radius: 14px;
+    border-radius: 8px;
     text-align: center;
     font-weight: 700;
 }
 
 /* Utilities */
-.loader, .empty-state {
+.loader,
+.empty-state {
     text-align: center;
     grid-column: 1 / -1;
     padding: 50px;
@@ -569,11 +654,80 @@
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        margin: 24px auto;
+        padding: 16px;
+        gap: 18px;
+    }
+
+    .sidebar {
+        width: 260px;
+        padding: 22px 18px;
+    }
+
+    .dashboard-content {
+        padding: 24px;
+    }
+
+    .bookings-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         flex-direction: column;
     }
+
     .sidebar {
+        width: 100%;
+        position: static;
+    }
+
+    .dashboard-content {
+        padding: 18px;
+    }
+
+    .sidebar-menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .sidebar-menu li button {
+        margin-bottom: 0;
+        min-height: 48px;
+    }
+
+    .content-header h2 {
+        font-size: 1.55rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+
+    .sidebar-menu {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-panel,
+    .profile-settings-form,
+    .booking-card {
+        padding: 18px;
+    }
+
+    .job-header,
+    .code-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-verify,
+    .handshake-input {
         width: 100%;
     }
 }

@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <header class="navbar">
@@ -50,7 +51,7 @@
           >
         </li>
         <li>
-          <div class="notification">
+          <div class="notification" aria-label="Notifications">
             <i class="fa-solid fa-bell"></i>
             <span class="badge">3</span>
           </div>
@@ -116,12 +117,12 @@
 
           <h4>Available Time Slots</h4>
           <div class="time-grid">
-            <button class="time-slot">09:00–10:00</button>
-            <button class="time-slot">10:00–11:00</button>
-            <button class="time-slot">11:00–12:00</button>
-            <button class="time-slot">02:00–03:00</button>
-            <button class="time-slot">03:00–04:00</button>
-            <button class="time-slot">05:00–06:00</button>
+            <button class="time-slot">09:00-10:00</button>
+            <button class="time-slot">10:00-11:00</button>
+            <button class="time-slot">11:00-12:00</button>
+            <button class="time-slot">02:00-03:00</button>
+            <button class="time-slot">03:00-04:00</button>
+            <button class="time-slot">05:00-06:00</button>
           </div>
 
           <div
@@ -160,6 +161,10 @@
     <div
       class="emergency-overlay"
       id="emergencyModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="emergencyModalTitle"
+      aria-hidden="true"
       style="
         display: none;
         position: fixed;
@@ -187,7 +192,7 @@
           class="fa-solid fa-triangle-exclamation emergency-icon"
           style="color: red; font-size: 40px; margin-bottom: 15px"
         ></i>
-        <h2>Emergency Service</h2>
+        <h2 id="emergencyModalTitle">Emergency Service</h2>
         <p style="margin: 15px 0">
           Our technician will arrive within 30-45 minutes. Additional charges
           may apply for instant service.
@@ -240,7 +245,7 @@
             padding-top: 10px;
           "
         >
-          <p>© 2026 SERVIIO All Rights Reserved</p>
+          <p>&copy; 2026 SERVIIO All Rights Reserved</p>
         </div>
       </div>
     </footer>
@@ -278,7 +283,7 @@
 
         try {
           const response = await fetch(
-            `http://localhost:5000/api/providers/${providerIdFromUrl}`,
+            Serviio.apiUrl(`/api/providers/${providerIdFromUrl}`),
           );
           const data = await response.json();
 
@@ -378,9 +383,11 @@
       };
       emergencyBtn.onclick = () => {
         modal.style.display = "flex";
+        modal.setAttribute("aria-hidden", "false");
       };
       function closeModal() {
         modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
       }
 
       // --- 2. Time Slot Selection Logic ---
@@ -409,21 +416,22 @@
           const jobLocation = jobLocationInput.value.trim();
 
           if (!selectedDateEl || !selectedTimeEl) {
-            alert(
+            Serviio.notify(
               "Please select both a date from the calendar and a time slot.",
+              "warning",
             );
             return;
           }
 
           if (!jobLocation) {
-            alert("Please enter your service location.");
+            Serviio.notify("Please enter your service location.", "warning");
             return;
           }
 
           // Get logged-in User
           const userStr = localStorage.getItem("serviio_user");
           if (!userStr) {
-            alert("You must be logged in to book a service!");
+            Serviio.notify("You must be logged in to book a service.", "warning");
             window.location.href = "login.html";
             return;
           }
@@ -433,14 +441,14 @@
           const urlParams = new URLSearchParams(window.location.search);
           let providerId = urlParams.get("provider_id");
           if (!providerId) {
-            alert("Please select a provider before scheduling.");
+            Serviio.notify("Please select a provider before scheduling.", "warning");
             window.location.href = "providerList.html";
             return;
           }
 
           const bookingDateTime = new Date(selectedBookingDate || new Date());
-          const timeValue = selectedBookingTime || "09:00–10:00";
-          const [startTime] = timeValue.split("–");
+          const timeValue = selectedBookingTime || "09:00-10:00";
+          const [startTime] = timeValue.split("-");
           const [hours, minutes] = startTime.trim().split(":").map(Number);
           bookingDateTime.setHours(hours || 9, minutes || 0, 0, 0);
 
@@ -450,7 +458,7 @@
             service_type: selectedProviderServiceType,
             job_location: jobLocation,
             is_emergency: false,
-            estimated_price_range: "৳ 500 - ৳ 800",
+            estimated_price_range: "BDT 500 - BDT 800",
             booking_date: bookingDateTime
               .toISOString()
               .slice(0, 19)
@@ -467,7 +475,7 @@
 
             const token = localStorage.getItem("serviio_token");
             const response = await fetch(
-              "http://localhost:5000/api/bookings/create",
+              Serviio.apiUrl("/api/bookings/create"),
               {
                 method: "POST",
                 headers: {
@@ -488,13 +496,13 @@
               // SILENT REDIRECT: Go straight to payment and pass the booking ID
               window.location.href = `payment.html?booking_id=${bookingId}`;
             } else {
-              alert("Booking failed: " + data.message);
+              Serviio.notify("Booking failed: " + data.message, "error");
               btn.innerHTML = "Confirm Schedule &rarr;";
               btn.style.pointerEvents = "auto";
             }
           } catch (error) {
             console.error("API Error:", error);
-            alert(error.message || "Could not connect to the server.");
+            Serviio.notify(error.message || "Could not connect to the server.", "error");
             const btn = document.getElementById("confirmBookingBtn");
             btn.innerHTML = "Confirm Schedule &rarr;";
             btn.style.pointerEvents = "auto";

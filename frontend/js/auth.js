@@ -4,12 +4,22 @@ const passwordInput = document.getElementById("password");
 const submitButton = document.getElementById("loginSubmitButton");
 
 function getApiBaseUrl() {
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-  if (window.location.protocol === "file:" || isLocalhost) {
-    return "http://localhost:5000";
+  return window.Serviio?.apiBaseUrl || window.location.origin;
+}
+
+function safeNext(pathname) {
+  if (window.Serviio?.safeNext) return window.Serviio.safeNext(pathname);
+  const raw = String(pathname || "").trim();
+  if (
+    !raw ||
+    raw.startsWith("http://") ||
+    raw.startsWith("https://") ||
+    raw.startsWith("//") ||
+    raw.startsWith("\\")
+  ) {
+    return "";
   }
-  return window.location.origin;
+  return raw.replace(/^\/+/, "");
 }
 
 function getLoginMessageElement() {
@@ -41,7 +51,14 @@ function setLoading(isLoading) {
 function getRedirectUrl(user) {
   const role = user && user.role ? user.role.toLowerCase() : "customer";
   if (role === "provider") return "profileBooking.html";
-  if (role === "admin") return "admin.html";
+  if (
+    role === "admin" ||
+    role === "super_admin" ||
+    role === "support_agent" ||
+    role === "verification_officer"
+  ) {
+    return "admin.html";
+  }
   return "home.html";
 }
 
@@ -75,6 +92,12 @@ async function handleLogin(event) {
       showMessage(
         data.message || "Login failed. Please check your credentials.",
       );
+      if (data.verification_required && data.email) {
+        sessionStorage.setItem("serviio_pending_verification_email", data.email);
+        setTimeout(() => {
+          window.location.href = `verify-registration.html?email=${encodeURIComponent(data.email)}`;
+        }, 900);
+      }
       return;
     }
 
@@ -88,11 +111,11 @@ async function handleLogin(event) {
     const params = new URLSearchParams(window.location.search);
     const next = params.get("next");
     if (next) {
-      // Basic sanitation: only allow local paths within the frontend
-      if (next.startsWith("http://") || next.startsWith("https://")) {
+      const safeRedirect = safeNext(next);
+      if (!safeRedirect) {
         window.location.href = getRedirectUrl(data.user);
       } else {
-        window.location.href = next;
+        window.location.href = safeRedirect;
       }
     } else {
       window.location.href = getRedirectUrl(data.user);

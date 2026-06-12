@@ -10,40 +10,45 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+      <script src="js/config.js"></script>
   </head>
   <body>
     <nav class="navbar">
       <div class="logo">SERVIIO</div>
       <ul class="nav-links">
         <li><a href="home.html">Home</a></li>
-        <li><a href="#" class="active">My Profile</a></li>
+        <li><a href="profile.html" class="active">My Profile</a></li>
       </ul>
     </nav>
 
     <main class="profile-wrapper">
       <div class="settings-card">
-        <h3>Manage Personal Parameters</h3>
+        <h3>Account Profile</h3>
         <form id="profileUpdateForm">
           <div class="form-group">
-            <label>Primary Phone Association</label>
-            <input type="text" id="profilePhone" value="01827364521" readonly />
+            <label for="profileFirstName">First Name</label>
+            <input type="text" id="profileFirstName" required />
           </div>
           <div class="form-group">
-            <label>System Email Domain</label>
+            <label for="profileLastName">Last Name</label>
+            <input type="text" id="profileLastName" required />
+          </div>
+          <div class="form-group">
+            <label for="profilePhone">Phone</label>
+            <input type="tel" id="profilePhone" placeholder="01XXXXXXXXX" />
+          </div>
+          <div class="form-group">
+            <label for="profileEmail">Email</label>
             <input
               type="email"
               id="profileEmail"
-              value="user@domain.com"
               readonly
             />
           </div>
-          <button
-            type="button"
-            class="btn-save-settings"
-            onclick="saveChanges()"
-          >
-            Commit Structural Changes
+          <button type="submit" class="btn-save-settings" id="saveProfileBtn">
+            Save Profile
           </button>
+          <p id="profileMessage" style="margin-top: 10px"></p>
         </form>
       </div>
 
@@ -58,10 +63,42 @@
       </div>
 
       <div class="settings-card" style="margin-top: 24px">
+        <h3>Booking Messages</h3>
+        <form id="customerMessageForm">
+          <div class="form-group">
+            <label for="customerMessageBooking">Booking</label>
+            <select id="customerMessageBooking"></select>
+          </div>
+          <div id="customerMessageList" class="message-thread">
+            Loading messages...
+          </div>
+          <div class="form-group" style="margin-top: 16px">
+            <label for="customerMessageText">Message</label>
+            <textarea
+              id="customerMessageText"
+              rows="3"
+              maxlength="2000"
+              placeholder="Write a booking message"
+              style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px"
+            ></textarea>
+          </div>
+          <button type="submit" class="btn-save-settings">Send Message</button>
+          <button
+            type="button"
+            class="btn-save-settings secondary-action"
+            id="customerCallRequestBtn"
+          >
+            Request Voice Call
+          </button>
+          <p id="customerMessageStatus" style="margin-top: 10px"></p>
+        </form>
+      </div>
+
+      <div class="settings-card" style="margin-top: 24px">
         <h3>Support Tickets</h3>
         <form id="supportTicketForm">
           <div class="form-group">
-            <label>Category</label>
+            <label for="ticketCategory">Category</label>
             <select id="ticketCategory">
               <option value="GENERAL">General</option>
               <option value="REFUND">Refund</option>
@@ -71,7 +108,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Subject</label>
+            <label for="ticketSubject">Subject</label>
             <input
               type="text"
               id="ticketSubject"
@@ -80,7 +117,7 @@
             />
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label for="ticketDescription">Description</label>
             <textarea
               id="ticketDescription"
               rows="4"
@@ -104,11 +141,11 @@
           <form id="reviewForm">
             <input type="hidden" id="reviewBookingId" />
             <div class="form-group">
-              <label>Selected Booking</label>
+              <label for="reviewBookingLabel">Selected Booking</label>
               <input type="text" id="reviewBookingLabel" readonly />
             </div>
             <div class="form-group">
-              <label>Rating</label>
+              <label for="reviewRating">Rating</label>
               <select id="reviewRating" required>
                 <option value="5">5 - Excellent</option>
                 <option value="4">4 - Good</option>
@@ -118,7 +155,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Title</label>
+              <label for="reviewTitle">Title</label>
               <input
                 type="text"
                 id="reviewTitle"
@@ -127,7 +164,7 @@
               />
             </div>
             <div class="form-group">
-              <label>Comment</label>
+              <label for="reviewComment">Comment</label>
               <textarea
                 id="reviewComment"
                 rows="4"
@@ -153,13 +190,18 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-      function saveChanges() {
-        alert(
-          "Profile settings committed successfully inside local environment layers.",
-        );
-      }
-
-      const token = localStorage.getItem("serviio_token");
+      const session = window.Serviio.requireAuth({
+        roles: ["customer"],
+        next: "profile.html",
+      });
+      const token = session.token;
+      const currentUser = session.user;
+      const profileForm = document.getElementById("profileUpdateForm");
+      const profileFirstName = document.getElementById("profileFirstName");
+      const profileLastName = document.getElementById("profileLastName");
+      const profilePhone = document.getElementById("profilePhone");
+      const profileEmail = document.getElementById("profileEmail");
+      const profileMessage = document.getElementById("profileMessage");
       const ticketForm = document.getElementById("supportTicketForm");
       const supportMessage = document.getElementById("supportMessage");
       const ticketList = document.getElementById("ticketList");
@@ -172,9 +214,22 @@
       const reviewForm = document.getElementById("reviewForm");
       const reviewMessage = document.getElementById("reviewMessage");
       const myReviewList = document.getElementById("myReviewList");
+      const customerMessageForm = document.getElementById("customerMessageForm");
+      const customerMessageBooking = document.getElementById(
+        "customerMessageBooking",
+      );
+      const customerMessageList = document.getElementById("customerMessageList");
+      const customerMessageText = document.getElementById("customerMessageText");
+      const customerMessageStatus = document.getElementById(
+        "customerMessageStatus",
+      );
+      const customerCallRequestBtn = document.getElementById(
+        "customerCallRequestBtn",
+      );
       let currentNotifications = [];
       let customerBookings = [];
       let customerReviews = [];
+      let profileSocket = null;
 
       function escapeHTML(value) {
         return String(value || "")
@@ -199,6 +254,67 @@
         ).join("");
       }
 
+      function setProfileMessage(message, isError = false) {
+        profileMessage.textContent = message || "";
+        profileMessage.style.color = isError ? "#b91c1c" : "#15803d";
+      }
+
+      function populateProfile(user) {
+        profileFirstName.value = user.first_name || "";
+        profileLastName.value = user.last_name || "";
+        profilePhone.value = user.phone || "";
+        profileEmail.value = user.email || "";
+      }
+
+      async function loadProfile() {
+        populateProfile(currentUser || {});
+        if (!token) return;
+
+        try {
+          const response = await fetch(Serviio.apiUrl("/api/auth/me"), {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load profile.");
+          }
+          populateProfile(data.data || {});
+          localStorage.setItem("serviio_user", JSON.stringify(data.data || {}));
+        } catch (error) {
+          setProfileMessage(error.message, true);
+        }
+      }
+
+      profileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!token) return;
+
+        setProfileMessage("Saving profile...");
+        try {
+          const response = await fetch(Serviio.apiUrl("/api/auth/me"), {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              first_name: profileFirstName.value.trim(),
+              last_name: profileLastName.value.trim(),
+              phone: profilePhone.value.trim(),
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to save profile.");
+          }
+          populateProfile(data.data || {});
+          localStorage.setItem("serviio_user", JSON.stringify(data.data || {}));
+          setProfileMessage("Profile saved.");
+        } catch (error) {
+          setProfileMessage(error.message, true);
+        }
+      });
+
       async function fetchNotifications() {
         if (!token) {
           notificationList.innerText = "Log in to view notifications.";
@@ -207,7 +323,7 @@
 
         try {
           const response = await fetch(
-            "http://localhost:5000/api/notifications",
+            Serviio.apiUrl("/api/notifications"),
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -256,7 +372,7 @@
 
         try {
           const response = await fetch(
-            "http://localhost:5000/api/support/tickets/my",
+            Serviio.apiUrl("/api/support/tickets/my"),
             {
               headers: { Authorization: `Bearer ${token}` },
             },
@@ -295,10 +411,10 @@
 
         try {
           const [bookingResponse, reviewResponse] = await Promise.all([
-            fetch("http://localhost:5000/api/bookings/my", {
+            fetch(Serviio.apiUrl("/api/bookings/my"), {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            fetch("http://localhost:5000/api/reviews/my", {
+            fetch(Serviio.apiUrl("/api/reviews/my"), {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);
@@ -317,6 +433,8 @@
           customerReviews = reviewData.data || [];
           renderPendingReviews();
           renderMyReviews();
+          renderCustomerMessageBookingOptions();
+          loadCustomerMessages();
         } catch (error) {
           pendingReviewList.innerText = error.message;
           myReviewList.innerText = error.message;
@@ -385,6 +503,142 @@
           .join("");
       }
 
+      function renderCustomerMessageBookingOptions() {
+        const selected = customerMessageBooking.value;
+        const bookings = customerBookings.filter((booking) =>
+          ["PENDING", "ACCEPTED", "ON_THE_WAY", "ARRIVED", "IN_PROGRESS", "COMPLETED"].includes(booking.status),
+        );
+        customerMessageBooking.innerHTML = bookings.length
+          ? bookings
+              .map((booking) => {
+                const label = `#${booking.id} - ${booking.service_type || "Service"} with ${booking.provider_name || "Provider"}`;
+                return `<option value="${booking.id}">${escapeHTML(label)}</option>`;
+              })
+              .join("")
+          : '<option value="">No messageable bookings</option>';
+        if (selected && bookings.some((booking) => String(booking.id) === selected)) {
+          customerMessageBooking.value = selected;
+        }
+      }
+
+      function renderCustomerMessages(messages) {
+        if (!messages || !messages.length) {
+          customerMessageList.innerHTML =
+            '<div class="message-empty">No messages yet.</div>';
+          return;
+        }
+
+        customerMessageList.innerHTML = messages
+          .map((message) => {
+            const own = String(message.sender_id) === String(JSON.parse(localStorage.getItem("serviio_user") || "{}").id);
+            return `
+              <div class="message-bubble ${own ? "own" : ""}">
+                <strong>${escapeHTML(message.sender_name || "User")}</strong>
+                <p>${escapeHTML(message.message || "")}</p>
+                <small>${escapeHTML(new Date(message.created_at).toLocaleString())}</small>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      async function loadCustomerMessages() {
+        const bookingId = customerMessageBooking.value;
+        if (!token || !bookingId) {
+          customerMessageList.innerHTML =
+            '<div class="message-empty">Select a booking to load messages.</div>';
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            Serviio.apiUrl(`/api/communications/bookings/${bookingId}/messages`),
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load messages.");
+          }
+          renderCustomerMessages(data.data || []);
+          if (profileSocket) {
+            profileSocket.emit("booking:join", { bookingId, token });
+          }
+        } catch (error) {
+          customerMessageList.innerHTML = `<div class="message-empty">${escapeHTML(error.message)}</div>`;
+        }
+      }
+
+      customerMessageForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const bookingId = customerMessageBooking.value;
+        const message = customerMessageText.value.trim();
+        if (!token || !bookingId || !message) return;
+
+        customerMessageStatus.textContent = "Sending...";
+        customerMessageStatus.style.color = "#334155";
+        try {
+          const response = await fetch(
+            Serviio.apiUrl(`/api/communications/bookings/${bookingId}/messages`),
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ message }),
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to send message.");
+          }
+          customerMessageText.value = "";
+          customerMessageStatus.textContent = "Message sent.";
+          customerMessageStatus.style.color = "#15803d";
+          loadCustomerMessages();
+        } catch (error) {
+          customerMessageStatus.textContent = error.message;
+          customerMessageStatus.style.color = "#b91c1c";
+        }
+      });
+
+      customerCallRequestBtn.addEventListener("click", async () => {
+        const bookingId = customerMessageBooking.value;
+        if (!token || !bookingId) return;
+
+        customerMessageStatus.textContent = "Requesting call...";
+        customerMessageStatus.style.color = "#334155";
+        try {
+          const response = await fetch(
+            Serviio.apiUrl(`/api/communications/bookings/${bookingId}/call-requests`),
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                call_type: "VOICE",
+                reason: "Customer requested a booking coordination call.",
+              }),
+            },
+          );
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to request call.");
+          }
+          customerMessageStatus.textContent = "Call request sent.";
+          customerMessageStatus.style.color = "#15803d";
+        } catch (error) {
+          customerMessageStatus.textContent = error.message;
+          customerMessageStatus.style.color = "#b91c1c";
+        }
+      });
+
+      customerMessageBooking.addEventListener("change", loadCustomerMessages);
+
       window.selectBookingForReview = function (bookingId) {
         const booking = customerBookings.find(
           (item) => String(item.id) === String(bookingId),
@@ -413,7 +667,7 @@
 
         try {
           const response = await fetch(
-            "http://localhost:5000/api/support/tickets",
+            Serviio.apiUrl("/api/support/tickets"),
             {
               method: "POST",
               headers: {
@@ -462,7 +716,7 @@
         reviewMessage.style.color = "#334155";
 
         try {
-          const response = await fetch("http://localhost:5000/api/reviews", {
+          const response = await fetch(Serviio.apiUrl("/api/reviews"), {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -493,7 +747,7 @@
 
       markAllNotificationsRead.addEventListener("click", async () => {
         if (!token) return;
-        await fetch("http://localhost:5000/api/notifications/read-all", {
+        await fetch(Serviio.apiUrl("/api/notifications/read-all"), {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -501,17 +755,30 @@
       });
 
       if (token && window.io) {
-        const socket = io("http://localhost:5000");
+        const socket = io(Serviio.apiBaseUrl);
+        profileSocket = socket;
         socket.emit("notifications:join", { token });
         socket.on("notification:new", (notification) => {
           currentNotifications = [notification, ...currentNotifications];
           renderNotifications();
+        });
+        socket.on("booking:message:new", (message) => {
+          if (String(message.booking_id) === String(customerMessageBooking.value)) {
+            loadCustomerMessages();
+          }
+        });
+        socket.on("booking:call:requested", (callRequest) => {
+          if (String(callRequest.booking_id) === String(customerMessageBooking.value)) {
+            customerMessageStatus.textContent = "New call request received.";
+            customerMessageStatus.style.color = "#0056b3";
+          }
         });
       }
 
       fetchNotifications();
       fetchTickets();
       fetchCustomerReviewData();
+      loadProfile();
     </script>
   </body>
 </html>

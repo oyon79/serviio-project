@@ -1,10 +1,18 @@
 const db = require("../config/db");
 const { createNotifications } = require("../services/notificationService");
-
-const DEFAULT_COMMISSION_RATE = 0.1;
+const {
+  verifyConfiguredGatewayPayment,
+} = require("../services/paymentGatewayService");
+const { parsePlatformCommissionRate } = require("../utils/financialPolicy");
+const { isAdminRole } = require("../utils/roles");
 
 exports.processPayment = async (req, res) => {
-  const { booking_id, amount, payment_method = "mock" } = req.body;
+  const {
+    booking_id,
+    amount,
+    payment_method = "mock",
+    gateway_reference,
+  } = req.body;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -21,11 +29,21 @@ exports.processPayment = async (req, res) => {
     });
   }
 
-  const parsedAmount = parseFloat(amount);
-  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+  const requestedAmount = parseFloat(amount);
+  if (isNaN(requestedAmount) || requestedAmount <= 0) {
     return res.status(400).json({
       success: false,
       message: "amount must be a positive number.",
+    });
+  }
+
+  let platformFeeRate;
+  try {
+    platformFeeRate = parsePlatformCommissionRate();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Payment configuration is invalid.",
     });
   }
 
@@ -35,7 +53,7 @@ exports.processPayment = async (req, res) => {
     await connection.beginTransaction();
 
     const [bookingRows] = await connection.query(
-      "SELECT id, customer_id, provider_id, status, payment_status FROM bookings WHERE id = ? LIMIT 1 FOR UPDATE",
+      "SELECT id, customer_id, provider_id, status, payment_status, quoted_amount FROM bookings WHERE id = ? LIMIT 1 FOR UPDATE",
       [booking_id],
     );
 
@@ -65,6 +83,15 @@ exports.processPayment = async (req, res) => {
       });
     }
 
+    if (!["PENDING", "ACCEPTED"].includes(booking.status)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment can only be completed before the provider starts travelling or working.",
+      });
+    }
+
     if (booking.payment_status === "PAID") {
       await connection.rollback();
       return res.status(409).json({
@@ -73,15 +100,36 @@ exports.processPayment = async (req, res) => {
       });
     }
 
-    const transactionId = `TXN-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)
-      .toUpperCase()}`;
+    const parsedAmount = Number(booking.quoted_amount || requestedAmount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Booking does not have a valid payable amount.",
+      });
+    }
 
-    const commissionRate = Number(process.env.PLATFORM_COMMISSION_RATE);
-    const platformFeeRate = Number.isFinite(commissionRate)
-      ? commissionRate
-      : DEFAULT_COMMISSION_RATE;
+    const gatewayResult = await verifyConfiguredGatewayPayment({
+      bookingId: booking.id,
+      customerId: booking.customer_id,
+      providerId: booking.provider_id,
+      amount: parsedAmount,
+      paymentMethod: payment_method,
+      gatewayReference: gateway_reference,
+    });
+
+    if (!gatewayResult.verified) {
+      await connection.rollback();
+      return res.status(gatewayResult.statusCode || 400).json({
+        success: false,
+        message: gatewayResult.message || "Payment could not be verified.",
+      });
+    }
+
+    const transactionId = String(gatewayResult.transactionId).slice(0, 100);
+    const gatewayName =
+      gatewayResult.gatewayName || String(payment_method).slice(0, 50);
+
     const platformFee = Number((parsedAmount * platformFeeRate).toFixed(2));
     const providerAmount = Number((parsedAmount - platformFee).toFixed(2));
 
@@ -101,8 +149,8 @@ exports.processPayment = async (req, res) => {
         transactionId,
         parsedAmount,
         "SUCCESS",
-        String(payment_method).slice(0, 50),
-        "Mock checkout payment recorded by Serviio backend.",
+        gatewayName,
+        `${gatewayName} checkout payment verified by Serviio backend.`,
       ],
     );
 
@@ -259,7 +307,7 @@ exports.getPaymentStatus = async (req, res) => {
     if (
       String(booking.customer_id) !== String(userId) &&
       String(booking.provider_id) !== String(userId) &&
-      req.user.role !== "admin"
+      !isAdminRole(req.user.role)
     ) {
       return res.status(403).json({
         success: false,

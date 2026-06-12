@@ -11,7 +11,7 @@
     background-color: var(--white);
     max-width: 550px;
     width: 100%;
-    border-radius: 16px;
+    border-radius: 8px;
     box-shadow: 0 10px 30px rgba(220, 53, 69, 0.15);
     padding: 40px;
     border: 2px solid #dc3545;
@@ -65,8 +65,28 @@
     background-color: #bd2130;
 }
 
+.btn-panic-trigger:disabled {
+    opacity: 0.72;
+}
+
 @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
     70% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
     100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+@media (max-width: 560px) {
+    .emergency-wrapper {
+        padding: 32px 14px;
+        align-items: flex-start;
+    }
+
+    .sos-card {
+        padding: 28px 20px;
+    }
+
+    .pulse-ring {
+        width: 78px;
+        height: 78px;
+    }
 }

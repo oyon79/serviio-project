@@ -9,6 +9,9 @@ SET @demo_password_hash = '$2b$12$3TacDNJmDc/tYLV9QNNJNejq04bAHxhjpO5LkxedC7QwsN
 INSERT INTO users (first_name, last_name, email, phone, password, role, is_active)
 VALUES
   ('Admin', 'User', 'admin@serviio.test', '01700000001', @demo_password_hash, 'admin', TRUE),
+  ('Super', 'Admin', 'superadmin@serviio.test', '01700000005', @demo_password_hash, 'super_admin', TRUE),
+  ('Support', 'Agent', 'support@serviio.test', '01700000006', @demo_password_hash, 'support_agent', TRUE),
+  ('Verification', 'Officer', 'verification@serviio.test', '01700000007', @demo_password_hash, 'verification_officer', TRUE),
   ('Customer', 'User', 'customer@serviio.test', '01700000002', @demo_password_hash, 'customer', TRUE),
   ('Rahim', 'Electrician', 'provider@serviio.test', '01700000003', @demo_password_hash, 'provider', TRUE),
   ('Karim', 'Plumber', 'plumber@serviio.test', '01700000004', @demo_password_hash, 'provider', TRUE)
@@ -54,11 +57,11 @@ VALUES
 
 INSERT INTO bookings
   (customer_id, provider_id, service_type, job_location, booking_date,
-   estimated_price_range, status, handshake_code, is_emergency,
+   estimated_price_range, quoted_amount, status, handshake_code, is_emergency,
    payment_status, payment_transaction_id, payment_amount, payment_date)
 SELECT
   @customer_id, @provider_id, 'Electrician', 'House 12, Road 4, Uttara',
-  DATE_SUB(NOW(), INTERVAL 2 DAY), 'BDT 500 - BDT 800', 'COMPLETED',
+  DATE_SUB(NOW(), INTERVAL 2 DAY), 'BDT 500 - BDT 800', 550.00, 'COMPLETED',
   '1234', FALSE, 'PAID', 'DEMO-TXN-001', 550.00, DATE_SUB(NOW(), INTERVAL 2 DAY)
 WHERE NOT EXISTS (
   SELECT 1 FROM bookings WHERE payment_transaction_id = 'DEMO-TXN-001'
@@ -72,6 +75,33 @@ SET @completed_booking_id = (
     AND payment_transaction_id = 'DEMO-TXN-001'
   LIMIT 1
 );
+
+INSERT INTO payment_transactions
+  (booking_id, customer_id, provider_id, transaction_id, amount, status, payment_method, description)
+VALUES
+  (@completed_booking_id, @customer_id, @provider_id, 'DEMO-TXN-001', 550.00, 'SUCCESS', 'mock', 'Seeded completed demo payment')
+ON DUPLICATE KEY UPDATE
+  amount = VALUES(amount),
+  status = VALUES(status),
+  payment_method = VALUES(payment_method),
+  description = VALUES(description);
+
+INSERT INTO escrow_payments
+  (booking_id, customer_id, provider_id, payment_transaction_id, amount,
+   platform_fee, provider_amount, status, release_available_at, released_at)
+VALUES
+  (@completed_booking_id, @customer_id, @provider_id, 'DEMO-TXN-001', 550.00,
+   55.00, 495.00, 'RELEASED', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY))
+ON DUPLICATE KEY UPDATE
+  amount = VALUES(amount),
+  platform_fee = VALUES(platform_fee),
+  provider_amount = VALUES(provider_amount),
+  status = VALUES(status),
+  released_at = VALUES(released_at);
+
+UPDATE wallets
+SET balance = 495.00, pending_balance = 0.00
+WHERE user_id = @provider_id;
 
 INSERT INTO reviews (booking_id, provider_id, customer_id, rating, title, comment)
 VALUES

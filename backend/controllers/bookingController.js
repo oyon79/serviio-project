@@ -3,13 +3,14 @@ const {
   createNotification,
   createNotifications,
 } = require("../services/notificationService");
-
-const allowedStatuses = new Set([
-  "PENDING",
-  "IN_PROGRESS",
-  "COMPLETED",
-  "CANCELLED",
-]);
+const {
+  allowedStatuses,
+  canProviderTransition,
+  canStartWithHandshake,
+  getStatusTimestampColumn,
+} = require("../services/bookingLifecycle");
+const { estimatePrice } = require("../services/pricingService");
+const { isAdminRole } = require("../utils/roles");
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
@@ -50,28 +51,45 @@ exports.createBooking = async (req, res) => {
     }
 
     const [providerRows] = await db.query(
-      "SELECT u.id FROM users u INNER JOIN provider_profiles p ON p.user_id = u.id WHERE u.id = ? AND u.role = 'provider' LIMIT 1",
+      `SELECT u.id, p.hourly_rate
+       FROM users u
+       INNER JOIN provider_profiles p ON p.user_id = u.id
+       WHERE u.id = ?
+         AND u.role = 'provider'
+         AND u.is_active = TRUE
+         AND p.is_available = TRUE
+         AND (p.is_verified = 1 OR p.is_verified = TRUE)
+       LIMIT 1`,
       [provider_id],
     );
     if (providerRows.length === 0) {
       return res
         .status(404)
-        .json({ success: false, message: "Provider not found." });
+        .json({ success: false, message: "Provider is not available for booking." });
     }
 
     const handshake_code = Math.floor(1000 + Math.random() * 9000).toString();
+    const priceEstimate = estimatePrice({
+      serviceType: service_type,
+      location: job_location,
+      scheduledAt: booking_date,
+      workload: "moderate",
+      isEmergency: Boolean(is_emergency),
+      providerHourlyRate: providerRows[0].hourly_rate,
+    });
 
     const [result] = await db.query(
       `INSERT INTO bookings
-        (customer_id, provider_id, service_type, job_location, booking_date, estimated_price_range, is_emergency, status, handshake_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (customer_id, provider_id, service_type, job_location, booking_date, estimated_price_range, quoted_amount, is_emergency, status, handshake_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         customerId,
         provider_id,
         service_type,
         job_location || null,
         booking_date,
-        estimated_price_range || null,
+        priceEstimate.rangeLabel || estimated_price_range || null,
+        priceEstimate.quotedAmount,
         is_emergency ? 1 : 0,
         "PENDING",
         handshake_code,
@@ -106,7 +124,8 @@ exports.createBooking = async (req, res) => {
       data: {
         booking_id: bookingId,
         status: "PENDING",
-        handshake_code,
+        estimated_price_range: priceEstimate.rangeLabel,
+        quoted_amount: priceEstimate.quotedAmount,
       },
     });
   } catch (error) {
@@ -133,7 +152,7 @@ exports.getBookingById = async (req, res) => {
   try {
     // Query the database for the booking, and join provider details if you want their name!
     const query = `
-            SELECT b.*, p.first_name as provider_name, p.phone as provider_phone 
+            SELECT b.*, p.first_name as provider_name, p.phone as provider_phone
             FROM bookings b
             LEFT JOIN users p ON b.provider_id = p.id
             WHERE b.id = ?
@@ -152,11 +171,19 @@ exports.getBookingById = async (req, res) => {
     const isCustomer = String(bookingRow.customer_id) === userId;
     const isProvider = String(bookingRow.provider_id) === userId;
 
-    if (!isCustomer && !isProvider && req.user.role !== "admin") {
+    const isAdmin = isAdminRole(req.user.role);
+
+    if (!isCustomer && !isProvider && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: "You do not have permission to view this booking.",
       });
+    }
+
+    if (!isAdmin) {
+      if (!isCustomer || bookingRow.payment_status !== "PAID") {
+        delete bookingRow.handshake_code;
+      }
     }
 
     res.status(200).json({
@@ -203,7 +230,12 @@ exports.getProviderBookings = async (req, res) => {
 
   try {
     const query = `
-        SELECT b.*, u.first_name as customer_name, u.phone as customer_phone 
+        SELECT
+          b.id, b.customer_id, b.provider_id, b.service_type, b.job_location,
+          b.booking_date, b.estimated_price_range, b.status, b.is_emergency,
+          b.payment_status, b.payment_transaction_id, b.payment_amount,
+          b.payment_date, b.created_at, b.updated_at,
+          u.first_name as customer_name, u.phone as customer_phone
         FROM bookings b
         JOIN users u ON b.customer_id = u.id
         WHERE b.provider_id = ?
@@ -233,7 +265,12 @@ exports.getMyBookings = async (req, res) => {
   try {
     if (req.user.role === "provider") {
       const query = `
-        SELECT b.*, u.first_name as customer_name, u.phone as customer_phone
+        SELECT
+          b.id, b.customer_id, b.provider_id, b.service_type, b.job_location,
+          b.booking_date, b.estimated_price_range, b.status, b.is_emergency,
+          b.payment_status, b.payment_transaction_id, b.payment_amount,
+          b.payment_date, b.created_at, b.updated_at,
+          u.first_name as customer_name, u.phone as customer_phone
         FROM bookings b
         JOIN users u ON b.customer_id = u.id
         WHERE b.provider_id = ?
@@ -247,7 +284,12 @@ exports.getMyBookings = async (req, res) => {
 
     // else customer
     const query = `
-      SELECT b.*, u.first_name as provider_name, u.phone as provider_phone
+      SELECT
+        b.id, b.customer_id, b.provider_id, b.service_type, b.job_location,
+        b.booking_date, b.estimated_price_range, b.status, b.is_emergency,
+        b.payment_status, b.payment_transaction_id, b.payment_amount,
+        b.payment_date, b.created_at, b.updated_at,
+        u.first_name as provider_name, u.phone as provider_phone
       FROM bookings b
       LEFT JOIN users u ON b.provider_id = u.id
       WHERE b.customer_id = ?
@@ -302,27 +344,45 @@ exports.verifyHandshake = async (req, res) => {
         .json({ success: false, message: "Booking not found." });
     }
 
-    if (String(booking[0].provider_id) !== String(req.user.id)) {
+    const currentBooking = booking[0];
+
+    if (String(currentBooking.provider_id) !== String(req.user.id)) {
       return res.status(403).json({
         success: false,
         message: "You can only verify bookings assigned to you.",
       });
     }
 
+    if (currentBooking.payment_status !== "PAID") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment must be completed before starting the job.",
+      });
+    }
+
+    if (!canStartWithHandshake(currentBooking.status)) {
+      return res.status(409).json({
+        success: false,
+        message: `Handshake cannot start a job in status ${currentBooking.status}.`,
+      });
+    }
+
     // Check if the code matches
-    if (booking[0].handshake_code !== code) {
+    if (currentBooking.handshake_code !== code) {
       return res.status(400).json({
         success: false,
         message: "Invalid 4-digit code! Please try again.",
       });
     }
     // If it matches, update the job status to 'IN_PROGRESS'
-    await db.query("UPDATE bookings SET status = ? WHERE id = ?", [
-      "IN_PROGRESS",
-      bookingId,
-    ]);
+    await db.query(
+      `UPDATE bookings
+       SET status = ?, started_at = COALESCE(started_at, NOW())
+       WHERE id = ?`,
+      ["IN_PROGRESS", bookingId],
+    );
     await createNotification({
-      user_id: booking[0].customer_id,
+      user_id: currentBooking.customer_id,
       booking_id: bookingId,
       notification_type: "BOOKING_STARTED",
       title: "Job started",
@@ -355,13 +415,13 @@ exports.updateBookingStatus = async (req, res) => {
     return res.status(400).json({
       success: false,
       message:
-        "Invalid status. Valid values are PENDING, IN_PROGRESS, COMPLETED, or CANCELLED.",
+        "Invalid status. Valid values are PENDING, ACCEPTED, ON_THE_WAY, ARRIVED, IN_PROGRESS, COMPLETED, or CANCELLED.",
     });
   }
 
   try {
     const [bookingRows] = await db.query(
-      "SELECT id, provider_id, status FROM bookings WHERE id = ? LIMIT 1",
+      "SELECT id, customer_id, provider_id, status, payment_status FROM bookings WHERE id = ? LIMIT 1",
       [bookingId],
     );
 
@@ -387,10 +447,59 @@ exports.updateBookingStatus = async (req, res) => {
       });
     }
 
-    await db.query("UPDATE bookings SET status = ? WHERE id = ?", [
+    if (requestedStatus === "PENDING" || requestedStatus === "IN_PROGRESS") {
+      return res.status(400).json({
+        success: false,
+        message:
+          requestedStatus === "IN_PROGRESS"
+            ? "Use handshake verification to start a booking."
+            : "Bookings cannot be moved back to pending.",
+      });
+    }
+
+    const validTransition = canProviderTransition(
+      booking.status,
       requestedStatus,
-      bookingId,
-    ]);
+    );
+
+    if (!validTransition) {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot change booking from ${booking.status} to ${requestedStatus}.`,
+      });
+    }
+
+    if (requestedStatus === "COMPLETED" && booking.payment_status !== "PAID") {
+      return res.status(400).json({
+        success: false,
+        message: "Paid escrow is required before a booking can be completed.",
+      });
+    }
+
+    if (
+      ["ON_THE_WAY", "ARRIVED"].includes(requestedStatus) &&
+      booking.payment_status !== "PAID"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer payment must be secured before travel begins.",
+      });
+    }
+
+    const timestampColumn = getStatusTimestampColumn(requestedStatus);
+    if (timestampColumn) {
+      await db.query(
+        `UPDATE bookings
+         SET status = ?, ${timestampColumn} = COALESCE(${timestampColumn}, NOW())
+         WHERE id = ?`,
+        [requestedStatus, bookingId],
+      );
+    } else {
+      await db.query("UPDATE bookings SET status = ? WHERE id = ?", [
+        requestedStatus,
+        bookingId,
+      ]);
+    }
     const [recipientRows] = await db.query(
       "SELECT customer_id FROM bookings WHERE id = ? LIMIT 1",
       [bookingId],
@@ -436,7 +545,7 @@ exports.cancelBooking = async (req, res) => {
 
   try {
     const [bookingRows] = await db.query(
-      "SELECT id, customer_id, provider_id, status FROM bookings WHERE id = ? LIMIT 1",
+      "SELECT id, customer_id, provider_id, status, payment_status FROM bookings WHERE id = ? LIMIT 1",
       [bookingId],
     );
 
@@ -450,8 +559,9 @@ exports.cancelBooking = async (req, res) => {
     const userId = String(req.user.id);
     const isCustomer = String(booking.customer_id) === userId;
     const isProvider = String(booking.provider_id) === userId;
+    const isAdmin = isAdminRole(req.user.role);
 
-    if (!isCustomer && !isProvider && req.user.role !== "admin") {
+    if (!isCustomer && !isProvider && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to cancel this booking.",
@@ -462,6 +572,21 @@ exports.cancelBooking = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Completed bookings cannot be cancelled.",
+      });
+    }
+
+    if (booking.payment_status === "PAID" && !isAdmin) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Paid bookings require support/admin review for cancellation or refund.",
+      });
+    }
+
+    if (isCustomer && booking.status !== "PENDING" && !isAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: "Customers can only cancel pending bookings.",
       });
     }
 
